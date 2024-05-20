@@ -27,6 +27,31 @@ def butter_lowpass_filter(data, cutoff, fs, order=25):
     y = lfilter(b, a, data)
     return y
 
+def create_sampled_datetimes(datetime_tuple, sampling_rate_seconds):
+    """
+    The create_sampled_datetimes function generates an array of equally spaced datetimes within a specified range. 
+
+    Parameters
+        datetime_tuple (tuple): A tuple containing two pandas.Timestamp objects.
+        The first element is the start datetime.
+        The second element is the end datetime.
+        sampling_rate_seconds (int): The interval in seconds between each sampled datetime in the output array.
+
+    Returns
+    numpy.ndarray: An array of pandas.Timestamp objects representing the sampled datetimes, starting from the start datetime to the end datetime,
+        spaced by the specified sampling rate.
+    """
+    start_datetime, end_datetime = datetime_tuple
+    
+    # Calculate the number of samples
+    delta = end_datetime - start_datetime
+    num_samples = int(delta.total_seconds() // sampling_rate_seconds) + 1
+    
+    # Create an array of equally spaced datetimes
+    sampled_datetimes = [start_datetime + timedelta(seconds=sampling_rate_seconds * i) for i in range(num_samples)]
+    
+    return np.array(sampled_datetimes)
+
 
 def sinc_interpolation(x: NDArray, s: NDArray, u: NDArray) -> NDArray:
     """Whittaker–Shannon or sinc or bandlimited interpolation.
@@ -73,12 +98,44 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     """
     Gives the ratio of E/B in the spectral domain, either returning an animation or a plot of the conductivies it derived
     """
+    def Logic_for_one_step():
+        """
+        Finds periodogram, Conductivity and Alfven speed for each window
+        """
+    
     def conductivities():
+        """
+        Gives the plot of conductivities and Alfven speed found by looping through window
+        """
 
         return
+    def Animation_Init():
+        """
+        Iniatizes animation
+        #TODO 
+        Create figure, 
+        figure out no of subplots
+        something else
+        """
     def Animation():
+        """
+        Creates an animation of each window
+        """
 
         return 
+    def heatmap():
+        """
+        Creates a heatmap of the periodograms in E,B and the ratio of E and B (depending on options selected)
+        """
+
+        return
+    
+    time_range = query_dict["time_range"]
+    sampling_rate_seconds=query_dict["sampling_rate"]
+    sampled_datetimes = create_sampled_datetimes(time_range, sampling_rate_seconds)
+
+    for i in range(len(sampled_datetimes)):
+
     
 
     return 
