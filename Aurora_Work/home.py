@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 from EB import EBplotsNEC
-from MFA_EB import EBplotsMFA
 import matplotlib.animation as animation
 from moviepy.editor import VideoFileClip, concatenate_videoclips, clips_array
 import moviepy
