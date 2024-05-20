@@ -145,7 +145,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     sampled_datetimes = create_sampled_datetimes(time_range, sampling_rate_seconds)
     frequencies, powerspec_E,powerspec_B, ratio_EB = 
     for k in range(len()): #length of satellites
-        B_sinc,B_resample=sinc_interpolation(bfield, time_B,time_E), signal.resample(bfield, len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
+        B_sinc,B_resample=sinc_interpolation(bfield[k], time_B,time_E), signal.resample(bfield[k], len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
 
         for i in range(len(sampled_datetimes) - sampling_rate_seconds *query_dict['window_length']): #Loops through each window and at the end stops early so window length doesnt cause error
             Logic_for_one_step(i, B_resample)
