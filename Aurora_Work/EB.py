@@ -98,10 +98,20 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     """
     Gives the ratio of E/B in the spectral domain, either returning an animation or a plot of the conductivies it derived
     """
-    def Logic_for_one_step():
+    def Logic_for_one_step(index,Bsinc,Bresamp):
         """
         Finds periodogram, Conductivity and Alfven speed for each window
         """
+        window_length=query_dict["window_length"]
+        index_start,index_end= index*16, index*16+16*window_length
+        #TODO do this per space-craft and do it in the ratio desired, currently North over East
+        frequencies_E, powerspec_E = signal.periodogram(efield[range(index_start, index_end+1), 0], 16, window="hann",detrend='linear', scaling='spectrum')
+        frequencies_B, powerspec_B = signal.periodogram(Bresamp[range(index_start, index_end+1), 1], 16, window="hann",detrend='linear', scaling='spectrum')
+        ratio_EB = powerspec_E/ powerspec_B
+        return [frequencies_E, powerspec_E, powerspec_B, ratio_EB ]
+
+        
+
     
     def conductivities():
         """
@@ -133,9 +143,10 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     time_range = query_dict["time_range"]
     sampling_rate_seconds=query_dict["sampling_rate"]
     sampled_datetimes = create_sampled_datetimes(time_range, sampling_rate_seconds)
+    B_sinc,B_resample=sinc_interpolation(bfield, time_B,time_E), signal.resample(bfield, len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
 
-    for i in range(len(sampled_datetimes)):
-
+    for i in range(len(sampled_datetimes) - sampling_rate_seconds *query_dict['window_length']): #Loops through each window and at the end stops early so window length doesnt cause error
+        Logic_for_one_step(i, B_sinc,B_resample)
     
 
     return 
