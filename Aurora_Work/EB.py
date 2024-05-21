@@ -94,7 +94,7 @@ def period_graph(ax, arg, *kwargs):
 def time_series_graph(ax,arg,*kwargs):
     return
 
-def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dict):
+def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dict, fig, axes):
     """
     Gives the ratio of E/B in the spectral domain, either returning an animation or a plot of the conductivies it derived
     """
@@ -105,10 +105,18 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         window_length=query_dict["window_length"]
         index_start,index_end= index*16, index*16+16*window_length
         #TODO do this per space-craft and do it in the ratio desired, currently North over East
-        frequencies_E, powerspec_E = signal.periodogram(efield[range(index_start, index_end+1), 0], 16, window="hann",detrend='linear', scaling='spectrum')
-        frequencies_B, powerspec_B = signal.periodogram(Bresamp[range(index_start, index_end+1), 1], 16, window="hann",detrend='linear', scaling='spectrum')
-        ratio_EB = powerspec_E/ powerspec_B
-        return np.array([frequencies_E, powerspec_E, powerspec_B, ratio_EB])
+        frequencies_E_0, powerspec_E_0 = signal.periodogram(efield[range(index_start, index_end+1), 0], 16, window="hann",detrend='linear', scaling='spectrum')
+        frequencies_B_0, powerspec_B_0 = signal.periodogram(Bresamp[range(index_start, index_end+1), 1], 16, window="hann",detrend='linear', scaling='spectrum')
+
+        frequencies_E_1, powerspec_E_1 = signal.periodogram(efield[range(index_start, index_end+1), 0], 16, window="hann",detrend='linear', scaling='spectrum')
+        frequencies_B_1, powerspec_B_1 = signal.periodogram(Bresamp[range(index_start, index_end+1), 1], 16, window="hann",detrend='linear', scaling='spectrum')
+
+
+        ratio_EB_01 = powerspec_E_0/ powerspec_B_1
+        ratio_EB_10 = powerspec_E_1/ powerspec_B_0
+
+
+        return np.array([[frequencies_E_0, frequencies_E_1], [powerspec_E_0, powerspec_E_1], [powerspec_B_0, powerspec_B_1], [ratio_EB_01, ratio_EB_10], [int((index_end-index_start)/2), None]])
 
         
 
@@ -131,13 +139,79 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         """
         Creates an animation of each window
         """
+        def animate()
+
 
         return 
-    def heatmap():
+    def graph_heatmap(data, datetimes):
         """
         Creates a heatmap of the periodograms in E,B and the ratio of E and B (depending on options selected)
         """
+        def subplot_select():
+            length_for_axis = 0
+            try:
+                length_for_axis += len(query_dict["graph_E_chosen"])
+            except TypeError:
+                pass
+            try:
+                length_for_axis += len(query_dict["graph_B_chosen"])
+            except TypeError:
+                pass
+            try:
+                length_for_axis += len(query_dict["graph_PF_chosen"])
+            except TypeError:
+                pass
+            if query_dict["FAC"] == True:
+                length_for_axis += 1
+            else:
+                pass
+            if query_dict["Difference"] == True:
+                length_for_axis += 1
+            else:
+                pass
+            if query_dict["Pixel_intensity"] == True:
+                try:
+                    length_for_axis += len(query_dict["sky_map_values"])
+                except TypeError:
+                    raise ValueError("Sky Map not Selected")
+        length_for_axis=subplot_select()
+            
 
+        for i in range(len(query_dict["heatmap"])):
+            for k in range(len(query_dict["satellite_graph"])):
+                if query_dict['coordinate_system'][0] == "North East Centre":
+                    if query_dict["graph_B_chosen"][i] == "E_North":
+                        index1 = 0
+                    elif query_dict["graph_B_chosen"][i] == "E_East":
+                        index = 1
+                    elif query_dict["graph_B_chosen"][i] == "B_North":
+                        index = 2
+                    elif query_dict["graph_B_chosen"][i] == "B_East":
+                        index = 3
+                    elif query_dict["graph_B_chosen"][i] == "E North / B East":
+                        index = 4
+                    elif query_dict["graph_B_chosen"][i] == "E East / B North":
+                        index = 1
+                else:
+                    if query_dict["graph_B_chosen"][i] == "E_Azimuth":
+                        index = 0
+                    elif query_dict["graph_B_chosen"][i] == "E_Polodial":
+                        index = 1
+                    elif query_dict["graph_B_chosen"][i] == "B_Azimuth":
+                        index = 2
+                    elif query_dict["graph_B_chosen"][i] == "B_Polodial":
+                        index = 2
+                    elif query_dict["graph_B_chosen"][i] == "E Azimuth / B Polodial":
+                        index = 1
+                    elif query_dict["graph_B_chosen"][i] == "E Polodial / B Azimuth":
+                        index = 1
+                axes[i + length_for_axis].pcolormesh(datetimes[data[k, :, 0,4, :]] , data[k, :, 0,1, :], data[k, :, index1, index2, :]  ) #selects average time, frequencies, and then the periodogram 
+                axes[i + length_for_axis].legend(loc=2)
+                axes[i + length_for_axis].set_ylabel(
+                    r"$B_{{{}}}$".format(query_dict["graph_B_chosen"][i]) + " (nT) "
+                )
+                axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
+        
         return
     
     time_range = query_dict["time_range"]
@@ -145,13 +219,14 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     sampled_datetimes = create_sampled_datetimes(time_range, sampling_rate_seconds)
     len_satellite = len(query_dict["satellite_graph"])
     length_of_windows=len(sampled_datetimes) - sampling_rate_seconds *query_dict['window_length']
-    data = np.zeros(len_satellite, 4, length_of_windows, (16*query_dict["window_length"]//2) + 1)#length of periodogram 
-    for k in range(len()): #length of satellites
+    data = np.zeros(len_satellite, length_of_windows, 5, 2,  (16*query_dict["window_length"]//2) + 1, 2) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
+    for k in range(len(query_dict["satellite_graph"])): #length of satellites
         B_sinc,B_resample=sinc_interpolation(bfield[k], time_B,time_E), signal.resample(bfield[k], len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
 
         for i in range(length_of_windows): #Loops through each window and at the end stops early so window length doesnt cause error
-            data[k][i] = Logic_for_one_step(i, B_resample)
-    
+            data[k, i] = Logic_for_one_step(i, B_resample)
+    if query_dict["heatmap"] != None:
+        graph_heatmap(data, sample_datetimes)
     
 
     return 
@@ -225,6 +300,9 @@ def EBplotsNEC(query_dict):
 
         if query_dict['graph_PF_chosen'] != None:
             length_for_axis += len(query_dict["graph_PF_chosen"])
+        
+        if query_dict['graph_E_chosen'] != None:
+            length_for_axis += len(query_dict["heatmap"])
 
         if query_dict["FAC"] == True:
             length_for_axis += 1
@@ -986,7 +1064,7 @@ def EBplotsNEC(query_dict):
         if query_dict["E_B_ratio"] == True:
             pass
             graphing_ratio(
-                space_craft_with_E, efield, bfield, time_E, time_B, query_dict
+                space_craft_with_E, efield, bfield, time_E, time_B, query_dict, fig, axes
             )
         if query_dict["sky_map_values"] != None and query_dict["Pixel_intensity"] == True:
 
