@@ -53,19 +53,19 @@ def create_sampled_datetimes(datetime_tuple, sampling_rate_seconds):
     return np.array(sampled_datetimes)
 
 
-def sinc_interpolation(x: NDArray, s: NDArray, u: NDArray) -> NDArray:
-    """Whittaker–Shannon or sinc or bandlimited interpolation.
+def sinc_geodeticolation(x: NDArray, s: NDArray, u: NDArray) -> NDArray:
+    """Whittaker–Shannon or sinc or bandlimited geodeticolation.
     Args:
-        x (NDArray): signal to be interpolated, can be 1D or 2D
+        x (NDArray): signal to be geodeticolated, can be 1D or 2D
         s (NDArray): time points of x (*s* for *samples*)
         u (NDArray): time points of y (*u* for *upsampled*)
     Returns:
-        NDArray: interpolated signal at time points *u*
+        NDArray: geodeticolated signal at time points *u*
     Reference:
         This code is based on https://gist.github.com/endolith/1297227
         and the comments therein.
     TODO:
-        * implement FFT based interpolation for speed up
+        * implement FFT based geodeticolation for speed up
     """
     sinc_ = np.sinc((u - s[:, None]) / (s[1] - s[0]))
 
@@ -236,7 +236,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     length_of_windows=len(sampled_datetimes) - sampling_rate_seconds *query_dict['window_length']
     data = np.zeros(len_satellite, length_of_windows, 5, 2,  (16*query_dict["window_length"]//2) + 1, 2) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
     for k in range(len(query_dict["satellite_graph"])): #length of satellites
-        B_sinc,B_resample=sinc_interpolation(bfield[k], time_B,time_E), signal.resample(bfield[k], len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
+        B_sinc,B_resample=sinc_geodeticolation(bfield[k], time_B,time_E), signal.resample(bfield[k], len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
 
         for i in range(length_of_windows): #Loops through each window and at the end stops early so window length doesnt cause error
             data[k, i] = Logic_for_one_step(i, B_resample)
@@ -315,10 +315,11 @@ def EBplotsNEC(query_dict):
 
         if query_dict['graph_PF_chosen'] != None:
             length_for_axis += len(query_dict["graph_PF_chosen"])
-        
-        if query_dict['graph_E_chosen'] != None:
-            length_for_axis += len(query_dict["heatmap"])
-
+        try:
+            if query_dict['graph_E_chosen'] != None:
+                length_for_axis += len(query_dict["heatmap"])
+        except KeyError:
+            pass
         if query_dict["FAC"] == True:
             length_for_axis += 1
 
@@ -843,7 +844,7 @@ def EBplotsNEC(query_dict):
 
                 for l in range(3):
                     print(np.shape(bfield[i][:,l]))
-                    bflux[:,l] = sinc_interpolation(x=bfield[i][:,l], s=time_B[i], u=time_E)
+                    bflux[:,l] = sinc_geodeticolation(x=bfield[i][:,l], s=time_B[i], u=time_E)
 
                 print(np.shape(eflux), np.shape(bflux))
                 flux = np.cross(eflux * 1e-3, bflux * 1e-9) * 1.256e6*1e3
@@ -893,7 +894,7 @@ def EBplotsNEC(query_dict):
                             location_code,
                             time_range=time_range,
                             alt=alt,
-                            custom_alt="interp",
+                            custom_alt="geodetic",
                         )
                         cadence = 3
                     elif asi_array_code.lower() == "rego":
@@ -901,7 +902,7 @@ def EBplotsNEC(query_dict):
                             location_code,
                             time_range=time_range,
                             alt=alt,
-                            custom_alt="interp",
+                            custom_alt="geodetic",
                         )
                         cadence = 3
                     elif asi_array_code.lower() == "trex_nir":
@@ -909,7 +910,7 @@ def EBplotsNEC(query_dict):
                             location_code,
                             time_range=time_range,
                             alt=alt,
-                            custom_alt="interp",
+                            custom_alt="geodetic",
                         )
                         cadence = 6
                     elif asi_array_code.lower() == "trex_rgb":
@@ -919,7 +920,7 @@ def EBplotsNEC(query_dict):
                             time_range=time_range,
                             alt=alt,
                             colors="rgb",
-                            custom_alt="interp",
+                            custom_alt="geodetic",
                         )
 
                     return asi, cadence
