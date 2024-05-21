@@ -116,7 +116,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         ratio_EB_10 = powerspec_E_1/ powerspec_B_0
 
 
-        return np.array([[frequencies_E_0, frequencies_E_1], [powerspec_E_0, powerspec_E_1], [powerspec_B_0, powerspec_B_1], [ratio_EB_01, ratio_EB_10], [int((index_end-index_start)/2), None]])
+        return np.array([[frequencies_E_0, None], [powerspec_E_0, powerspec_E_1], [powerspec_B_0, powerspec_B_1], [ratio_EB_01, ratio_EB_10], [int((index_end-index_start)/2), None]]) #all frequencies are the same
 
         
 
@@ -135,11 +135,13 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         figure out no of subplots
         something else
         """
+        return 
     def Animation():
         """
         Creates an animation of each window
         """
-        def animate()
+        def animate():
+            return
 
 
         return 
@@ -181,31 +183,43 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
             for k in range(len(query_dict["satellite_graph"])):
                 if query_dict['coordinate_system'][0] == "North East Centre":
                     if query_dict["graph_B_chosen"][i] == "E_North":
-                        index1 = 0
+                        index1 = 1
+                        index2=  0
                     elif query_dict["graph_B_chosen"][i] == "E_East":
-                        index = 1
+                        index1 = 1
+                        index2=  1
                     elif query_dict["graph_B_chosen"][i] == "B_North":
-                        index = 2
+                        index1 = 2
+                        index2=  0
                     elif query_dict["graph_B_chosen"][i] == "B_East":
-                        index = 3
+                        index1 = 2
+                        index2=  1
                     elif query_dict["graph_B_chosen"][i] == "E North / B East":
-                        index = 4
+                        index1 = 3
+                        index2=  0
                     elif query_dict["graph_B_chosen"][i] == "E East / B North":
-                        index = 1
+                        index1 = 3
+                        index2=  1
                 else:
                     if query_dict["graph_B_chosen"][i] == "E_Azimuth":
-                        index = 0
+                        index1 = 1
+                        index2=  0
                     elif query_dict["graph_B_chosen"][i] == "E_Polodial":
-                        index = 1
+                        index1 = 1
+                        index2=  1
                     elif query_dict["graph_B_chosen"][i] == "B_Azimuth":
-                        index = 2
+                        index1 = 2
+                        index2=  0
                     elif query_dict["graph_B_chosen"][i] == "B_Polodial":
-                        index = 2
+                        index1 = 2
+                        index2=  1
                     elif query_dict["graph_B_chosen"][i] == "E Azimuth / B Polodial":
-                        index = 1
+                        index1 = 3
+                        index2=  0
                     elif query_dict["graph_B_chosen"][i] == "E Polodial / B Azimuth":
-                        index = 1
-                axes[i + length_for_axis].pcolormesh(datetimes[data[k, :, 0,4, :]] , data[k, :, 0,1, :], data[k, :, index1, index2, :]  ) #selects average time, frequencies, and then the periodogram 
+                        index1 = 3
+                        index2=  1
+                axes[i + length_for_axis].pcolormesh(datetimes[data[k, :, 0,4, :]] , data[k, :, 0,0, :], data[k, :, index1, index2, :]  ) #selects average time, frequencies, and then the periodogram 
                 axes[i + length_for_axis].legend(loc=2)
                 axes[i + length_for_axis].set_ylabel(
                     r"$B_{{{}}}$".format(query_dict["graph_B_chosen"][i]) + " (nT) "
