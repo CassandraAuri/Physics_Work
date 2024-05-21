@@ -108,7 +108,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         frequencies_E, powerspec_E = signal.periodogram(efield[range(index_start, index_end+1), 0], 16, window="hann",detrend='linear', scaling='spectrum')
         frequencies_B, powerspec_B = signal.periodogram(Bresamp[range(index_start, index_end+1), 1], 16, window="hann",detrend='linear', scaling='spectrum')
         ratio_EB = powerspec_E/ powerspec_B
-        return [frequencies_E, powerspec_E, powerspec_B, ratio_EB ]
+        return np.array([frequencies_E, powerspec_E, powerspec_B, ratio_EB])
 
         
 
@@ -143,12 +143,14 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     time_range = query_dict["time_range"]
     sampling_rate_seconds=query_dict["sampling_rate"]
     sampled_datetimes = create_sampled_datetimes(time_range, sampling_rate_seconds)
-    frequencies, powerspec_E,powerspec_B, ratio_EB = 
+    len_satellite = len(query_dict["satellite_graph"])
+    length_of_windows=len(sampled_datetimes) - sampling_rate_seconds *query_dict['window_length']
+    data = np.zeros(len_satellite, 4, length_of_windows, (16*query_dict["window_length"]//2) + 1)#length of periodogram 
     for k in range(len()): #length of satellites
         B_sinc,B_resample=sinc_interpolation(bfield[k], time_B,time_E), signal.resample(bfield[k], len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
 
-        for i in range(len(sampled_datetimes) - sampling_rate_seconds *query_dict['window_length']): #Loops through each window and at the end stops early so window length doesnt cause error
-            Logic_for_one_step(i, B_resample)
+        for i in range(length_of_windows): #Loops through each window and at the end stops early so window length doesnt cause error
+            data[k][i] = Logic_for_one_step(i, B_resample)
     
     
 
