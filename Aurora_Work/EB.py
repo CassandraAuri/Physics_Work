@@ -219,12 +219,13 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                     elif query_dict["graph_B_chosen"][i] == "E Polodial / B Azimuth":
                         index1 = 3
                         index2=  1
-                axes[i + length_for_axis].pcolormesh(datetimes[data[k, :, 0,4, :]] , data[k, :, 0,0, :], data[k, :, index1, index2, :]  ) #selects average time, frequencies, and then the periodogram 
-                axes[i + length_for_axis].legend(loc=2)
+                axes[i + length_for_axis].pcolormesh(datetimes[data[k, :, 0,4, :]] , data[k, :, 0, 0, :], data[k, :, index1, index2, :]  ) #selects average time, frequencies, and then the periodogram 
                 axes[i + length_for_axis].set_ylabel(
-                    r"$B_{{{}}}$".format(query_dict["graph_B_chosen"][i]) + " (nT) "
+                    "Frequencies"
                 )
-                axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
+                axes[i + length_for_axis].set_xlabel(
+                    "Times"
+                )
         
         return
     
@@ -240,7 +241,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         for i in range(length_of_windows): #Loops through each window and at the end stops early so window length doesnt cause error
             data[k, i] = Logic_for_one_step(i, B_resample)
     if query_dict["heatmap"] != None:
-        graph_heatmap(data, sample_datetimes)
+        graph_heatmap(data, sampled_datetimes)
     
 
     return 
