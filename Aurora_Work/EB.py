@@ -647,11 +647,17 @@ def EBplotsNEC(query_dict):
 
                         Electric = dsE[measurements[1][1]].to_numpy()  # Electric field in satellite coordinates
                         ElectricNEC = np.multiply(velocity_unit, Electric)  # transforms satellite coordinates into NEC
+                        
+                        b,a = butter_lowpass(7.5,50, 25)
 
                         for l in range(3):  # moving average of bres for all three components
+
                             ElectricNEC[:, l] = ElectricNEC[:, l] - moving_average(
                                 ElectricNEC[:, l]
                             )
+                            
+                            ElectricNEC[:, i] = signal.filtfilt(a=a,b=b,x=ElectricNEC[:, i])
+
 
                         def B_Logic_For_E():
                             # finds the closest index in B for each time
