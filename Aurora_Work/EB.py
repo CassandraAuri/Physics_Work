@@ -89,12 +89,6 @@ def unit_array(array):
     array_unit = array / arraysum[:, np.newaxis]  # normalizes
     return array_unit
 
-def period_graph(ax, arg, *kwargs):
-    return
-
-def time_series_graph(ax,arg,*kwargs):
-    return
-
 def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dict, fig, axes):
     """
     Gives the ratio of E/B in the spectral domain, either returning an animation or a plot of the conductivies it derived
@@ -201,11 +195,44 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         """
         Creates an animation of each window
         """
-        fig_ani, axes_ani = plt.subplots(fig_size=(15,10), nrows=Animation_rows())
-        def animate():
+        fig_ani, axes_ani = plt.subplots(fig_size=(15,10),  nrows=Animation_rows())
+        def animate(i):
             """
             Wrapper for animation
             """
+            def EB_Periodogram_Plot(axes_used):
+                for l, val in enumerate(query_dict["EB_periodogram"]):
+                    for l, val_sat in enumerate((query_dict["satellite_graph"])):
+                        if val == 'ENorth, BEast':
+                            index=0
+                        else:
+                            index=1
+                        axes_ani[axes_used + l ].plot(data[k, i, 0, 0, : ], data[k, i, 4,index, :], label=val_sat) #Frequencies E's
+                    axes_ani[axes_used + l ].set_ylabel(str(val) + "m/s")
+
+            def B_Periodogram_Plot(axes_used):
+                for l, val in enumerate(query_dict["B_periodogram"]):
+                    for l, val_sat in enumerate((query_dict["satellite_graph"])):
+                        if val == 'B_North':
+                            index=1
+                        else:
+                            index=0
+                        axes_ani[axes_used + l ].plot(data[k, i, 0, 0, : ], data[k, i, 2,index, :], label=val_sat) #Frequencies E's
+                    axes_ani[axes_used + l ].set_ylabel(str(val) + "nT")
+                return  axes_used + len(query_dict["B_periodogram"])
+
+            def E_Periodogram_Plot(axes_used):
+                for l, val in enumerate(query_dict["E_periodogram"]):
+                    for l, val_sat in enumerate((query_dict["satellite_graph"])):
+                        if val == 'E_North':
+                            index=1
+                        else:
+                            index=0
+                        axes_ani[axes_used + l ].plot(data[k, i, 0, 0, : ], data[k, i, 1,index, :], label=val_sat) #Frequencies E's
+                    axes_ani[axes_used + l ].set_ylabel(str(val) + "mV/m")
+                return  axes_used + len(query_dict["E_periodogram"])
+            
+
             def Time_Series_plot():
                 twin_x_axes=[None]*len(query_dict["satellite_graph"]) #There are n number of axises that are contained for the time series
                 for l in range(len(query_dict["Time_Series"])):
@@ -216,35 +243,33 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                                     pass
                                 else:
                                     twin_x=axes_ani[l].twinx()
-                                twin_x.plot(sampled_datetimes[indicies[k][l]], efield[indicies[k][l], 0])
+                                twin_x.plot(sampled_datetimes[indicies[k][i]], efield[indicies[k][i], 0])
                             elif query_dict["Time_Series"][l] == "E_East":
                                 if twin_x_axes[l]:
                                     pass
                                 else:
                                     twin_x=axes_ani[l].twinx()
-                                twin_x.plot(sampled_datetimes[indicies[k][l]], efield[indicies[k][l], 1])
+                                twin_x.plot(sampled_datetimes[indicies[k][i]], efield[indicies[k][i], 1])
 
                             elif query_dict["Time_Series"][l] == "B_East":
-                                axes_ani[l].plot(sampled_datetimes[indicies[k][l]] , B_sinc[indicies[k][l], 1])
+                                axes_ani[l].plot(sampled_datetimes[indicies[k][i]] , B_sinc[indicies[k][i], 1])
                             elif query_dict["Time_Series"][l] == "B_North":
-                                axes_ani[l].plot(sampled_datetimes[indicies[k][l]] , B_sinc[indicies[k][l], 0])             
-                return 
-                        
-
-            if query_dict["Time_Series"] != None:
-                Time_Series_plot()
-            if query_dict["E_periodogram"] != None:
-
-            if query_dict["B_periodogram"] != None:
+                                axes_ani[l].plot(sampled_datetimes[indicies[k][i]] , B_sinc[indicies[k][i], 0])             
+                return len(twin_x_axes)
             
+            if query_dict["Time_Series"] != None:
+                axes_used=Time_Series_plot()
+            if query_dict["E_periodogram"] != None:
+                axes_used = E_Periodogram_Plot(axes_used) 
+            if query_dict["B_periodogram"] != None:
+                axes_used = B_Periodogram_Plot(axes_used)
             if query_dict["EB_periodogram"] != None:
-
-
+                EB_Periodogram_Plot(axes_used)
             return
 
-        ani = animation.FuncAnimation(fig=fig, func=animate, frames=frames) #What
-        FFwriter = animation.FFMpegWriter(fps=2)  #TODO given the framerate of 2 frames per second, which is equivalent to 6 seconds imager time = 1 second animation time, calculate the number of windows inbetween given a set step size
-        ani.save("animation.mp4", writer=FFwriter)
+        ani = animation.FuncAnimation(fig=fig_ani, func=animate, frames=frames) #What
+        FFwriter = animation.FFMpegWriter(fps=int(2*sampling_rate_seconds))  #TODO given the framerate of 2 frames per second, which is equivalent to 6 seconds imager time = 1 second animation time, calculate the number of windows inbetween given a set step size
+        ani.save("animationAlfven.mp4", writer=FFwriter)
         
         return 
     def graph_heatmap(data, datetimes):
@@ -340,9 +365,8 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
 
 
     data = np.zeros(len_satellite, length_of_windows, 5, 2,  16*query_dict["window_length"]//2) + 1) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
-    indicies_total=[]
 
-
+    indicies_total = []
     for k in range(len(query_dict["satellite_graph"])): #length of satellites
         B_sinc,B_resample=sinc_geodeticolation(bfield[k], time_B,time_E), signal.resample(bfield[k], len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
         indicies_window=[]
