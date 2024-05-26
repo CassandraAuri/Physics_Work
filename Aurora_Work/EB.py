@@ -117,7 +117,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         ratio_EB_10 = powerspec_E_1/ powerspec_B_0
 
 
-        return np.array([[frequencies_E_0, None], [powerspec_E_0, powerspec_E_1], [powerspec_B_0, powerspec_B_1], [ratio_EB_01, ratio_EB_10], [[int((index_end-index_start)/2)]*len(frequencies_B_0), None]]), range(index_start, index_end+1)  #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
+        return np.array([[frequencies_E_0, [None] * len(frequencies_E_0)], [powerspec_E_0, powerspec_E_1], [powerspec_B_0, powerspec_B_1], [ratio_EB_01, ratio_EB_10], [[int((index_end-index_start)/2)]*len(frequencies_B_0), None]]), range(index_start, index_end+1)  #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
 
         
 
@@ -187,45 +187,47 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     def Animation_rows():
         #TODO Creates an animation of times series of deviations E and B, plot periodograms, plot E/B ratio for given, and what polarization or coordinate should be graphed for each plot
         axes_length=0
-        query_dict_selected = [query_dict["Time_Series"], query_dict["E_periodogram"], query_dict["B_peridogram"], query_dict["EB_periodogram"]]
+        query_dict_selected = [ query_dict["E_periodogram"], query_dict["B_peridogram"], query_dict["EB_periodogram"]]
+        if query_dict["Time_Series"] != None:
+            query_dict_selected = query_dict_selected.append([True] *len(query_dict["satellite_graph"])) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
+        else:
+            query_dict_selected = [query_dict["E_periodogram"], query_dict["B_peridogram"], query_dict["EB_periodogram"]]
         for key in query_dict_selected:
             if key != None:
                 axes_length += 1
         return axes_length
 
-    def Animation_Init():
-        """
-        Iniatizes animation
-        #TODO 
-        Create figure, 
-        figure out no of subplots
-        something else
-        """
-        fig_ani, axes_ani = plt.subplots(fig_size=(15,10), nrows=Animation_rows())
-        return fig_ani, axes_ani
-    def Animation(data,sampled_datetimes, B_sinc, B_resample, frames):
+    def Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies, frames):
         """
         Creates an animation of each window
         """
+        fig_ani, axes_ani = plt.subplots(fig_size=(15,10), nrows=Animation_rows())
         def animate():
             """
             Wrapper for animation
             """
             def Time_Series_plot():
-                [["E_north", 0], ["E_East", 1], ["B_North", 2], ["B_East", 3]]
+                twin_x_axes=[None]*len(query_dict["satellite_graph"]) #There are n number of axises that are contained for the time series
                 for l in range(len(query_dict["Time_Series"])):
                     for k in range(len(query_dict["satellite_graph"])):
                         if query_dict['coordinate_system'][0] == "North East Centre":  #Make one plot over plotted with eachother
                             if query_dict["Time_Series"][l] == 'E_North': #Make Electric field twin x axis.
-                            
+                                if twin_x_axes[l]:
+                                    pass
+                                else:
+                                    twin_x=axes_ani[l].twinx()
+                                twin_x.plot(sampled_datetimes[indicies[k][l]], efield[indicies[k][l], 0])
                             elif query_dict["Time_Series"][l] == "E_East":
+                                if twin_x_axes[l]:
+                                    pass
+                                else:
+                                    twin_x=axes_ani[l].twinx()
+                                twin_x.plot(sampled_datetimes[indicies[k][l]], efield[indicies[k][l], 1])
 
-                            elif in
-                            
-
-                    
-
-                                
+                            elif query_dict["Time_Series"][l] == "B_East":
+                                axes_ani[l].plot(sampled_datetimes[indicies[k][l]] , B_sinc[indicies[k][l], 1])
+                            elif query_dict["Time_Series"][l] == "B_North":
+                                axes_ani[l].plot(sampled_datetimes[indicies[k][l]] , B_sinc[indicies[k][l], 0])             
                 return 
                         
 
@@ -240,7 +242,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
 
             return
 
-        ani = animation.FuncAnimation(fig=fig, func=animate, frames=frames, init_func=Animation_Init(query_dict)) #What
+        ani = animation.FuncAnimation(fig=fig, func=animate, frames=frames) #What
         FFwriter = animation.FFMpegWriter(fps=2)  #TODO given the framerate of 2 frames per second, which is equivalent to 6 seconds imager time = 1 second animation time, calculate the number of windows inbetween given a set step size
         ani.save("animation.mp4", writer=FFwriter)
         
@@ -335,18 +337,23 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     sampled_datetimes = create_sampled_datetimes(time_range, sampling_rate_seconds)
     len_satellite = len(query_dict["satellite_graph"])
     length_of_windows=len(sampled_datetimes) - sampling_rate_seconds *query_dict['window_length']
-    data = np.zeros(len_satellite, length_of_windows, 5, 2,  (16*query_dict["window_length"]//2) + 1, 2) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
+
+
+    data = np.zeros(len_satellite, length_of_windows, 5, 2,  16*query_dict["window_length"]//2) + 1) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
     indicies_total=[]
+
+
     for k in range(len(query_dict["satellite_graph"])): #length of satellites
         B_sinc,B_resample=sinc_geodeticolation(bfield[k], time_B,time_E), signal.resample(bfield[k], len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
-
+        indicies_window=[]
         for i in range(length_of_windows): #Loops through each window and at the end stops early so window length doesnt cause error
             data[k, i], indicies = Logic_for_one_step(i, B_resample)
-            indicies_total.append(indicies) #don't
+            indicies_window.append(indicies) #don't
+        indicies_total.append(indicies_window)
     if query_dict["heatmap"] != None:
         graph_heatmap(data, sampled_datetimes)
     if query_dict["animation"] != None:
-        Animation(data,sampled_datetimes, B_sinc, B_resample, indicies, frames)
+        Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies, frames)
     if query_dict["Conductivities"] != None:
         conductivities(data, sampled_datetimes)
 
