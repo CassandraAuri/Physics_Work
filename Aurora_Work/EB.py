@@ -15,16 +15,17 @@ import asilib.asi
 import cdflib
 import aacgmv2
 from scipy import signal
-from scipy.signal import butter, lfilter, freqz
+from scipy.signal import butter, filtfilt, freqz
 from numpy.typing import NDArray
+import matplotlib.animation as animation
 
-def butter_lowpass(cutoff, fs, order=25):
-    return butter(order, cutoff, fs=fs, btype="low", analog=False)
+def butter_bandpass(cutoffs, fs, order=25):
+    return butter(order, cutoffs, fs=fs, btype="band", analog=False)
 
 
-def butter_lowpass_filter(data, cutoff, fs, order=25):
-    b, a = butter_lowpass(cutoff, fs, order=order)
-    y = lfilter(b, a, data)
+def butter_bandpass_filter(data, cutoffs, fs, order=25):
+    b, a = butter_bandpass(cutoffs, fs, order=order)
+    y = filtfilt(b, a, data)
     return y
 
 def create_sampled_datetimes(datetime_tuple, sampling_rate_seconds):
@@ -116,17 +117,82 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         ratio_EB_10 = powerspec_E_1/ powerspec_B_0
 
 
-        return np.array([[frequencies_E_0, None], [powerspec_E_0, powerspec_E_1], [powerspec_B_0, powerspec_B_1], [ratio_EB_01, ratio_EB_10], [int((index_end-index_start)/2), None]]) #all frequencies are the same
+        return np.array([[frequencies_E_0, None], [powerspec_E_0, powerspec_E_1], [powerspec_B_0, powerspec_B_1], [ratio_EB_01, ratio_EB_10], [[int((index_end-index_start)/2)]*len(frequencies_B_0), None]]), range(index_start, index_end+1)  #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
 
         
 
     
-    def conductivities():
+    def conductivities(data,times):
+
         """
         Gives the plot of conductivities and Alfven speed found by looping through window
         """
+        def subplot_select():
+            #TODO clean up with for loop and apply to other
+            length_for_axis = 0
+            try:
+                length_for_axis += len(query_dict["graph_E_chosen"])
+            except TypeError:
+                pass
+            try:
+                length_for_axis += len(query_dict["graph_B_chosen"])
+            except TypeError:
+                pass
+            try:
+                length_for_axis += len(query_dict["graph_PF_chosen"])
+            except TypeError:
+                pass
+            if query_dict["FAC"] == True:
+                length_for_axis += 1
+            else:
+                pass
+            if query_dict["Difference"] == True:
+                length_for_axis += 1
+            else:
+                pass
+            if query_dict["Pixel_intensity"] == True:
+                try:
+                    length_for_axis += len(query_dict["sky_map_values"])
+                except TypeError:
+                    raise ValueError("Sky Map not Selected")
+            if query_dict["heatmap"] != None:
+                length_for_axis += len(query_dict["heatmap"])
+            return length_for_axis
+        
+
+        length_of_axis=subplot_select()
+        for index in range(len(query_dict["conductivies"])):
+            for k in range(len(query_dict["satellite_graph"])):
+                if query_dict['coordinate_system'][0] == "North East Centre": 
+                    #From North East or East North, are they self similar who knows?
+                    if query_dict["conductivities"][index] == "North over East":
+                        conductivies= data[k, :,  3, 0, 0] # we want zeroth frequency term of the EB ratio
+                    else: #East over North
+                        conducitivies= data[k, :,  3, 1, 0]
+
+                else:
+                    if index == "Azimuth over Polodial":
+                        conductivies= data[k, :,  3, 0, 0] # we want zeroth frequency term of the EB ratio
+                    else: #East over North
+                        conducitivies= data[k, :,  3, 1, 0]
+                axes[index + length_of_axis].plot(times[data[k, :, 0,4, 0]],conducitivies)
+
+                
+
+        
+
 
         return
+    
+    def Animation_rows():
+        #TODO Creates an animation of times series of deviations E and B, plot periodograms, plot E/B ratio for given, and what polarization or coordinate should be graphed for each plot
+        axes_length=0
+        query_dict_selected = [query_dict["Time_Series"], query_dict["E_periodogram"], query_dict["B_peridogram"], query_dict["EB_periodogram"]]
+        for key in query_dict_selected:
+            if key != None:
+                axes_length += 1
+        return axes_length
+
     def Animation_Init():
         """
         Iniatizes animation
@@ -135,21 +201,56 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         figure out no of subplots
         something else
         """
-        return 
-    def Animation():
+        fig_ani, axes_ani = plt.subplots(fig_size=(15,10), nrows=Animation_rows())
+        return fig_ani, axes_ani
+    def Animation(data,sampled_datetimes, B_sinc, B_resample, frames):
         """
         Creates an animation of each window
         """
         def animate():
+            """
+            Wrapper for animation
+            """
+            def Time_Series_plot():
+                [["E_north", 0], ["E_East", 1], ["B_North", 2], ["B_East", 3]]
+                for l in range(len(query_dict["Time_Series"])):
+                    for k in range(len(query_dict["satellite_graph"])):
+                        if query_dict['coordinate_system'][0] == "North East Centre":  #Make one plot over plotted with eachother
+                            if query_dict["Time_Series"][l] == 'E_North': #Make Electric field twin x axis.
+                            
+                            elif query_dict["Time_Series"][l] == "E_East":
+
+                            elif in
+                            
+
+                    
+
+                                
+                return 
+                        
+
+            if query_dict["Time_Series"] != None:
+                Time_Series_plot()
+            if query_dict["E_periodogram"] != None:
+
+            if query_dict["B_periodogram"] != None:
+            
+            if query_dict["EB_periodogram"] != None:
+
+
             return
 
-
+        ani = animation.FuncAnimation(fig=fig, func=animate, frames=frames, init_func=Animation_Init(query_dict)) #What
+        FFwriter = animation.FFMpegWriter(fps=2)  #TODO given the framerate of 2 frames per second, which is equivalent to 6 seconds imager time = 1 second animation time, calculate the number of windows inbetween given a set step size
+        ani.save("animation.mp4", writer=FFwriter)
+        
         return 
     def graph_heatmap(data, datetimes):
         """
         Creates a heatmap of the periodograms in E,B and the ratio of E and B (depending on options selected)
         """
         def subplot_select():
+            #TODO clean up with for loop and apply to other
             length_for_axis = 0
             try:
                 length_for_axis += len(query_dict["graph_E_chosen"])
@@ -235,19 +336,27 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     len_satellite = len(query_dict["satellite_graph"])
     length_of_windows=len(sampled_datetimes) - sampling_rate_seconds *query_dict['window_length']
     data = np.zeros(len_satellite, length_of_windows, 5, 2,  (16*query_dict["window_length"]//2) + 1, 2) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
+    indicies_total=[]
     for k in range(len(query_dict["satellite_graph"])): #length of satellites
         B_sinc,B_resample=sinc_geodeticolation(bfield[k], time_B,time_E), signal.resample(bfield[k], len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
 
         for i in range(length_of_windows): #Loops through each window and at the end stops early so window length doesnt cause error
-            data[k, i] = Logic_for_one_step(i, B_resample)
+            data[k, i], indicies = Logic_for_one_step(i, B_resample)
+            indicies_total.append(indicies) #don't
     if query_dict["heatmap"] != None:
         graph_heatmap(data, sampled_datetimes)
+    if query_dict["animation"] != None:
+        Animation(data,sampled_datetimes, B_sinc, B_resample, indicies, frames)
+    if query_dict["Conductivities"] != None:
+        conductivities(data, sampled_datetimes)
+
     
 
     return 
 
 
 def EBplotsNEC(query_dict):
+    
     set_token(
         "https://vires.services/ows",
         set_default=True,
@@ -647,16 +756,13 @@ def EBplotsNEC(query_dict):
 
                         Electric = dsE[measurements[1][1]].to_numpy()  # Electric field in satellite coordinates
                         ElectricNEC = np.multiply(velocity_unit, Electric)  # transforms satellite coordinates into NEC
-                        
-                        b,a = butter_lowpass(7.5,50, 25)
 
-                        for l in range(3):  # moving average of bres for all three components
 
-                            ElectricNEC[:, l] = ElectricNEC[:, l] - moving_average(
-                                ElectricNEC[:, l]
-                            )
+                        if query_dict["bandpass"][0] == True:
+                            for l in range(3):  # moving average of bres for all three components
+                                ElectricNEC[:, l] = butter_bandpass_filter(ElectricNEC[:, l], query_dict["bandpass"][1], 16)
+
                             
-                            ElectricNEC[:, i] = signal.filtfilt(a=a,b=b,x=ElectricNEC[:, i])
 
 
                         def B_Logic_For_E():
@@ -757,10 +863,11 @@ def EBplotsNEC(query_dict):
                     bmodelarranged = arrangement(time, bmodel_actual, 3)
 
                     bresarranged = np.subtract(barranged, bmodelarranged)
-                    for l in range(3):  # moving average of bres for all three components
-                        bresarranged[:, l] = bresarranged[:, l] - moving_average(
-                            bresarranged[:, l]
-                        )
+
+                    if query_dict["bandpass"][0] == True:
+                        for l in range(3):  # moving average of bres for all three components
+                            bresarranged[:, l] = butter_bandpass_filter(bresarranged[:, l], query_dict["bandpass"][1], 50)
+                    
 
                     ##TODO Add MFA
                     if query_dict['coordinate_system'][0] == "Mean-field aligned":

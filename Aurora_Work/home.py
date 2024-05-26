@@ -131,6 +131,9 @@ def empharisis_processing(dict, cadence):
 
 
 def Animation(timerange):
+    """
+    Animation is required embedded within the GUI as this is what cooperates with streamlit, should be its own python file. However it is self-contained within
+    """
     def graphing_animation(dict):
         data_3, data_6 = empharisis_processing(dict, 3), empharisis_processing(dict, 6)
         time_range = dict["time_range"]
@@ -761,6 +764,8 @@ def Graph():
         st.session_state["E_B_ratio"] = False
     if "Pixel_intensity" not in st.session_state:
         st.session_state["Pixel_intensity"] = False
+    if "Filtering" not in st.session_state:
+        st.session_state["Filtering"] = False
 
     st.checkbox(
         label="would you like to find the normalized difference between FAC and Pyonting flux (must select both FAC and pyonting flux centre)",
@@ -778,6 +783,21 @@ def Graph():
         value=st.session_state["Pixel_intensity"],
         key="Pixel_intensity",
     )
+    st.checkbox(
+        label=r"Would you like to bandpass filter for Alfven (50km, 1km)",
+        value=st.session_state["Filtering"],
+        key="Filtering",
+    )
+
+    if "low_pass" not in st.session_state:
+        st.session_state["low_pass"] = None
+    if "high_pass" not in st.session_state:
+        st.session_state["high_pass"] = None
+    if st.session_state["Filtering"] == True:
+        st.select_slider(label="Please select the low pass in Hz", value="0.2", options=[0.1,0.2,0.5, 1, 2, 4], key="low_pass")
+        st.select_slider(label="Please select the low pass in Hz", value="7", options=[0.5, 1, 2, 4, 6, 7, 8], key="high_pass")
+
+        
 
 
 def Render_Graph(timerange):
@@ -846,6 +866,7 @@ def Render_Graph(timerange):
         "E_B_ratio": st.session_state["E_B_ratio"],
         "Pixel_intensity": st.session_state["Pixel_intensity"],
         "sky_map_values": skymap_values,
+        "bandpass": [st.session_state["Filtering"] ,[st.session_state["low_pass"], st.session_state["high_pass"]]]
     }
 
     if dict["coordinate_system"][0] == "North East Centre":
