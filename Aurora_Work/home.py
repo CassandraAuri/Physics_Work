@@ -794,8 +794,8 @@ def Graph():
     if "high_pass" not in st.session_state:
         st.session_state["high_pass"] = None
     if st.session_state["Filtering"] == True:
-        st.select_slider(label="Please select the low pass in Hz", value="0.2", options=[0.1,0.2,0.5, 1, 2, 4], key="low_pass")
-        st.select_slider(label="Please select the low pass in Hz", value="7", options=[0.5, 1, 2, 4, 6, 7, 8], key="high_pass")
+        st.select_slider(label="Please select the low pass in Hz", value=0.2, options=[0.1,0.2,0.5, 1, 2, 4], key="low_pass")
+        st.select_slider(label="Please select the low pass in Hz", value=7, options=[0.5, 1, 2, 4, 6, 7, 8], key="high_pass")
 
         
 
@@ -867,6 +867,7 @@ def Render_Graph(timerange):
         "Pixel_intensity": st.session_state["Pixel_intensity"],
         "sky_map_values": skymap_values,
         "bandpass": [st.session_state["Filtering"] ,[st.session_state["low_pass"], st.session_state["high_pass"]]]
+        
     }
 
     if dict["coordinate_system"][0] == "North East Centre":

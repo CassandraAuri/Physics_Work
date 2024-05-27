@@ -19,12 +19,13 @@ from scipy.signal import butter, filtfilt, freqz
 from numpy.typing import NDArray
 import matplotlib.animation as animation
 
-def butter_bandpass(cutoffs, fs, order=25):
-    return butter(order, cutoffs, fs=fs, btype="band", analog=False)
+def butter_bandpass(cutoffs, fs, order=4):
+    return butter(order, cutoffs, fs=fs, btype="band")
 
 
-def butter_bandpass_filter(data, cutoffs, fs, order=25):
+def butter_bandpass_filter(data, cutoffs, fs, order=4):
     b, a = butter_bandpass(cutoffs, fs, order=order)
+    print(b,a)
     y = filtfilt(b, a, data)
     return y
 
@@ -364,7 +365,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     length_of_windows=len(sampled_datetimes) - sampling_rate_seconds *query_dict['window_length']
 
 
-    data = np.zeros(len_satellite, length_of_windows, 5, 2,  16*query_dict["window_length"]//2) + 1) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
+    data = np.zeros(len_satellite, length_of_windows, 5, 2,  16*(query_dict["window_length"]//2 + 1)) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
 
     indicies_total = []
     for k in range(len(query_dict["satellite_graph"])): #length of satellites
@@ -377,7 +378,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     if query_dict["heatmap"] != None:
         graph_heatmap(data, sampled_datetimes)
     if query_dict["animation"] != None:
-        Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies, frames)
+        Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies, length_of_windows)
     if query_dict["Conductivities"] != None:
         conductivities(data, sampled_datetimes)
 
@@ -788,10 +789,12 @@ def EBplotsNEC(query_dict):
                         Electric = dsE[measurements[1][1]].to_numpy()  # Electric field in satellite coordinates
                         ElectricNEC = np.multiply(velocity_unit, Electric)  # transforms satellite coordinates into NEC
 
-
+                        print(query_dict["bandpass"][0], 'bandpass')
                         if query_dict["bandpass"][0] == True:
                             for l in range(3):  # moving average of bres for all three components
-                                ElectricNEC[:, l] = butter_bandpass_filter(ElectricNEC[:, l], query_dict["bandpass"][1], 16)
+                                ElectricNEC[:, l] = butter_bandpass_filter(data=ElectricNEC[:, l], cutoffs=query_dict["bandpass"][1], fs=16)
+                                print(query_dict["bandpass"][1])
+                                print(ElectricNEC[:, l], 'electric')
 
                             
 
@@ -1223,7 +1226,7 @@ def EBplotsNEC(query_dict):
         ##TODO Implement ratio
         if query_dict["E_B_ratio"] == True:
             pass
-            graphing_ratio(
+            Graphing_Ratio(
                 space_craft_with_E, efield, bfield, time_E, time_B, query_dict, fig, axes
             )
         if query_dict["sky_map_values"] != None and query_dict["Pixel_intensity"] == True:
