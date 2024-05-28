@@ -766,6 +766,13 @@ def Graph():
         st.session_state["Pixel_intensity"] = False
     if "Filtering" not in st.session_state:
         st.session_state["Filtering"] = False
+    if "Heatmap" not in st.session_state:
+        st.session_state["Heatmap"] = False
+    if "Conductivies" not in st.session_state:
+        st.session_state["Conductivities"] = False
+    if "Alfven_Animation" not in st.session_state:
+        st.session_state["Alfven_Animation"] = False
+
 
     st.checkbox(
         label="would you like to find the normalized difference between FAC and Pyonting flux (must select both FAC and pyonting flux centre)",
@@ -793,15 +800,80 @@ def Graph():
         st.session_state["low_pass"] = None
     if "high_pass" not in st.session_state:
         st.session_state["high_pass"] = None
+
+    if "sampling_rate" not in st.session_state:
+        st.session_state["sampling_rate"] = None
+    
+    if "Window_Length" not in st.session_state:
+        st.session_state["Window_Length"] = None
+
+
+    if "heatmap_graphs" not in st.session_state:
+        st.session_state["heatmap_graphs"] = None
+    if "conductivity_graphs" not in st.session_state:
+        st.session_state["conductivity_graphs"] = None
+    if "Alfven_Animation" not in st.session_state:
+        st.session_state["Alfven_Animation"] = None
+        
+    if "Time_Series_Graph" not in st.session_state:
+        st.session_state["Time_Series_Graph"] = None
+    if "E_Peridogram_Graph" not in st.session_state:
+        st.session_state["E_Peridogram_Graph"] = None
+    if "B_Peridogram_Graph" not in st.session_state:
+        st.session_state["B_Peridogram_Graph"] = None
+    if "E/B_Periodogram_Graph" not in st.session_state:
+        st.session_state["E/B_Periodogram_Graph"] = None
+
     if st.session_state["Filtering"] == True:
         st.select_slider(label="Please select the low pass in Hz", value=0.2, options=[0.1,0.2,0.5, 1, 2, 4], key="low_pass")
         st.select_slider(label="Please select the low pass in Hz", value=7, options=[0.5, 1, 2, 4, 6, 7, 8], key="high_pass")
+    
+    if st.session_state["E_B_ratio"] == True:
+        st.select_slider(label="Please select the running window interval (sampling rate)", value=1, options=[0.1,0.2,0.5, 1, 2], key="sampling_rate")
+        st.select_slider(label="Please select the running window length", value=4, options=[2,3,4,5,6,7,8], key="Window_Length")
+
+
+        if st.session_state["Coordinate_system"][0] == "North East Centre":
+            options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast", "EEast/BNorth"]]
+        else:
+            options=[["E_Azimuthal", "E_Polodial"], ["B_Azimuthal", "B_Polodial"], ["EAzimuthal/BPolodial", "EPolodial/BAzimuthal"]]
+
+
+        st.checkbox(label="Would you like to graph a heatmap of the event through timed (frequency versus time versus ampltiude spectra)", key="Heatmap")
+        st.checkbox(label="Would you like to graph the conductivies derived the EB ratio versus time", key="Conductivies")
+        st.checkbox(label="Would you like to create an animation of the peridograms through time", key="Alfven_Animation")
+
+        if st.session_state["Heatmap"] == True:
+            st.multiselect(label="Choose the variable in the heatmap(s)", options=sum(options, []), key="heatmap_graphs")
+
+        if st.session_state["Conductivies"] == True:
+            st.multiselect(label="Choose the polarization used for conductivies", options=options[2], key="conductivity_graphs")
+
+        if st.session_state["Alfven_Animation"] == True:
+
+            st.multiselect(label="Please select the plots in the Alfven animation", options=["Time Series", "E Periodogram", "B Periodogram", "E/B Periodogram"], key="Alfven_graphs")
+
+            if "Time Series" in st.session_state["Alfven_graphs"]:
+                print(options[:-1])
+                st.multiselect(label="Please select the time series you want to plot through", options=sum(options[:-1], []), key="Time_Series_Graph")
+
+            if "E Periodogram" in st.session_state["Alfven_graphs"]:
+                st.multiselect(label="Please select the E polarization you want to plot", options=options[0], key="E_Peridogram_Graph")
+
+            if "B Periodogram" in st.session_state["Alfven_graphs"]:
+                st.multiselect(label="Please select the B polarization you want to plot", options=options[1], key="E_Peridogram_Graph")
+
+            if "E/B Periodogram" in st.session_state["Alfven_graphs"]:
+                st.multiselect(label="Please select the E/B polarization you would like to plot", options=options[2], key="E/B_Periodogram_Graph")
+            
+        
+
 
         
 
 
 def Render_Graph(timerange):
-    parameters = [
+    parameters = [ 
         "Satellite_Graph",
         "Satellite_Graph",
         "B_options_to_use",
@@ -866,8 +938,17 @@ def Render_Graph(timerange):
         "E_B_ratio": st.session_state["E_B_ratio"],
         "Pixel_intensity": st.session_state["Pixel_intensity"],
         "sky_map_values": skymap_values,
-        "bandpass": [st.session_state["Filtering"] ,[st.session_state["low_pass"], st.session_state["high_pass"]]]
-        
+        "bandpass": [st.session_state["Filtering"] ,[st.session_state["low_pass"], st.session_state["high_pass"]]],
+        "heatmap": st.session_state["heatmap_graphs"],
+        "conductivities": st.session_state["conductivity_graphs"],
+        "animation": st.session_state["Alfven_Animation"],
+        "Time_Series":st.session_state["Time_Series_Graph"],
+        "E_periodogram": st.session_state["E_Peridogram_Graph"],
+        "B_periodogram": st.session_state["B_Peridogram_Graph"],
+        "EB_periodogram": st.session_state["E/B_Periodogram_Graph"],
+        "sampling_rate": st.session_state["sampling_rate"],
+        "window_length":st.session_state["Window_Length"]
+
     }
 
     if dict["coordinate_system"][0] == "North East Centre":
