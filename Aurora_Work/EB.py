@@ -956,6 +956,7 @@ def EBplotsNEC(query_dict):
         if (
             query_dict["graph_E_chosen"] == None
             and query_dict["graph_PF_chosen"] == None
+            and query_dict['E_B_ratio'] == False
         ):
             pass
         else:
@@ -964,6 +965,7 @@ def EBplotsNEC(query_dict):
         if (
             query_dict["graph_B_chosen"] == None
             and query_dict["graph_PF_chosen"] == None
+            and query_dict['E_B_ratio'] == False
         ):
             pass
         else:
