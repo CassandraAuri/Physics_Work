@@ -155,7 +155,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         
 
         length_of_axis=subplot_select()
-        for index in range(len(query_dict["conductivies"])):
+        for index in range(len(query_dict["conductivities"])):
             for k in range(len(query_dict["satellite_graph"])):
                 if query_dict['coordinate_system'][0] == "North East Centre": 
                     #From North East or East North, are they self similar who knows?
@@ -169,7 +169,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                         conductivies= data[k, :,  3, 0, 0] # we want zeroth frequency term of the EB ratio
                     else: #East over North
                         conductivies= data[k, :,  3, 1, 0]
-                axes[index + length_of_axis].plot(times[data[k, :, 0,4, 0]],conductivies)
+                axes[index + length_of_axis].plot(times[np.array(data[k, :, 4,0, 0], dtype=int)],1/(1.256e-6*conductivies))
 
                 
 
@@ -348,8 +348,10 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                     elif query_dict["graph_B_chosen"][i] == "E Polodial / B Azimuth":
                         index1 = 3
                         index2=  1
-
-                img = axes[i + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , data[k, 0, 0, 0, :], np.array(data[k, :, index1, index2, :]).T , shading='auto', norm=colors.LogNorm(vmin=np.array(data[k, :, index1, index2, :]).T.min()*1e2, vmax=np.array(data[k, :, index1, index2, :]).T.max()), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
+                if index1==3:
+                    img = axes[i + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , data[k, 0, 0, 0, :], np.array(data[k, :, index1, index2, :]).T , shading='auto', norm=colors.LogNorm(vmin=np.array(data[k, :, index1, index2, :]).T.min(), vmax=np.array(data[k, :, index1, index2, :]).T.max()), cmap='winter_r' ) #selects average time, frequencies, and then the periodogram 
+                else:
+                     img = axes[i + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , data[k, 0, 0, 0, :], np.array(data[k, :, index1, index2, :]).T , shading='auto', norm=colors.LogNorm(vmin=np.array(data[k, :, index1, index2, :]).T.min()*1e2, vmax=np.array(data[k, :, index1, index2, :]).T.max()), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 print(np.array(data[k, :, index1, index2, :]).T.max())
                 fig.colorbar(img, ax=axes[i+length_for_axis], extend='max')
                 axes[i + length_for_axis].set_ylabel(
