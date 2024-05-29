@@ -111,7 +111,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         ratio_EB_01 = np.sqrt((powerspec_E_0/ powerspec_B_1))
         ratio_EB_10 = np.sqrt((powerspec_E_1/ powerspec_B_0))
 
-        return np.array([[frequencies_E_0, [None] * len(frequencies_E_0)], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start/16,index_end/16], dtype=int)]*len(frequencies_B_0), [None]*len(frequencies_B_0)]]), range(index_start, index_end+1)  #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
+        return np.array([[frequencies_E_0, [None] * len(frequencies_E_0)], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start/16,index_end/16], dtype=int)]*len(frequencies_B_0), [None]*len(frequencies_B_0)]]), range(index_start, index_end)  #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
 
         
 
@@ -195,16 +195,20 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         print(axes_length, 'axes_length')
         return axes_length
 
-    def Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies, frames):
+    def Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies, frames, time_E):
         """
         Creates an animation of each window
         """
+        print(Animation_rows())
         fig_ani, axes_ani = plt.subplots(figsize=(15,10),  nrows=Animation_rows())
+        axs = np.array(axes_ani)
         def animate(i):
             """
             Wrapper for animation
             """
-            fig_ani.clear()
+
+            for ax in axs.reshape(-1):
+                ax.clear()
             def EB_Periodogram_Plot(axes_used):
                 for l, val in enumerate(query_dict["EB_periodogram"]):
                     for l, val_sat in enumerate((query_dict["satellite_graph"])):
@@ -244,25 +248,23 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                     for k in range(len(query_dict["satellite_graph"])):
                         if query_dict['coordinate_system'][0] == "North East Centre":  #Make one plot over plotted with eachother
                             if query_dict["Time_Series"][l] == 'E_North': #Make Electric field twin x axis.
-                                if twin_x_axes[l]:
+                                if twin_x_axes[k]:
                                     pass
                                 else:
-                                    twin_x=axes_ani[l].twinx()
-                                twin_x.plot(sampled_datetimes[indicies[k][i]], efield[indicies[k][i], 0])
+                                    twin_x=axes_ani[k].twinx()
+                                twin_x.plot(time_E[indicies[k][i]], efield[k][indicies[k][i], 0])
                             elif query_dict["Time_Series"][l] == "E_East":
-                                if twin_x_axes[l]:
+                                if twin_x_axes[k]:
                                     pass
                                 else:
                                     twin_x=axes_ani[l].twinx()
-                                twin_x.plot(sampled_datetimes[indicies[k][i]], efield[indicies[k][i], 1])
-
+                                twin_x.plot(time_E[indicies[k][i]], efield[k][indicies[k][i], 1])
+                            
                             elif query_dict["Time_Series"][l] == "B_East":
-                                print(np.shape(indicies))
-
-                                print(indicies[k][i])
-                                axes_ani[l].plot(sampled_datetimes[indicies[k][i]] , B_sinc[indicies[k][i], 1])
+                                axes_ani[k].plot(time_E[indicies[k][i]] , B_sinc[k][indicies[k][i], 1])
                             elif query_dict["Time_Series"][l] == "B_North":
-                                axes_ani[l].plot(sampled_datetimes[indicies[k][i]] , B_sinc[indicies[k][i], 0])             
+                                axes_ani[k].plot(time_E[indicies[k][i]] , B_sinc[k][indicies[k][i], 0])   
+                            print(np.shape(B_sinc))          
                 return len(twin_x_axes)
             
             if query_dict["Time_Series"] != None:
@@ -382,11 +384,14 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     B_sinc,B_resample = np.zeros(np.shape(efield)),np.zeros(np.shape(efield))
     indicies_total = []
     print(np.shape(bfield), np.shape(time_E), np.shape(time_B))
+    print(bfield[0])
+    print(np.shape(time_E))
     for k in range(len(query_dict["satellite_graph"])): #length of satellites
         for i in range(3):
-            B_sinc[k][:, i] =sinc_interpolation(bfield[k][:, i], time_B,time_E[k])
+            B_sinc[k][:, i] =sinc_interpolation(bfield[k][:, i], time_B,time_E)
             B_resample[k][:,i]= signal.resample(bfield[k][:, i], len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
         indicies_window=[]
+        print(B_sinc)
         for i in range(length_of_windows): #Loops through each window and at the end stops early so window length doesnt cause error
             data[k, i], indicies = Logic_for_one_step(i, k,  B_resample)
             indicies_window.append(indicies) #don't
@@ -394,7 +399,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     if query_dict["heatmap"] != None:
         graph_heatmap(data, sampled_datetimes)
     if query_dict["animation"] != False:
-        Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies_total, length_of_windows)
+        Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies_total, length_of_windows, time_E)
     if query_dict["conductivities"] != None:
         conductivities(data, sampled_datetimes)
 
