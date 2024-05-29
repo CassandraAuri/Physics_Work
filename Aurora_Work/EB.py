@@ -102,10 +102,10 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         index_start,index_end= index*16, index*16+16*window_length
         #TODO do this per space-craft and do it in the ratio desired, currently North over East
         frequencies_E_0, powerspec_E_0 = signal.periodogram(efield[index_satellite][range(index_start, index_end), 0]*1e-3, 16, window="hann",detrend='linear', scaling='spectrum')
-        frequencies_B_0, powerspec_B_0 = signal.periodogram(Bresamp[index_satellite][range(index_start, index_end), 1]*1e-9, 16, window="hann",detrend='linear', scaling='spectrum')
+        frequencies_B_0, powerspec_B_0 = signal.periodogram(Bresamp[index_satellite][range(index_start, index_end), 0]*1e-9, 16, window="hann",detrend='linear', scaling='spectrum')
 
-        frequencies_E_1, powerspec_E_1 = signal.periodogram(efield[index_satellite][range(index_start, index_end), 0]*1e-3, 16, window="hann",detrend='linear', scaling='spectrum')
-        frequencies_B_1, powerspec_B_1 = signal.periodogram(Bresamp[index_satellite][range(index_start, index_end), 1]*1e-9, 16, window="hann",detrend='linear', scaling='spectrum')
+        frequencies_E_1, powerspec_E_1 = signal.periodogram(efield[index_satellite][range(index_start, index_end), 1]*1e-3, 16, window="hann",detrend='linear', scaling='spectrum')
+        frequencies_B_1, powerspec_B_1 = signal.periodogram(Bresamp[index_satellite][range(index_start, index_end),1]*1e-9, 16, window="hann",detrend='linear', scaling='spectrum')
 
 
         ratio_EB_01 = np.sqrt((powerspec_E_0/ powerspec_B_1))
@@ -181,25 +181,30 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     def Animation_rows():
         #TODO Creates an animation of times series of deviations E and B, plot periodograms, plot E/B ratio for given, and what polarization or coordinate should be graphed for each plot
         axes_length=0
-        query_dict_selected = [ query_dict["E_periodogram"], query_dict["B_peridogram"], query_dict["EB_periodogram"]]
+        query_dict_selected = [ query_dict["E_periodogram"], query_dict["B_periodogram"], query_dict["EB_periodogram"]]
+        print(query_dict_selected)
         if query_dict["Time_Series"] != None:
-            query_dict_selected = query_dict_selected.append([True] *len(query_dict["satellite_graph"])) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
+            query_dict_selected.append([True] *len(query_dict["satellite_graph"])) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
         else:
-            query_dict_selected = [query_dict["E_periodogram"], query_dict["B_peridogram"], query_dict["EB_periodogram"]]
+            pass
+        print(query_dict_selected)
         for key in query_dict_selected:
+            print(key)
             if key != None:
                 axes_length += 1
+        print(axes_length, 'axes_length')
         return axes_length
 
     def Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies, frames):
         """
         Creates an animation of each window
         """
-        fig_ani, axes_ani = plt.subplots(fig_size=(15,10),  nrows=Animation_rows())
+        fig_ani, axes_ani = plt.subplots(figsize=(15,10),  nrows=Animation_rows())
         def animate(i):
             """
             Wrapper for animation
             """
+            fig_ani.clear()
             def EB_Periodogram_Plot(axes_used):
                 for l, val in enumerate(query_dict["EB_periodogram"]):
                     for l, val_sat in enumerate((query_dict["satellite_graph"])):
@@ -214,9 +219,9 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                 for l, val in enumerate(query_dict["B_periodogram"]):
                     for l, val_sat in enumerate((query_dict["satellite_graph"])):
                         if val == 'B_North':
-                            index=1
-                        else:
                             index=0
+                        else:
+                            index=1
                         axes_ani[axes_used + l ].plot(data[k, i, 0, 0, : ], data[k, i, 2,index, :], label=val_sat) #Frequencies E's
                     axes_ani[axes_used + l ].set_ylabel(str(val) + "nT")
                 return  axes_used + len(query_dict["B_periodogram"])
@@ -225,9 +230,9 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                 for l, val in enumerate(query_dict["E_periodogram"]):
                     for l, val_sat in enumerate((query_dict["satellite_graph"])):
                         if val == 'E_North':
-                            index=1
-                        else:
                             index=0
+                        else:
+                            index=1
                         axes_ani[axes_used + l ].plot(data[k, i, 0, 0, : ], data[k, i, 1,index, :], label=val_sat) #Frequencies E's
                     axes_ani[axes_used + l ].set_ylabel(str(val) + "mV/m")
                 return  axes_used + len(query_dict["E_periodogram"])
@@ -252,6 +257,9 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                                 twin_x.plot(sampled_datetimes[indicies[k][i]], efield[indicies[k][i], 1])
 
                             elif query_dict["Time_Series"][l] == "B_East":
+                                print(np.shape(indicies))
+
+                                print(indicies[k][i])
                                 axes_ani[l].plot(sampled_datetimes[indicies[k][i]] , B_sinc[indicies[k][i], 1])
                             elif query_dict["Time_Series"][l] == "B_North":
                                 axes_ani[l].plot(sampled_datetimes[indicies[k][i]] , B_sinc[indicies[k][i], 0])             
@@ -349,7 +357,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                         index1 = 3
                         index2=  1
                 if index1==3:
-                    img = axes[i + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , data[k, 0, 0, 0, :], np.array(data[k, :, index1, index2, :]).T , shading='auto', norm=colors.LogNorm(vmin=np.array(data[k, :, index1, index2, :]).T.min(), vmax=np.array(data[k, :, index1, index2, :]).T.max()), cmap='winter_r' ) #selects average time, frequencies, and then the periodogram 
+                    img = axes[i + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , data[k, 0, 0, 0, :], np.array(data[k, :, index1, index2, :]).T , shading='auto', norm=colors.LogNorm(vmin=np.array(data[k, :, index1, index2, :]).T.min(), vmax=np.array(data[k, :, index1, index2, :]).T.max()*1e-1), cmap='winter_r' ) #selects average time, frequencies, and then the periodogram 
                 else:
                      img = axes[i + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , data[k, 0, 0, 0, :], np.array(data[k, :, index1, index2, :]).T , shading='auto', norm=colors.LogNorm(vmin=np.array(data[k, :, index1, index2, :]).T.min()*1e2, vmax=np.array(data[k, :, index1, index2, :]).T.max()), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 print(np.array(data[k, :, index1, index2, :]).T.max())
@@ -386,7 +394,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     if query_dict["heatmap"] != None:
         graph_heatmap(data, sampled_datetimes)
     if query_dict["animation"] != False:
-        Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies, length_of_windows)
+        Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies_total, length_of_windows)
     if query_dict["conductivities"] != None:
         conductivities(data, sampled_datetimes)
 
@@ -560,7 +568,8 @@ def EBplotsNEC(query_dict):
             df = []
         return df
 
-    def graphingE(label, arrayx, arrayy):
+    def graphingE(label, arrayx, arrayy, arraybandy, satelliteindex):
+        colors = ["C0", "C1", "C2", "C3", "C4", "C5"]
         for i in range(len(query_dict["graph_E_chosen"])):
 
             if query_dict["coordinate_system"][0] == "North East Centre":
@@ -580,14 +589,22 @@ def EBplotsNEC(query_dict):
                 elif query_dict["graph_E_chosen"][i] == "Mean-field":
                     index = 2
 
-            axes[i].plot(arrayx, arrayy[:, index], label=label)
+            axes[i].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex])
             axes[i].set_ylabel(
                 r"$E_{{{}}}$ $(mV/m)$".format(query_dict["graph_E_chosen"][i])
             )
             axes[i].legend(loc=2)
             axes[i].set_xlim((time_range[0], time_range[1]))
+            if query_dict["bandpass"][0] == True:
+                axes_twin_i=axes[i].twinx()
+                axes_twin_i.plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3])
+                axes_twin_i.set_ylabel(
+                r"$E_{{{}}}$ bandpassed $(mV/m)$".format(query_dict["graph_E_chosen"][i])
+            )
+                axes_twin_i.legend(loc=1)
 
-    def graphingB(label, arrayx, arrayy):
+    def graphingB(label, arrayx, arrayy, arraybandy, satelliteindex):
+        colors = ["C0", "C1", "C2", "C3", "C4", "C5"]
         if query_dict["graph_E_chosen"] != None:
             length_for_axis = len(query_dict["graph_E_chosen"])
         else:
@@ -607,16 +624,24 @@ def EBplotsNEC(query_dict):
                     index = 1
                 elif query_dict["graph_B_chosen"][i] == "Mean-field":
                     index = 2
-            axes[i + length_for_axis].plot(arrayx, arrayy[:, index], label=label)
+            axes[i + length_for_axis].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex])
             axes[i + length_for_axis].legend(loc=2)
             axes[i + length_for_axis].set_ylabel(
                 r"$B_{{{}}}$".format(query_dict["graph_B_chosen"][i]) + " (nT) "
             )
             axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
+            if query_dict["bandpass"][0] == True:
+                axes_twin_i=axes[i + length_for_axis].twinx()
+                axes_twin_i.plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3])
+                axes_twin_i.set_ylabel(
+                r"$B_{{{}}}$ bandpassed $(nT)$".format(query_dict["graph_B_chosen"][i])
+            )
+                axes_twin_i.legend(loc=1)
 
-    def graphingFlux(label, arrayx, arrayy):
+    def graphingFlux(label, arrayx, arrayy, index_band, satelliteindex):
         length_for_axis = 0
         # because python starts index at 0
+        colors = ["C0", "C1", "C2", "C3", "C4", "C5"]
         try:
             length_for_axis += len(query_dict["graph_E_chosen"])
         except TypeError:
@@ -641,23 +666,39 @@ def EBplotsNEC(query_dict):
                 elif query_dict["graph_PF_chosen"][i] == "Mean-field":
                     index = 2
             try:
-                axes[i + length_for_axis].plot(arrayx, arrayy[index], label=label)
+                if index_band==0:
+                    p1,=axes[i + length_for_axis].plot(arrayx, arrayy[index], label=label, color=colors[satelliteindex])
 
-                axes[i + length_for_axis].set_ylabel(
-                    r"$S_{{{}}}$".format(query_dict["graph_PF_chosen"][i])
-                    + r" $mW m^{-2}$"
-                )
-                axes[i + length_for_axis].legend(loc=2)
-                axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
+                    axes[i + length_for_axis].set_ylabel(
+                        r"$S_{{{}}}$".format(query_dict["graph_PF_chosen"][i])
+                        + r" $mW m^{-2}$"
+                    )
+                    axes[i + length_for_axis].legend(loc=2)
+                    axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
+                else:
+
+                    twinx=axes[i+length_for_axis].twinx()
+                    twinx.plot(arrayx,arrayy[index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3])
+                    twinx.legend(loc=1)
+
+
             except TypeError:
-
-                axes.plot(arrayx, arrayy[index], label=label)
-                axes.set_ylabel(
-                    r"$S_{{{}}}$".format(query_dict["graph_PF_chosen"][i])
+                if index_band==0:
+                    axes.plot(arrayx, arrayy[index], label="".join([label, "bandpassed"]), color=colors[satelliteindex])
+                    axes.set_ylabel(
+                        r"$S_{{{}}}$".format(query_dict["graph_PF_chosen"][i])
+                        + r" $mW m^{-2}$"
+                    )
+                    axes.legend(loc=2)
+                    axes.set_xlim((time_range[0], time_range[1]))
+                else:
+                    twinx=axes.twinx()
+                    twinx.plot(arrayx,arrayy[index], label="".join([label, "bandpassed"]),  colors=colors[satelliteindex+3])
+                    twinx.legend(loc=1)
+                    twinx.set_ylabel(
+                    r"$S_{{{}}}$ bandpassed".format(query_dict["graph_PF_chosen"][i])
                     + r" $mW m^{-2}$"
                 )
-                axes.legend(loc=2)
-                axes.set_xlim((time_range[0], time_range[1]))
 
     def graphingF(label, arrayx, arrayy):
         length_for_axis = 0
@@ -761,7 +802,8 @@ def EBplotsNEC(query_dict):
 
     def requesterarraylogic():
         def E():
-            return_data = []
+            return_data_non_band = []
+            return_data_band =[]
             returned_times = []
             satellites_with_E = []
             times_for_flux = []
@@ -776,6 +818,7 @@ def EBplotsNEC(query_dict):
                 if len(dsE) != 0:  # checks if empty
                     # Checks if space-craft is selected
                     if "".join(("swarm", dsE["Spacecraft"][0].lower())) in labels:
+                        print(has_E, dsE["Spacecraft"][0].lower())
                         has_E.append(True)
                         satellites_with_E.append(
                             "".join(("swarm", dsE["Spacecraft"][0].lower()))
@@ -786,10 +829,10 @@ def EBplotsNEC(query_dict):
                         Electric = dsE[measurements[1][1]].to_numpy()  # Electric field in satellite coordinates
                         ElectricNEC = np.multiply(velocity_unit, Electric)  # transforms satellite coordinates into NEC
 
-
+                        ElectricNECbandpass=np.zeros(np.shape(ElectricNEC))
                         if query_dict["bandpass"][0] == True:
                             for l in range(3):  # moving average of bres for all three components
-                                ElectricNEC[:, l] = butter_bandpass_filter(data=ElectricNEC[:, l], cutoffs=query_dict["bandpass"][1], fs=16)
+                                ElectricNECbandpass[:, l] = butter_bandpass_filter(data=ElectricNEC[:, l], cutoffs=query_dict["bandpass"][1], fs=16)
 
 
                             
@@ -830,18 +873,23 @@ def EBplotsNEC(query_dict):
                             r_nec = Coordinate_change(latitude, longitude, radius) #Changes coordinates of r to NEC
                           
                             ElectricData = MFA(ElectricNEC, meanfield, r_nec.T) #puts data into MFA coordinate system
+                            ElectricNECbandpass = MFA(ElectricNECbandpass, meanfield, r_nec.T)
                         else:
                             ElectricData = ElectricNEC
 
                         # Plots electric field time seres
+                        print(sum(has_E)-1, 'E length')
                         if query_dict["graph_E_chosen"] != None:
                             graphingE(
                                 "".join(("Swarm ", dsE["Spacecraft"][0])),
                                 dsE.index.to_numpy(),
                                 ElectricData,
+                                ElectricNECbandpass,
+                                sum(has_E)-1 #finds the amounts of trues in has_E then -'s by 1 to make it start at -1, this is so the color is the same as B and flux
                             )
                         # For ponyting flux
-                        return_data.append(ElectricData)
+                        return_data_band.append(ElectricNECbandpass)
+                        return_data_non_band.append(ElectricData)
                         returned_times = dsE.index.to_numpy()  # Times for plot
 
                     else:
@@ -850,10 +898,11 @@ def EBplotsNEC(query_dict):
                 else:  # Says theres no E component
                     has_E.append(False)
 
-            return return_data, times_for_flux, returned_times, satellites_with_E
+            return return_data_non_band, return_data_band, times_for_flux, returned_times, satellites_with_E
 
         def B():
-            return_data = []
+            return_data_non_band = []
+            return_data_band =[]
             time_array=[]
             # Goes through every satellite selected
             for i in range(len(query_dict["satellite_graph"])):
@@ -893,10 +942,10 @@ def EBplotsNEC(query_dict):
                     bmodelarranged = arrangement(time, bmodel_actual, 3)
 
                     bresarranged = np.subtract(barranged, bmodelarranged)
-
+                    bresarrangedband=np.zeros(np.shape(bresarranged))
                     if query_dict["bandpass"][0] == True:
                         for l in range(3):  # moving average of bres for all three components
-                            bresarranged[:, l] = butter_bandpass_filter(bresarranged[:, l], query_dict["bandpass"][1], 50)
+                            bresarrangedband[:, l] = butter_bandpass_filter(bresarranged[:, l], query_dict["bandpass"][1], 50)
                     
 
                     ##TODO Add MFA
@@ -904,21 +953,26 @@ def EBplotsNEC(query_dict):
                         latitude, longitude, radius = ds['Latitude'].to_numpy(), ds['Longitude'].to_numpy(),  ds["Radius"].to_numpy()  # Gets Emphermis data
                         r_nec = Coordinate_change(latitude, longitude, radius) #Changes coordinates of r to NEC
                         Bdata = MFA(bresarranged, bmodelarranged, r_nec.T) #puts data into MFA coordinate system
+                        Bdataband =MFA(bresarrangedband, bmodelarranged,r_nec.T)
                     else:
                         Bdata = bresarranged
-
+                        Bdataband = bresarrangedband
+                    print(i, "bcall")
                     if query_dict["graph_B_chosen"] != None: #plots if selected
                         graphingB(
                             "".join(("Swarm ", dsmodel_res["Spacecraft"][0])),
                             time,
                             Bdata,
+                            Bdataband,
+                            i
                         )
 
-                    if (query_dict["graph_PF_chosen"] != None and has_E[j] == True):  # only needs to pass data back if we need to look at pyonting flux E cross B
-                        return_data.append(Bdata)
+
+                    return_data_non_band.append(Bdata)
+                    return_data_band.append(Bdataband)
             else:
                 pass
-            return return_data, time
+            return return_data_non_band,return_data_band, time
 
         def F(space_craft_with_E=["swarma", "swarmb", "swarmc"]):
             data_return = []
@@ -961,7 +1015,7 @@ def EBplotsNEC(query_dict):
             pass
         else:
             # E field, indexs of B for time, times for plotting flux
-            efield, times_for_b, time_E, space_craft_with_E = E()
+            efield_nonband, efield_band, times_for_b, time_E, space_craft_with_E = E()
         if (
             query_dict["graph_B_chosen"] == None
             and query_dict["graph_PF_chosen"] == None
@@ -969,7 +1023,7 @@ def EBplotsNEC(query_dict):
         ):
             pass
         else:
-            bfield,time_B = B()
+            bfield_non_band, bfield_band, time_B = B()
 
         if query_dict["FAC"] == True:
             try:
@@ -978,24 +1032,28 @@ def EBplotsNEC(query_dict):
                 FAC_data, Low = F()
 
 
-        def pontying_flux():  # Take rough estimate by doing N cross E to get C poynting flux
+        def pontying_flux(efieldband,efieldnonband, bfieldband,bfieldnonband):  # Take rough estimate by doing N cross E to get C poynting flux
             return_data = []
-            
-            for i in range(len(efield)):
-                eflux = efield[i]
-                bflux=np.empty(np.shape(eflux))
+            looping_list=[[efieldnonband, bfieldnonband], [efieldband, bfieldband]]
+            for k in range(2):
+                efield=looping_list[k][0]
+                bfield=looping_list[k][1]
+                print(k)
+                for i in range(len(efield)):
+                    eflux = efield[i]
+                    bflux=np.empty(np.shape(eflux))
 
-                for l in range(3):
+                    for l in range(3):
+                        print(np.shape(bfield[i][:,l]), np.shape(time_B), np.shape(time_E))
+                        bflux[:,l] = sinc_interpolation(x=bfield[i][:,l], s=time_B, u=time_E)
 
-                    bflux[:,l] = sinc_interpolation(x=bfield[i][:,l], s=time_B, u=time_E)
+                    flux = np.cross(eflux * 1e-3, bflux * 1e-9) * 1.256e6*1e3
+                    flux_individual = np.transpose(flux)
 
-                flux = np.cross(eflux * 1e-3, bflux * 1e-9) * 1.256e6*1e3
-                flux_individual = np.transpose(flux)
-
-                graphingFlux(space_craft_with_E[i], time_E, flux_individual)
-                return_data.append(
-                    [space_craft_with_E[i], time_E, flux_individual[2]]
-                )
+                    graphingFlux(space_craft_with_E[i], time_E, flux_individual, k, i)
+                    return_data.append(
+                        [space_craft_with_E[i], time_E, flux_individual[2]]
+                    )
             return return_data
 
         def Difference_plots(flux, fac):
@@ -1205,7 +1263,7 @@ def EBplotsNEC(query_dict):
         if query_dict["graph_PF_chosen"] == None:
             pass
         else:
-            flux = pontying_flux()
+            flux = pontying_flux(efield_band,efield_nonband, bfield_band,bfield_non_band)
         try:
             if query_dict["Difference"] == True:
                 Difference_plots(flux, FAC_data)
@@ -1214,7 +1272,12 @@ def EBplotsNEC(query_dict):
 
         ##TODO Implement ratio
         if query_dict["E_B_ratio"] == True:
-            pass
+            if query_dict["bandpass"][0] == True:
+                efield = efield_band
+                bfield = bfield_band
+            else:
+                efield = efield_nonband
+                bfield = bfield_non_band
             Graphing_Ratio(
                 space_craft_with_E, efield, bfield, time_E, time_B, query_dict, fig, axes
             )

@@ -612,7 +612,7 @@ def Animation(timerange):
                     fig, Update, frames=n
                 )  # Creates animation
                 FFwriter = animation.FFMpegWriter(fps=2)  # Writes to mp4
-                lin_ani.save("animation.mp4", writer=FFwriter)
+                lin_ani.save("animationgraph.mp4", writer=FFwriter)
 
             animation_strings = graphing_animation(Animation_dict)
 
@@ -641,9 +641,9 @@ def Animation(timerange):
                 combined = clips_array([[clip1, clip2, clip3]])
             else:
                 combined = clips_array([[clip1, clip2], [clip3, clip4]])
-            if "Graph" in st.session_state:
+            if "Graph" in st.session_state and st.session_state["animation"] != True:
                 Animate_graph()
-                clip_graph = VideoFileClip("animation.mp4")
+                clip_graph = VideoFileClip("animationgraph.mp4")
                 if clip3 == None and clip2 == None and clip4 == None:
                     combined = clips_array([[clip1, clip_graph]])
                 elif clip4 == None and clip3 == None:
@@ -654,6 +654,22 @@ def Animation(timerange):
                     combined = clips_array(
                         [[clip1, clip2], [clip3, clip4], [clip_graph, clip_graph]]
                     )
+            if "Graph" in st.session_state and st.session_state["animation"] == True:
+                Animate_graph()
+                clip_graph = VideoFileClip("animationgraph.mp4")
+                alfven_graph = VideoFileClip("animationAlfven.mp4")
+                if clip3 == None and clip2 == None and clip4 == None:
+                    combined = clips_array([[clip1, clip_graph, alfven_graph]])
+                elif clip4 == None and clip3 == None:
+                    combined = clips_array([[clip1, clip2] [alfven_graph, clip_graph]])
+                elif clip4 == None:
+                    combined = clips_array([[clip1, clip2], [clip3, clip_graph], [clip_graph, alfven_graph]])
+                else:
+                    combined = clips_array(
+                        [[clip1, clip2], [clip3, clip4], [alfven_graph, clip_graph]]
+                    )
+
+                
 
             combined.write_videofile("animation_display.mp4")
             st.video("animation_display.mp4")
@@ -826,11 +842,11 @@ def Graph():
 
     if st.session_state["Filtering"] == True:
         st.select_slider(label="Please select the low pass in Hz", value=0.2, options=[0.1,0.2,0.5, 1, 2, 4], key="low_pass")
-        st.select_slider(label="Please select the low pass in Hz", value=7, options=[0.5, 1, 2, 4, 6, 7, 8], key="high_pass")
+        st.select_slider(label="Please select the low pass in Hz", value=7, options=[0.5, 1, 2, 4, 6, 7, 7.9], key="high_pass")
     
     if st.session_state["E_B_ratio"] == True:
         st.select_slider(label="Please select the running window interval (sampling rate)", value=1, options=[0.1,0.2,0.5, 1, 2], key="sampling_rate")
-        st.select_slider(label="Please select the running window length", value=4, options=[2,3,4,5,6,7,8], key="Window_Length")
+        st.select_slider(label="Please select the running window length", value=4, options=[2,3,4,5,6,7,7.9], key="Window_Length")
 
 
         if st.session_state["Coordinate_system"][0] == "North East Centre":
@@ -861,7 +877,7 @@ def Graph():
                 st.multiselect(label="Please select the E polarization you want to plot", options=options[0], key="E_Peridogram_Graph")
 
             if "B Periodogram" in st.session_state["Alfven_graphs"]:
-                st.multiselect(label="Please select the B polarization you want to plot", options=options[1], key="E_Peridogram_Graph")
+                st.multiselect(label="Please select the B polarization you want to plot", options=options[1], key="B_Peridogram_Graph")
 
             if "E/B Periodogram" in st.session_state["Alfven_graphs"]:
                 st.multiselect(label="Please select the E/B polarization you would like to plot", options=options[2], key="E/B_Periodogram_Graph")
