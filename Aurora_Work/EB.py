@@ -109,7 +109,9 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
 
 
         ratio_EB_01 = np.sqrt((powerspec_E_0/ powerspec_B_1))
+        print(powerspec_E_0, 'E North')
         ratio_EB_10 = np.sqrt((powerspec_E_1/ powerspec_B_0))
+        print(powerspec_E_1, 'E East')
 
         return np.array([[frequencies_E_0, [None] * len(frequencies_E_0)], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start/16,index_end/16], dtype=int)]*len(frequencies_B_0), [None]*len(frequencies_B_0)]]), range(index_start, index_end)  #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
 
@@ -150,7 +152,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                 except TypeError:
                     raise ValueError("Sky Map not Selected")
             if query_dict["heatmap"] != None:
-                length_for_axis += len(query_dict["heatmap"])
+                length_for_axis += len(query_dict["heatmap"])*len(query_dict["satellite_graph"])
             return length_for_axis
         
 
@@ -159,7 +161,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
             for k in range(len(query_dict["satellite_graph"])):
                 if query_dict['coordinate_system'][0] == "North East Centre": 
                     #From North East or East North, are they self similar who knows?
-                    if query_dict["conductivities"][index] == "North over East":
+                    if query_dict["conductivities"][index] == "ENorth/BEast":
                         conductivies= data[k, :,  3, 0, 0] # we want zeroth frequency term of the EB ratio
                     else: #East over North
                         conductivies= data[k, :,  3, 1, 0]
@@ -169,7 +171,10 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                         conductivies= data[k, :,  3, 0, 0] # we want zeroth frequency term of the EB ratio
                     else: #East over North
                         conductivies= data[k, :,  3, 1, 0]
-                axes[index + length_of_axis].plot(times[np.array(data[k, :, 4,0, 0], dtype=int)],1/(1.256e-6*conductivies))
+                axes[index + length_of_axis].plot(times[np.array(data[k, :, 4,0, 0], dtype=int)],1/(1.256e-6*conductivies), label= "".join([query_dict["satellite_graph"][k], " " ,query_dict["conductivities"][index]]))
+                axes [index + length_of_axis].set_ylabel("Conductivties (S)")
+                axes[ index + length_of_axis].set_title("Conductivity versus time")
+                axes[ index + length_of_axis].legend()
 
                 
 
@@ -181,10 +186,16 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     def Animation_rows():
         #TODO Creates an animation of times series of deviations E and B, plot periodograms, plot E/B ratio for given, and what polarization or coordinate should be graphed for each plot
         axes_length=0
-        query_dict_selected = [ query_dict["E_periodogram"], query_dict["B_periodogram"], query_dict["EB_periodogram"]]
+        query_dict_selected = [ query_dict["E_periodogram"], query_dict["B_periodogram"]]
         print(query_dict_selected)
         if query_dict["Time_Series"] != None:
-            query_dict_selected.append([True] *len(query_dict["satellite_graph"])) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
+            for i in range(len(query_dict["satellite_graph"])):
+                query_dict_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
+        else:
+            pass
+        if query_dict["EB_periodogram"] != None:
+            for i in range(len(query_dict["satellite_graph"])):
+                query_dict_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
         else:
             pass
         print(query_dict_selected)
@@ -200,8 +211,10 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         Creates an animation of each window
         """
         print(Animation_rows())
-        fig_ani, axes_ani = plt.subplots(figsize=(15,10),  nrows=Animation_rows())
+        fig_ani, axes_ani = plt.subplots(figsize=(10,15),  nrows=Animation_rows(), constrained_layout=True)
         axs = np.array(axes_ani)
+        if query_dict["Time_Series"] != None:
+            twin_x_axes=[axes_ani[k].twinx() for k in range(len(query_dict["satellite_graph"]))]
         def animate(i):
             """
             Wrapper for animation
@@ -210,75 +223,105 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
             for ax in axs.reshape(-1):
                 ax.clear()
             def EB_Periodogram_Plot(axes_used):
-                for l, val in enumerate(query_dict["EB_periodogram"]):
-                    for l, val_sat in enumerate((query_dict["satellite_graph"])):
-                        if val == 'ENorth, BEast':
-                            index=0
-                        else:
-                            index=1
-                        axes_ani[axes_used + l ].plot(data[k, i, 0, 0, : ], data[k, i, 4,index, :], label=val_sat) #Frequencies E's
-                    axes_ani[axes_used + l ].set_ylabel(str(val) + "m/s")
+                try:
+                    for l, val in enumerate(query_dict["EB_periodogram"]):
+                        for k, val_sat in enumerate((query_dict["satellite_graph"])):
+                            if val == 'ENorth/BEast':
+                                index=0
+                            else:
+                                index=1
+                            axes_ani[axes_used + k ].plot(data[k, i, 0, 0, : ], data[k, i, 3,index, :], label=val) #Frequencies E's
+                            axes_ani[axes_used + k ].set_ylabel(f" E over B ratio of {val_sat} m/s ")
+                            axes_ani[axes_used + k ].legend()
+                            axes_ani[axes_used + k ].set_yscale("log")
+                except TypeError:
+                    for l, val in enumerate(query_dict["EB_periodogram"]):
+                        for k, val_sat in enumerate((query_dict["satellite_graph"])):
+                            if val == 'ENorth/BEast':
+                                index=0
+                            else:
+                                index=1
+                            axes_ani.plot(data[k, i, 0, 0, : ], data[k, i, 3,index, :], label=val_sat) #Frequencies E's
+                        axes_ani.set_ylabel(str(val) + " m/s ")
+                        axes_ani.legend()
+                        axes_ani.set_yscale("log")
 
             def B_Periodogram_Plot(axes_used):
                 for l, val in enumerate(query_dict["B_periodogram"]):
-                    for l, val_sat in enumerate((query_dict["satellite_graph"])):
+                    for k, val_sat in enumerate((query_dict["satellite_graph"])):
                         if val == 'B_North':
                             index=0
                         else:
                             index=1
-                        axes_ani[axes_used + l ].plot(data[k, i, 0, 0, : ], data[k, i, 2,index, :], label=val_sat) #Frequencies E's
-                    axes_ani[axes_used + l ].set_ylabel(str(val) + "nT")
+                        axes_ani[axes_used + l ].plot(data[k, i, 0, 0, : ], data[k, i, 2,index, :]*1e9, label=val_sat) #Frequencies E's
+                    axes_ani[axes_used + l ].set_ylabel(str(val) + " nT ")
+                    axes_ani[axes_used + l ].legend()
+                    axes_ani[axes_used + l ].set_yscale("log")
                 return  axes_used + len(query_dict["B_periodogram"])
 
             def E_Periodogram_Plot(axes_used):
                 for l, val in enumerate(query_dict["E_periodogram"]):
-                    for l, val_sat in enumerate((query_dict["satellite_graph"])):
+                    for k, val_sat in enumerate((query_dict["satellite_graph"])):
                         if val == 'E_North':
                             index=0
                         else:
                             index=1
-                        axes_ani[axes_used + l ].plot(data[k, i, 0, 0, : ], data[k, i, 1,index, :], label=val_sat) #Frequencies E's
-                    axes_ani[axes_used + l ].set_ylabel(str(val) + "mV/m")
+                        axes_ani[axes_used + l ].plot(data[k, i, 0, 0, : ], data[k, i, 1,index, :]*1e3, label=val_sat) #Frequencies E's
+                    axes_ani[axes_used + l ].set_ylabel(str(val) + " mV/m ")
+                    axes_ani[axes_used + l ].legend()
+                    axes_ani[axes_used + l ].set_yscale("log")
                 return  axes_used + len(query_dict["E_periodogram"])
             
 
             def Time_Series_plot():
-                twin_x_axes=[None]*len(query_dict["satellite_graph"]) #There are n number of axises that are contained for the time series
-                for l in range(len(query_dict["Time_Series"])):
-                    for k in range(len(query_dict["satellite_graph"])):
+                colors = ["C0", "C1", "C2", "C3", "C4", "C5", "C6"]
+                #There are n number of axises that are contained for the time series
+                for k in range(len(query_dict["satellite_graph"])):
+                    axes_ani[k].set_title("".join(["Swarm ", query_dict["satellite_graph"][k]]))
+                    twin_x_axes[k].clear()
+                    twin_x_axes[k].yaxis.set_label_position("right")
+                    for l in range(len(query_dict["Time_Series"])):
                         if query_dict['coordinate_system'][0] == "North East Centre":  #Make one plot over plotted with eachother
                             if query_dict["Time_Series"][l] == 'E_North': #Make Electric field twin x axis.
-                                if twin_x_axes[k]:
-                                    pass
-                                else:
-                                    twin_x=axes_ani[k].twinx()
-                                twin_x.plot(time_E[indicies[k][i]], efield[k][indicies[k][i], 0])
+                                twin_x_axes[k].plot(time_E[indicies[k][i]], efield[k][indicies[k][i], 0], color=colors[k+3], label='E North')
+                                twin_x_axes[k].set_ylabel("E (mV/m)")
+
                             elif query_dict["Time_Series"][l] == "E_East":
-                                if twin_x_axes[k]:
-                                    pass
-                                else:
-                                    twin_x=axes_ani[l].twinx()
-                                twin_x.plot(time_E[indicies[k][i]], efield[k][indicies[k][i], 1])
-                            
+                                
+                                twin_x_axes[k].plot(time_E[indicies[k][i]], efield[k][indicies[k][i], 1], color=colors[k+4], label='E East')
+                                twin_x_axes[k].set_ylabel("E (mV/m)")
+                                
                             elif query_dict["Time_Series"][l] == "B_East":
-                                axes_ani[k].plot(time_E[indicies[k][i]] , B_sinc[k][indicies[k][i], 1])
+                                axes_ani[k].plot(time_E[indicies[k][i]] , B_sinc[k][indicies[k][i], 1], color=colors[k], label= 'B East')
+                                axes_ani[k].set_ylabel("B (nT)")
+                                pass
+                                
                             elif query_dict["Time_Series"][l] == "B_North":
-                                axes_ani[k].plot(time_E[indicies[k][i]] , B_sinc[k][indicies[k][i], 0])   
-                            print(np.shape(B_sinc))          
+                                axes_ani[k].plot(time_E[indicies[k][i]] , B_sinc[k][indicies[k][i], 0], color=colors[k+1] , label='B North') 
+                                axes_ani[k].set_ylabel("B(nT)")
+                    axes_ani[k].legend(loc=2)
+                    twin_x_axes[k].legend(loc=1)
+
+
+                
                 return len(twin_x_axes)
-            
+            axes_used=0
             if query_dict["Time_Series"] != None:
                 axes_used=Time_Series_plot()
+                print(axes_used, 'axestime')
             if query_dict["E_periodogram"] != None:
                 axes_used = E_Periodogram_Plot(axes_used) 
+                print(axes_used, 'axesE')
             if query_dict["B_periodogram"] != None:
                 axes_used = B_Periodogram_Plot(axes_used)
+                print(axes_used, 'axesB')
             if query_dict["EB_periodogram"] != None:
                 EB_Periodogram_Plot(axes_used)
+                print('EB_Periodogram_Plot')
             return
 
         ani = animation.FuncAnimation(fig=fig_ani, func=animate, frames=frames) #What
-        FFwriter = animation.FFMpegWriter(fps=int(2*sampling_rate_seconds))  #TODO given the framerate of 2 frames per second, which is equivalent to 6 seconds imager time = 1 second animation time, calculate the number of windows inbetween given a set step size
+        FFwriter = animation.FFMpegWriter(fps=int(6*sampling_rate_seconds))  #TODO given the framerate of 2 frames per second, which is equivalent to 6 seconds imager time = 1 second animation time, calculate the number of windows inbetween given a set step size
         ani.save("animationAlfven.mp4", writer=FFwriter)
         
         return 
@@ -340,35 +383,38 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                         index1 = 3
                         index2=  1
                 else:
-                    if query_dict["graph_B_chosen"][i] == "E_Azimuth":
+                    if query_dict["heatmap"][i] == "E_Azimuth":
                         index1 = 1
                         index2=  0
-                    elif query_dict["graph_B_chosen"][i] == "E_Polodial":
+                    elif query_dict["heatmap"][i] == "E_Polodial":
                         index1 = 1
                         index2=  1
-                    elif query_dict["graph_B_chosen"][i] == "B_Azimuth":
+                    elif query_dict["heatmap"][i] == "B_Azimuth":
                         index1 = 2
                         index2=  0
-                    elif query_dict["graph_B_chosen"][i] == "B_Polodial":
+                    elif query_dict["heatmap"][i] == "B_Polodial":
                         index1 = 2
                         index2=  1
-                    elif query_dict["graph_B_chosen"][i] == "E Azimuth / B Polodial":
+                    elif query_dict["heatmap"][i] == "E Azimuth / B Polodial":
                         index1 = 3
                         index2=  0
-                    elif query_dict["graph_B_chosen"][i] == "E Polodial / B Azimuth":
+                    elif query_dict["heatmap"][i] == "E Polodial / B Azimuth":
                         index1 = 3
                         index2=  1
                 if index1==3:
-                    img = axes[i + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , data[k, 0, 0, 0, :], np.array(data[k, :, index1, index2, :]).T , shading='auto', norm=colors.LogNorm(vmin=np.array(data[k, :, index1, index2, :]).T.min(), vmax=np.array(data[k, :, index1, index2, :]).T.max()*1e-1), cmap='winter_r' ) #selects average time, frequencies, and then the periodogram 
+                    img = axes[2*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , data[k, 0, 0, 0, :], np.array(data[k, :, index1, index2, :]).T , shading='auto', norm=colors.LogNorm(vmin=np.array(data[k, :, index1, index2, :]).T.min(), vmax=np.array(data[k, :, index1, index2, :]).T.max()*1e-1), cmap='winter_r' ) #selects average time, frequencies, and then the periodogram 
                 else:
-                     img = axes[i + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , data[k, 0, 0, 0, :], np.array(data[k, :, index1, index2, :]).T , shading='auto', norm=colors.LogNorm(vmin=np.array(data[k, :, index1, index2, :]).T.min()*1e2, vmax=np.array(data[k, :, index1, index2, :]).T.max()), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
-                print(np.array(data[k, :, index1, index2, :]).T.max())
-                fig.colorbar(img, ax=axes[i+length_for_axis], extend='max')
-                axes[i + length_for_axis].set_ylabel(
+                     img = axes[2*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , data[k, 0, 0, 0, :], np.array(data[k, :, index1, index2, :]).T , shading='auto', norm=colors.LogNorm(vmin=np.array(data[k, :, index1, index2, :]).T.min()*1e2, vmax=np.array(data[k, :, index1, index2, :]).T.max()), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
+                
+                fig.colorbar(img, ax=axes[2*i+k+length_for_axis], extend='max', label=query_dict["heatmap"][i])
+                axes[2*i+k + length_for_axis].set_ylabel(
                     "Frequencies"
                 )
-                axes[i + length_for_axis].set_xlabel(
+                axes[2*i+k + length_for_axis].set_xlabel(
                     "Times"
+                )
+                axes[2*i+k + length_for_axis].set_title(
+                   query_dict['satellite_graph'][k]
                 )
         
         return
@@ -383,12 +429,9 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     data = np.zeros((len_satellite, length_of_windows, 5, 2,  (16*query_dict["window_length"]//2 + 1))) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
     B_sinc,B_resample = np.zeros(np.shape(efield)),np.zeros(np.shape(efield))
     indicies_total = []
-    print(np.shape(bfield), np.shape(time_E), np.shape(time_B))
-    print(bfield[0])
-    print(np.shape(time_E))
     for k in range(len(query_dict["satellite_graph"])): #length of satellites
         for i in range(3):
-            B_sinc[k][:, i] =sinc_interpolation(bfield[k][:, i], time_B,time_E)
+            B_sinc[k][:, i] =sinc_interpolation(bfield[k][:, i], time_B[k],time_E)
             B_resample[k][:,i]= signal.resample(bfield[k][:, i], len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
         indicies_window=[]
         print(B_sinc)
@@ -471,7 +514,7 @@ def EBplotsNEC(query_dict):
         if query_dict['graph_PF_chosen'] != None:
             length_for_axis += len(query_dict["graph_PF_chosen"])
         if query_dict["heatmap"] != None:
-            length_for_axis += len(query_dict["heatmap"])
+            length_for_axis += len(query_dict["heatmap"])*len(query_dict["satellite_graph"])
         if query_dict["conductivities"] != None:
             length_for_axis += len(query_dict["conductivities"])
 
@@ -490,9 +533,7 @@ def EBplotsNEC(query_dict):
 
     fig, axes = plt.subplots(
         nrows=rows(),
-        figsize=(15, 10),
-        sharex=False,
-        sharey=False,
+        figsize=(10, 15),
         constrained_layout=True,
     )
     time_range = query_dict["time_range"]
@@ -573,8 +614,8 @@ def EBplotsNEC(query_dict):
             df = []
         return df
 
-    def graphingE(label, arrayx, arrayy, arraybandy, satelliteindex):
-        colors = ["C0", "C1", "C2", "C3", "C4", "C5"]
+    def graphingE(label, arrayx, arrayy, arraybandy, satelliteindex, has_twin):
+        colors = ["C0", "C1", "C2", "C3", "C4", "C5", "C6"]
         for i in range(len(query_dict["graph_E_chosen"])):
 
             if query_dict["coordinate_system"][0] == "North East Centre":
@@ -593,23 +634,29 @@ def EBplotsNEC(query_dict):
                     index = 1
                 elif query_dict["graph_E_chosen"][i] == "Mean-field":
                     index = 2
-
+            print(satelliteindex)
             axes[i].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex])
             axes[i].set_ylabel(
                 r"$E_{{{}}}$ $(mV/m)$".format(query_dict["graph_E_chosen"][i])
             )
             axes[i].legend(loc=2)
             axes[i].set_xlim((time_range[0], time_range[1]))
+            if has_twin==True:
+                pass
+            else:
+                global axes_twin_E
+                axes_twin_E=axes[i].twinx()
+
             if query_dict["bandpass"][0] == True:
-                axes_twin_i=axes[i].twinx()
-                axes_twin_i.plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3])
-                axes_twin_i.set_ylabel(
+                axes_twin_E.plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3])
+                axes_twin_E.set_ylabel(
                 r"$E_{{{}}}$ bandpassed $(mV/m)$".format(query_dict["graph_E_chosen"][i])
             )
-                axes_twin_i.legend(loc=1)
+                axes_twin_E.legend(loc=1)
+        return True
 
-    def graphingB(label, arrayx, arrayy, arraybandy, satelliteindex):
-        colors = ["C0", "C1", "C2", "C3", "C4", "C5"]
+    def graphingB(label, arrayx, arrayy, arraybandy, satelliteindex, has_twin):
+        colors = ["C0", "C1", "C2", "C3", "C4", "C5", "C6"]
         if query_dict["graph_E_chosen"] != None:
             length_for_axis = len(query_dict["graph_E_chosen"])
         else:
@@ -635,18 +682,24 @@ def EBplotsNEC(query_dict):
                 r"$B_{{{}}}$".format(query_dict["graph_B_chosen"][i]) + " (nT) "
             )
             axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
+            if has_twin==True:
+                pass
+            else:
+                global axes_twin_B
+                axes_twin_B=axes[i +length_for_axis].twinx()
+
             if query_dict["bandpass"][0] == True:
-                axes_twin_i=axes[i + length_for_axis].twinx()
-                axes_twin_i.plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3])
-                axes_twin_i.set_ylabel(
+                axes_twin_B.plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3])
+                axes_twin_B.set_ylabel(
                 r"$B_{{{}}}$ bandpassed $(nT)$".format(query_dict["graph_B_chosen"][i])
             )
-                axes_twin_i.legend(loc=1)
+                axes_twin_B.legend(loc=1)
+        return True
 
-    def graphingFlux(label, arrayx, arrayy, index_band, satelliteindex):
+    def graphingFlux(label, arrayx, arrayy, index_band, satelliteindex, has_twin):
         length_for_axis = 0
         # because python starts index at 0
-        colors = ["C0", "C1", "C2", "C3", "C4", "C5"]
+        colors = ["C0", "C1", "C2", "C3", "C4", "C5", "C6"]
         try:
             length_for_axis += len(query_dict["graph_E_chosen"])
         except TypeError:
@@ -670,6 +723,11 @@ def EBplotsNEC(query_dict):
                     index = 1
                 elif query_dict["graph_PF_chosen"][i] == "Mean-field":
                     index = 2
+            if has_twin==True:
+                pass
+            else:
+                global axes_twin_PF
+                axes_twin_PF=axes[i + length_for_axis].twinx()
             try:
                 if index_band==0:
                     p1,=axes[i + length_for_axis].plot(arrayx, arrayy[index], label=label, color=colors[satelliteindex])
@@ -681,10 +739,8 @@ def EBplotsNEC(query_dict):
                     axes[i + length_for_axis].legend(loc=2)
                     axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
                 else:
-
-                    twinx=axes[i+length_for_axis].twinx()
-                    twinx.plot(arrayx,arrayy[index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3])
-                    twinx.legend(loc=1)
+                    axes_twin_PF.plot(arrayx,arrayy[index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3])
+                    axes_twin_PF.legend(loc=1)
 
 
             except TypeError:
@@ -697,13 +753,13 @@ def EBplotsNEC(query_dict):
                     axes.legend(loc=2)
                     axes.set_xlim((time_range[0], time_range[1]))
                 else:
-                    twinx=axes.twinx()
-                    twinx.plot(arrayx,arrayy[index], label="".join([label, "bandpassed"]),  colors=colors[satelliteindex+3])
-                    twinx.legend(loc=1)
-                    twinx.set_ylabel(
+                    axes_twin_PF.plot(arrayx,arrayy[index], label="".join([label, "bandpassed"]),  colors=colors[satelliteindex+3])
+                    axes_twin_PF.legend(loc=1)
+                    axes_twin_PF.set_ylabel(
                     r"$S_{{{}}}$ bandpassed".format(query_dict["graph_PF_chosen"][i])
                     + r" $mW m^{-2}$"
                 )
+        return True
 
     def graphingF(label, arrayx, arrayy):
         length_for_axis = 0
@@ -812,6 +868,7 @@ def EBplotsNEC(query_dict):
             returned_times = []
             satellites_with_E = []
             times_for_flux = []
+            twin_axis=False
             for i in range(len(collectionE)):
                 dsE = requester(  # requests data
                     collectionE[i],
@@ -885,12 +942,13 @@ def EBplotsNEC(query_dict):
                         # Plots electric field time seres
                         print(sum(has_E)-1, 'E length')
                         if query_dict["graph_E_chosen"] != None:
-                            graphingE(
+                            twin_axis=graphingE(
                                 "".join(("Swarm ", dsE["Spacecraft"][0])),
                                 dsE.index.to_numpy(),
                                 ElectricData,
                                 ElectricNECbandpass,
-                                sum(has_E)-1 #finds the amounts of trues in has_E then -'s by 1 to make it start at -1, this is so the color is the same as B and flux
+                                sum(has_E)-1, #finds the amounts of trues in has_E then -'s by 1 to make it start at -1, this is so the color is the same as B and flux
+                                twin_axis
                             )
                         # For ponyting flux
                         return_data_band.append(ElectricNECbandpass)
@@ -909,6 +967,7 @@ def EBplotsNEC(query_dict):
             return_data_non_band = []
             return_data_band =[]
             time_array=[]
+            twin_axis=False
             # Goes through every satellite selected
             for i in range(len(query_dict["satellite_graph"])):
                 if query_dict["satellite_graph"][i] == "epop":
@@ -964,20 +1023,22 @@ def EBplotsNEC(query_dict):
                         Bdataband = bresarrangedband
                     print(i, "bcall")
                     if query_dict["graph_B_chosen"] != None: #plots if selected
-                        graphingB(
+                        twin_axis=graphingB(
                             "".join(("Swarm ", dsmodel_res["Spacecraft"][0])),
                             time,
                             Bdata,
                             Bdataband,
-                            i
+                            i,
+                            twin_axis
                         )
 
 
                     return_data_non_band.append(Bdata)
                     return_data_band.append(Bdataband)
+                    time_array.append(time)
             else:
                 pass
-            return return_data_non_band,return_data_band, time
+            return return_data_non_band,return_data_band, time_array
 
         def F(space_craft_with_E=["swarma", "swarmb", "swarmc"]):
             data_return = []
@@ -1040,22 +1101,21 @@ def EBplotsNEC(query_dict):
         def pontying_flux(efieldband,efieldnonband, bfieldband,bfieldnonband):  # Take rough estimate by doing N cross E to get C poynting flux
             return_data = []
             looping_list=[[efieldnonband, bfieldnonband], [efieldband, bfieldband]]
+            twin_axis=False
             for k in range(2):
                 efield=looping_list[k][0]
                 bfield=looping_list[k][1]
-                print(k)
                 for i in range(len(efield)):
                     eflux = efield[i]
                     bflux=np.empty(np.shape(eflux))
 
                     for l in range(3):
-                        print(np.shape(bfield[i][:,l]), np.shape(time_B), np.shape(time_E))
-                        bflux[:,l] = sinc_interpolation(x=bfield[i][:,l], s=time_B, u=time_E)
+                        bflux[:,l] = sinc_interpolation(x=bfield[i][:,l], s=time_B[i], u=time_E)
 
                     flux = np.cross(eflux * 1e-3, bflux * 1e-9) * 1.256e6*1e3
                     flux_individual = np.transpose(flux)
 
-                    graphingFlux(space_craft_with_E[i], time_E, flux_individual, k, i)
+                    twin_axis=graphingFlux(space_craft_with_E[i], time_E, flux_individual, k, i, twin_axis)
                     return_data.append(
                         [space_craft_with_E[i], time_E, flux_individual[2]]
                     )
