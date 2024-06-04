@@ -866,7 +866,7 @@ def Graph():
 
 
         if st.session_state["Coordinate_system"][0] == "North East Centre":
-            options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast", "EEast/BNorth"]]
+            options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"]]
         else:
             options=[["E_Azimuthal", "E_Polodial"], ["B_Azimuthal", "B_Polodial"], ["EAzimuthal/BPolodial", "EPolodial/BAzimuthal"]]
 
@@ -883,11 +883,11 @@ def Graph():
 
         if st.session_state["Alfven_Animation"] == True:
 
-            st.multiselect(label="Please select the plots in the Alfven animation", options=["Time Series", "E Periodogram", "B Periodogram", "E/B Periodogram"], key="Alfven_graphs")
+            st.multiselect(label="Please select the plots in the Alfven animation", options=["Time Series", "E Periodogram", "B Periodogram", "E/B Periodogram", "Cross Power Spectrum", "Phase Sope"], key="Alfven_graphs")
 
             if "Time Series" in st.session_state["Alfven_graphs"]:
                 print(options[:-1])
-                st.multiselect(label="Please select the time series you want to plot through", options=sum(options[:-1], []), key="Time_Series_Graph")
+                st.multiselect(label="Please select the time series you want to plot through", options=sum(options[:-3], []), key="Time_Series_Graph")
 
             if "E Periodogram" in st.session_state["Alfven_graphs"]:
                 st.multiselect(label="Please select the E polarization you want to plot", options=options[0], key="E_Peridogram_Graph")
@@ -897,6 +897,8 @@ def Graph():
 
             if "E/B Periodogram" in st.session_state["Alfven_graphs"]:
                 st.multiselect(label="Please select the E/B polarization you would like to plot", options=options[2], key="E/B_Periodogram_Graph")
+
+            ##TODO IMPLEMENT THE Cross PHASE and POWEr
             
         
 
