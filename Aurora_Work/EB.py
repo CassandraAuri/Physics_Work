@@ -106,21 +106,31 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
 
         frequencies_E_1, powerspec_E_1 = signal.welch(efield[index_satellite][range(index_start, index_end), 1]*1e-3, 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False)
         frequencies_B_1, powerspec_B_1 = signal.welch(Bresamp[index_satellite][range(index_start, index_end),1]*1e-9, 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False)
-
+        sorted_frequencies_indicies= np.argsort(frequencies_E_0)
+        frequencies_E_0, frequencies_B_0 = frequencies_E_0[sorted_frequencies_indicies], frequencies_B_0[sorted_frequencies_indicies]
+        powerspec_E_0, powerspec_B_0, powerspec_E_1, powerspec_B_1 = powerspec_E_0[sorted_frequencies_indicies],  powerspec_B_0[sorted_frequencies_indicies], powerspec_E_1[sorted_frequencies_indicies], powerspec_B_1[sorted_frequencies_indicies]
 
         ratio_EB_01 = np.sqrt((powerspec_E_0/ powerspec_B_1))
-        print(powerspec_E_0, 'E North')
         ratio_EB_10 = np.sqrt((powerspec_E_1/ powerspec_B_0))
-        print(powerspec_E_1, 'E East')
 
         freq , crossspectral_ENorth_BEast = signal.csd(efield[index_satellite][range(index_start, index_end), 0]*1e-3, Bresamp[index_satellite][range(index_start, index_end),1]*1e-9, 16, window="hann", detrend='linear', scaling='spectrum', return_onesided=False)
         freq,  crossspectral_EEast_BNorth = signal.csd(efield[index_satellite][range(index_start, index_end), 1]*1e-3, Bresamp[index_satellite][range(index_start, index_end),0]*1e-9, 16, window="hann", detrend='linear', scaling='spectrum', return_onesided=False)
 
+
+        crossspectral_ENorth_BEast, crossspectral_EEast_BNorth = crossspectral_ENorth_BEast[sorted_frequencies_indicies], crossspectral_EEast_BNorth[sorted_frequencies_indicies]
+
+
         phase_ENorth_BEast= np.angle(crossspectral_ENorth_BEast, deg=True)
         phase_EEast_BNorth = np.angle(crossspectral_EEast_BNorth, deg=True)
-        print(phase_ENorth_BEast)
-        print(np.shape(crossspectral_ENorth_BEast),np.shape(np.angle(crossspectral_ENorth_BEast)), np.shape(powerspec_B_1))
-        return np.array([[frequencies_E_0, [None] * len(frequencies_E_0)], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start/16,index_end/16], dtype=int)]*len(frequencies_B_0), [None]*len(frequencies_B_0)], [crossspectral_ENorth_BEast, crossspectral_ENorth_BEast], [phase_ENorth_BEast, phase_EEast_BNorth]]), range(index_start, index_end)  #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
+        if index==0:
+            print(phase_ENorth_BEast, 'calculated')
+        ##print(np.absolute(crossspectral_ENorth_BEast[0]),np.sqrt(np.multiply(powerspec_E_0, powerspec_B_1))[0] )
+        coherence_ENorth_BEast = np.absolute(crossspectral_ENorth_BEast)/ np.sqrt(np.multiply(powerspec_E_0, powerspec_B_1))
+        coherence_EEast_BNorth = np.absolute(crossspectral_EEast_BNorth)/ np.sqrt(np.multiply(powerspec_E_1, powerspec_B_0))
+        ##print(coherence_ENorth_BEast, 'def')
+        ##print(signal.coherence(efield[index_satellite][range(index_start, index_end), 0], Bresamp[index_satellite][range(index_start, index_end),1], 16,window="hann", detrend='linear'), 'scipy')
+        ##print(np.shape(crossspectral_ENorth_BEast),np.shape(np.angle(crossspectral_ENorth_BEast)), np.shape(powerspec_B_1), np.shape(coherence_EEast_BNorth))
+        return np.array([[frequencies_E_0, [None] * len(frequencies_E_0)], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start/16,index_end/16], dtype=int)]*len(frequencies_B_0), [None]*len(frequencies_B_0)], [crossspectral_ENorth_BEast, crossspectral_EEast_BNorth], [phase_ENorth_BEast, phase_EEast_BNorth], [coherence_ENorth_BEast, coherence_EEast_BNorth]]), range(index_start, index_end)  #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
 
         
 
@@ -203,6 +213,12 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
         if query_dict["EB_periodogram"] != None:
             for i in range(len(query_dict["satellite_graph"])):
                 query_dict_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
+        if query_dict["EB_cross power"] != None:
+            for i in range(len(query_dict["satellite_graph"])):
+                query_dict_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
+        if query_dict["EB_cross phase"] != None:
+            for i in range(len(query_dict["satellite_graph"])):
+                query_dict_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
         else:
             pass
         print(query_dict_selected)
@@ -237,7 +253,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                                 index=0
                             else:
                                 index=1
-                            axes_ani[axes_used + k ].plot(data[k, i, 0, 0, : ], data[k, i, 3,index, :], label=val) #Frequencies E's
+                            axes_ani[axes_used + k ].scatter(data[k, i, 0, 0, : ], data[k, i, 3,index, :], label=val) #Frequencies E's
                             axes_ani[axes_used + k ].set_ylabel(f" E over B ratio of {val_sat} m/s ")
                             axes_ani[axes_used + k ].legend()
                             axes_ani[axes_used + k ].set_yscale("log")
@@ -248,10 +264,39 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                                 index=0
                             else:
                                 index=1
-                            axes_ani.plot(data[k, i, 0, 0, : ], data[k, i, 3,index, :], label=val_sat) #Frequencies E's
+                            axes_ani.scatter(data[k, i, 0, 0, : ], data[k, i, 3,index, :], label=val_sat) #Frequencies E's
                         axes_ani.set_ylabel(str(val) + " m/s ")
                         axes_ani.legend()
                         axes_ani.set_yscale("log")
+                return axes_used + len(query_dict["EB_periodogram"])
+
+
+            def EB_power_plot(axes_used):
+                for l, val in enumerate(query_dict["EB_cross power"]):
+                    for k, val_sat in enumerate((query_dict["satellite_graph"])):
+                        if val == 'ENorth/BEast crosspower':
+                            index=0
+                        else:
+                            index=1
+                        axes_ani[axes_used + l ].scatter(data[k, i, 0, 0, : ], data[k, i, 5,index, :], label=val_sat) #Frequencies E's
+                    axes_ani[axes_used + l ].set_ylabel(str(val) + " nT ")
+                    axes_ani[axes_used + l ].legend()
+                    axes_ani[axes_used + l ].set_yscale("log")
+                return  axes_used + len(query_dict["EB_cross power"])
+            
+            def EB_phase_plot(axes_used):
+                for l, val in enumerate(query_dict["EB_cross phase"]):
+                    for k, val_sat in enumerate((query_dict["satellite_graph"])):
+                        if val == 'ENorth/BEast cross phase':
+                            index=0
+                        else:
+                            index=1
+                        axes_ani[axes_used + l ].scatter(data[k, i, 0, 0, : ], data[k, i, 6,index, :], label=val_sat) #Frequencies E's
+                    axes_ani[axes_used + l ].set_ylabel(str(val) + " nT ")
+                    axes_ani[axes_used + l ].legend()
+                    if i==0:
+                        print(data[k, 0, 6,index, :], 'plotted')
+                return  axes_used + len(query_dict["EB_cross phase"])
 
             def B_Periodogram_Plot(axes_used):
                 for l, val in enumerate(query_dict["B_periodogram"]):
@@ -308,6 +353,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                                 axes_ani[k].set_ylabel("B(nT)")
                     axes_ani[k].legend(loc=2)
                     twin_x_axes[k].legend(loc=1)
+            
 
 
                 
@@ -323,8 +369,12 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                 axes_used = B_Periodogram_Plot(axes_used)
                 print(axes_used, 'axesB')
             if query_dict["EB_periodogram"] != None:
-                EB_Periodogram_Plot(axes_used)
+                axes_used = EB_Periodogram_Plot(axes_used)
                 print('EB_Periodogram_Plot')
+            if query_dict["EB_cross power"] != None:
+                axes_used  = EB_power_plot(axes_used)
+            if query_dict["EB_cross phase"] != None:
+                EB_phase_plot(axes_used)
             return
 
         ani = animation.FuncAnimation(fig=fig_ani, func=animate, frames=frames) #What
@@ -401,6 +451,12 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                     elif query_dict["heatmap"][i] == "EEast/BNorth cross phase":
                         index1 = 6
                         index2=  1
+                    elif query_dict["heatmap"][i] == "ENorth/BEast coherence":
+                        index1 = 7
+                        index2=  0
+                    elif query_dict["heatmap"][i] == "EEast/BNorth coherence":
+                        index1 = 7
+                        index2=  1
                 else:
                     if query_dict["heatmap"][i] == "E_Azimuth":
                         index1 = 1
@@ -421,16 +477,31 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
                         index1 = 3
                         index2=  1
                 if index1==3: #Change scaling
-                    img = axes[len(query_dict["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , np.absolute(data[k, 0, 0, 0, :]), np.absolute(np.array(data[k, :, index1, index2, :])).T , shading='auto', norm=colors.LogNorm(vmin=np.absolute(np.array(data[k, :, index1, index2, :])).T.min(), vmax=np.absolute(np.array(data[k, :, index1, index2, :])).T.max()*1e-1), cmap='winter_r' ) #selects average time, frequencies, and then the periodogram 
-                elif index1 ==6: #not complex, allow non magnitude
-                    print(np.array(data[k, :, index1, index2, :]).T)
-                    print(data[k, 0, 0, 0, :], 'frequencies')
-                    print(np.shape(np.array(data[k, :, index1, index2, :]).T), np.shape(data[k, 0, 0, 0, :]))
-                    print(np.real(np.array(data[k, :, index1, index2, :])).T.min(),np.real(np.array(data[k, :, index1, index2, :])).T.max() ) #selects average time, frequencies, and then the periodogram )
-                    img=axes[len(query_dict["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , np.real(data[k, 0, 0, 0, :]), np.real(np.array(data[k, :, index1, index2, :])).T , shading='auto', cmap='winter_r' ) #selects average time, frequencies, and then the periodogram 
+                    img = axes[len(query_dict["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                                    np.absolute(data[k, 0, 0, 0, :]), np.absolute(np.array(data[k, :, index1, index2, :])).T , shading='auto', 
+                                    norm=colors.LogNorm(vmin=np.absolute(np.array(data[k, :, index1, index2, :])).T.min(), vmax=np.absolute(np.array(data[k, :, index1, index2, :])).T.max()*1e-1),
+                                    cmap='winter_r' ) #selects average time, frequencies, and then the periodogram 
+
+                elif index1==5:
+                    img = axes[len(query_dict["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                            np.real(data[k, 0, 0, 0, :]), np.absolute(np.array(data[k, :, index1, index2, :])).T , shading='auto', 
+                            norm=colors.LogNorm(vmin=np.absolute(np.array(data[k, :, index1, index2, :])).T.min(), vmax=np.absolute(np.array(data[k, :, index1, index2, :])).T.max()),
+                            cmap='winter_r' ) #selects average time, frequencies, and then the periodogram 
+                elif index1 ==6: #phase
+                    print(np.real(data[k, 0, 0, 0, :]), np.real(np.array(data[k, 0, index1, index2, :])).T, 'heatmap')
+                    img=axes[len(query_dict["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                                np.real(data[k, 0, 0, 0, :]),
+                                np.real(np.array(data[k, :, index1, index2, :])).T , shading='auto', cmap='winter') #selects average time, frequencies, and then the periodogram 
+                elif index1 ==7: #not complex, allow non magnitude
+                   
+                    img = axes[len(query_dict["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                            np.absolute(data[k, 0, 0, 0, :]), np.real(np.array(data[k, :, index1, index2, :]).T) , shading='auto',
+                            norm=colors.LogNorm(vmin=np.real(np.array(data[k, :, index1, index2, :])).T.min(), vmax=np.real(np.array(data[k, :, index1, index2, :])).T.max()),
+                            cmap='winter' ) #selects average time, frequencies, and then the periodogram #selects average time, frequencies, and then the periodogram 
                 else: #uses absolute value
-                     img = axes[len(query_dict["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , np.absolute(data[k, 0, 0, 0, :]), np.absolute(np.array(data[k, :, index1, index2, :]).T) , shading='auto', norm=colors.LogNorm(vmin=np.absolute(np.array(data[k, :, index1, index2, :])).T.min()*1e2, vmax=np.absolute(np.array(data[k, :, index1, index2, :])).T.max()), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
-                
+                     print(np.real(np.array(data[k, :, index1, index2, :])).T.min(), np.real(np.array(data[k, :, index1, index2, :])).T.max()) #selects average time, frequencies, and then the periodogram )
+                     img = axes[len(query_dict["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , np.absolute(data[k, 0, 0, 0, :]), np.real(np.array(data[k, :, index1, index2, :])).T , shading='auto', norm=colors.LogNorm(vmin=np.real(np.array(data[k, :, index1, index2, :])).T.min(), vmax=np.real(np.array(data[k, :, index1, index2, :])).T.max()), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
+                print(index1)
                 fig.colorbar(img, ax=axes[len(query_dict["satellite_graph"])*i+k+length_for_axis], extend='max', label=query_dict["heatmap"][i])
                 axes[len(query_dict["satellite_graph"])*i+k + length_for_axis].set_ylabel(
                     "Frequencies"
@@ -451,7 +522,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
     length_of_windows=len(sampled_datetimes) - sampling_rate_seconds *query_dict['window_length']
 
 
-    data = np.zeros((len_satellite, length_of_windows, 7, 2,  (16*query_dict["window_length"])), dtype=np.complex_) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
+    data = np.zeros((len_satellite, length_of_windows, 8, 2,  (16*query_dict["window_length"])), dtype=np.complex_) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
     B_sinc,B_resample = np.zeros(np.shape(efield)),np.zeros(np.shape(efield))
     indicies_total = []
     for k in range(len(query_dict["satellite_graph"])): #length of satellites
@@ -459,7 +530,6 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, query_dic
             B_sinc[k][:, i] =sinc_interpolation(bfield[k][:, i], time_B[k],time_E)
             B_resample[k][:,i]= signal.resample(bfield[k][:, i], len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
         indicies_window=[]
-        print(B_sinc)
         for i in range(length_of_windows): #Loops through each window and at the end stops early so window length doesnt cause error
             data[k, i], indicies = Logic_for_one_step(i, k,  B_resample)
             indicies_window.append(indicies) #don't

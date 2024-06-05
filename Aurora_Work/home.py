@@ -855,6 +855,10 @@ def Graph():
         st.session_state["B_Peridogram_Graph"] = None
     if "E/B_Periodogram_Graph" not in st.session_state:
         st.session_state["E/B_Periodogram_Graph"] = None
+    if "EB_cross power" not in st.session_state:
+        st.session_state["EB_cross power"] = None
+    if "EB_cross phase" not in st.session_state:
+        st.session_state["EB_cross phase"] = None
 
     if st.session_state["Filtering"] == True:
         st.select_slider(label="Please select the low pass in Hz", value=0.2, options=[0.1,0.2,0.5, 1, 2, 4], key="low_pass")
@@ -866,7 +870,7 @@ def Graph():
 
 
         if st.session_state["Coordinate_system"][0] == "North East Centre":
-            options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"]]
+            options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"], ["ENorth/BEast coherence", "EEast/BNorth coherence"]]
         else:
             options=[["E_Azimuthal", "E_Polodial"], ["B_Azimuthal", "B_Polodial"], ["EAzimuthal/BPolodial", "EPolodial/BAzimuthal"]]
 
@@ -883,11 +887,11 @@ def Graph():
 
         if st.session_state["Alfven_Animation"] == True:
 
-            st.multiselect(label="Please select the plots in the Alfven animation", options=["Time Series", "E Periodogram", "B Periodogram", "E/B Periodogram", "Cross Power Spectrum", "Phase Sope"], key="Alfven_graphs")
+            st.multiselect(label="Please select the plots in the Alfven animation", options=["Time Series", "E Periodogram", "B Periodogram", "E/B Periodogram", "Cross Power Spectrum", "Cross phase"], key="Alfven_graphs")
 
             if "Time Series" in st.session_state["Alfven_graphs"]:
                 print(options[:-1])
-                st.multiselect(label="Please select the time series you want to plot through", options=sum(options[:-3], []), key="Time_Series_Graph")
+                st.multiselect(label="Please select the time series you want to plot through", options=sum(options[:-4], []), key="Time_Series_Graph")
 
             if "E Periodogram" in st.session_state["Alfven_graphs"]:
                 st.multiselect(label="Please select the E polarization you want to plot", options=options[0], key="E_Peridogram_Graph")
@@ -897,6 +901,13 @@ def Graph():
 
             if "E/B Periodogram" in st.session_state["Alfven_graphs"]:
                 st.multiselect(label="Please select the E/B polarization you would like to plot", options=options[2], key="E/B_Periodogram_Graph")
+            
+            if "Cross Power Spectrum" in st.session_state["Alfven_graphs"]:
+                st.multiselect(label="Please select the E/B cross power you would like to plot", options=options[3], key="EB_cross power")
+
+            if "Cross phase" in st.session_state["Alfven_graphs"]:
+                st.multiselect(label="Please select the E/B cross phase you would like to plot", options=options[4], key="EB_cross phase")
+
 
             ##TODO IMPLEMENT THE Cross PHASE and POWEr
             
@@ -981,7 +992,9 @@ def Render_Graph(timerange):
         "B_periodogram": st.session_state["B_Peridogram_Graph"],
         "EB_periodogram": st.session_state["E/B_Periodogram_Graph"],
         "sampling_rate": st.session_state["sampling_rate"],
-        "window_length":st.session_state["Window_Length"]
+        "window_length":st.session_state["Window_Length"],
+        "EB_cross power": st.session_state["EB_cross power"],
+        "EB_cross phase": st.session_state["EB_cross phase"],
 
     }
 
