@@ -866,7 +866,7 @@ def Graph():
     
     if st.session_state["E_B_ratio"] == True:
         st.select_slider(label="Please select the running window interval (sampling rate)", value=1, options=[0.1,0.2,0.5, 1, 2], key="sampling_rate")
-        st.select_slider(label="Please select the running window length", value=4, options=[2,3,4,5,6,7,7.9], key="Window_Length")
+        st.select_slider(label="Please select the running window length", value=4, options=[2,3,4,5,6,8,10], key="Window_Length")
 
 
         if st.session_state["Coordinate_system"][0] == "North East Centre":
