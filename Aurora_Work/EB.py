@@ -20,6 +20,12 @@ from numpy.typing import NDArray
 import matplotlib.animation as animation
 import matplotlib.colors as colors
 import cmasher as cmr
+def process_string(input_string):
+    # Convert the string to lowercase
+    lowercased_string = input_string.lower()
+    # Remove any spaces
+    concatenated_string = lowercased_string.replace(" ", "")
+    return concatenated_string
 
 def butter_bandpass(cutoffs, fs, order=4):
     return butter(order, cutoffs, fs=fs, btype="band")
@@ -95,25 +101,20 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
     """
     Gives the ratio of E/B in the spectral domain, either returning an animation or a plot of the conductivies it derived
     """
-    def Logic_for_one_step(index, index_satellite,Bresamp):
+    def Logic_for_one_step(index, index_satellite,Bresamp, nperseg):
         """
         Finds periodogram, Conductivity and Alfven speed for each window
         """
         window_length=user_select["window_length"]
         index_start,index_end= int(index*16*user_select['sampling_rate']), int(index*16*user_select['sampling_rate'])+16*window_length
-        if user_select['nperseg'] == 'window length':
-            nperseg=16*window_length
-        if user_select['nperseg'] == 8*window_length:
-            nperseg=8*window_length
-        if user_select['nperseg'] == 4*window_length:
-            nperseg=4*window_length
+        
         
         #TODO do this per space-craft and do it in the ratio desired, currently North over East
-        frequencies_E_0, powerspec_E_0 = signal.welch(efield[index_satellite][range(index_start, index_end), 0], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=8*window_length, nperseg=nperseg)
-        frequencies_B_0, powerspec_B_0 = signal.welch(Bresamp[index_satellite][range(index_start, index_end), 0], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=8*window_length, nperseg=nperseg)
+        frequencies_E_0, powerspec_E_0 = signal.welch(efield[index_satellite][range(index_start, index_end), 0], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
+        frequencies_B_0, powerspec_B_0 = signal.welch(Bresamp[index_satellite][range(index_start, index_end), 0], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False,  nperseg=nperseg)
 
-        frequencies_E_1, powerspec_E_1 = signal.welch(efield[index_satellite][range(index_start, index_end), 1], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=8*window_length, nperseg=nperseg)
-        frequencies_B_1, powerspec_B_1 = signal.welch(Bresamp[index_satellite][range(index_start, index_end),1], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=8*window_length, nperseg=nperseg)
+        frequencies_E_1, powerspec_E_1 = signal.welch(efield[index_satellite][range(index_start, index_end), 1], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
+        frequencies_B_1, powerspec_B_1 = signal.welch(Bresamp[index_satellite][range(index_start, index_end),1], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
         sorted_frequencies_indicies= np.argsort(frequencies_E_0)
         frequencies_E_0, frequencies_B_0 = frequencies_E_0[sorted_frequencies_indicies], frequencies_B_0[sorted_frequencies_indicies]
 
@@ -132,13 +133,27 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         #if index==0:
             #print(phase_ENorth_BEast, 'calculated')
         ##print(np.absolute(crossspectral_ENorth_BEast[0]),np.sqrt(np.multiply(powerspec_E_0, powerspec_B_1))[0] )
-        coherence_ENorth_BEast = signal.coherence(efield[index_satellite][range(index_start, index_end), 0], Bresamp[index_satellite][range(index_start, index_end),1], 16,window="hann", detrend='linear', nperseg=nperseg)
-        coherence_EEast_BNorth = signal.coherence(efield[index_satellite][range(index_start, index_end), 0], Bresamp[index_satellite][range(index_start, index_end),1], 16,window="hann", detrend='linear', nperseg=nperseg)
-        #print(efield[index_satellite][range(index_start, index_end), 0], 'E')
-        #print(Bresamp[index_satellite][range(index_start, index_end),1],'B')
-        #print(signal.coherence(efield[index_satellite][range(index_start, index_end), 0], Bresamp[index_satellite][range(index_start, index_end),1], 16,window="hann", detrend='linear', nperseg=8), 'scipy')
-        ##print(np.shape(crossspectral_ENorth_BEast),np.shape(np.angle(crossspectral_ENorth_BEast)), np.shape(powerspec_B_1), np.shape(coherence_EEast_BNorth))
-        return np.array([[frequencies_E_0, [None] * len(frequencies_E_0)], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start/16,index_end/16], dtype=int)]*len(frequencies_B_0), [None]*len(frequencies_B_0)], [np.absolute(crossspectral_ENorth_BEast), np.absolute(crossspectral_EEast_BNorth)], [phase_ENorth_BEast, phase_EEast_BNorth], [coherence_ENorth_BEast, coherence_EEast_BNorth]]), range(index_start, index_end)  #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
+        #coherence_ENorth_BEast = signal.coherence(efield[index_satellite][range(index_start, index_end), 0], Bresamp[index_satellite][range(index_start, index_end),1], 16,window="hann", detrend='linear', return_onesided=False,  nperseg=nperseg)
+        #coherence_EEast_BNorth = signal.coherence(efield[index_satellite][range(index_start, index_end), 0], Bresamp[index_satellite][range(index_start, index_end),1], 16,window="hann", detrend='linear',return_onesided=False , nperseg=nperseg)
+       
+        #coherence_ENorth_BEast, coherence_EEast_BNorth = coherence_ENorth_BEast[sorted_frequencies_indicies], coherence_EEast_BNorth[sorted_frequencies_indicies]
+
+        ##TODO implement a B-lag cross correlation
+        if user_select['lag'] == True and index_satellite == 1: 
+            #TODO add a condition that if index our of range just put np.Nans
+            if np.ceil(lag_data[2])*16<= index_start and np.floor(lag_data[2]*16).astype(int)+index_end<= len(Bresamp[index_satellite]):
+                idex_lag=np.floor(lag_data[2]*16).astype(int)
+                freq,cross_BB=signal.csd(Bresamp[index_satellite-1][range(index_start, index_end),1], Bresamp[index_satellite][range(index_start+idex_lag, index_end+idex_lag),1], 16,window="hann", return_onesided=False, detrend='linear', nperseg=nperseg )
+
+                phase_BB= np.angle(cross_BB, deg=True)
+                cross_BB, phase_BB = cross_BB[sorted_frequencies_indicies], phase_BB[sorted_frequencies_indicies]
+            else: 
+                cross_BB = [np.nan]*len(frequencies_E_0)
+                phase_BB= [np.nan]*len(frequencies_E_0)
+        else:
+            cross_BB= [None] * len(frequencies_E_0)
+            phase_BB= [None] * len(frequencies_E_0)
+        return np.array([[frequencies_E_0, [None] * len(frequencies_E_0)], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start/16,index_end/16], dtype=int)]*len(frequencies_B_0), [None]*len(frequencies_B_0)], [np.absolute(crossspectral_ENorth_BEast), np.absolute(crossspectral_EEast_BNorth)], [phase_ENorth_BEast, phase_EEast_BNorth], [cross_BB, phase_BB]]), range(index_start, index_end)  #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
 
         
 
@@ -433,14 +448,14 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
             return length_for_axis
         length_for_axis=subplot_select()
             
-
+        indicies=0
         for i in range(len(user_select["heatmap"])):
             for k in range(len(user_select["satellite_graph"])):
                 if user_select['coordinate_system'][0] == "North East Centre":
-                    print(user_select["heatmap"][i])
                     if user_select["heatmap"][i] == "E_North":
                         index1 = 1
                         index2=  0
+                        
                     elif user_select["heatmap"][i] == "E_East":
                         index1 = 1
                         index2=  1
@@ -468,12 +483,19 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                     elif user_select["heatmap"][i] == "EEast/BNorth cross phase":
                         index1 = 6
                         index2=  1
-                    elif user_select["heatmap"][i] == "ENorth/BEast coherence":
+                    elif user_select["heatmap"][i] == 'B B lag cross power':
                         index1 = 7
                         index2=  0
-                    elif user_select["heatmap"][i] == "EEast/BNorth coherence":
+                    elif user_select["heatmap"][i] == 'B B lag cross phase':
                         index1 = 7
                         index2=  1
+                    elif user_select["heatmap"][i] == "ENorth/BEast coherence":
+                        index1 = 8
+                        index2=  0
+                    elif user_select["heatmap"][i] == "EEast/BNorth coherence":
+                        index1 = 8
+                        index2=  1
+                    
                 else:
                     if user_select["heatmap"][i] == "E_Azimuth":
                         index1 = 1
@@ -493,48 +515,66 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                     elif user_select["heatmap"][i] == "E Polodial / B Azimuth":
                         index1 = 3
                         index2=  1
+                if user_select['bandpass'][0] == True:
+                    bandpass=np.where((data[k, 0, 0, 0, :] >= user_select['bandpass'][1][0]) & (data[k, 0, 0, 0, :] <= user_select['bandpass'][1][1]))[0]
+                if user_select['lag']  == True: ##TODO implement
+                    times=datetimes[np.array(data[k, :, 4,0, 0] , dtype=int)]
+                else: bandpass = np.where(data[k, 0, 0, 0, :] >=0)[0]
+                print(index1,index2,k,i)
+                print(length_for_axis+indicies, 'maybe')
                 if index1==2:
-                    img = axes[len(user_select["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] ,
-                                np.absolute(data[k, 0, 0, 0, :]), np.real(np.array(data[k, :, index1, index2, :])).T ,
+                    img = axes[length_for_axis+indicies].pcolormesh(times ,
+                                np.absolute(data[k, 0, 0, 0, bandpass]), np.real(np.array(data[k, :, index1, index2,bandpass])).T ,
                                 shading='auto',
-                                    norm=colors.LogNorm(vmin=np.real(np.array(data[k, :, index1, index2, :])).T.min(),
-                                                         vmax=np.real(np.array(data[k, :, index1, index2, :])).T.max()), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
+                                    norm=colors.LogNorm(vmin=np.real(np.array(data[k, :, index1, index2, bandpass])).T.min(),
+                                                         vmax=np.real(np.array(data[k, :, index1, index2, bandpass])).T.max()), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 elif index1==3: #Change scaling
-                    img = axes[len(user_select["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
-                                    np.absolute(data[k, 0, 0, 0, :]), np.absolute(np.array(data[k, :, index1, index2, :])).T , shading='auto', 
-                                    norm=colors.LogNorm(vmin=np.absolute(np.array(data[k, :, index1, index2, :])).T.min(), vmax=np.absolute(np.array(data[k, :, index1, index2, :])).T.max()*1e-1),
+                    img = axes[length_for_axis+indicies].pcolormesh(times , 
+                                    np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass])) , shading='auto', 
+                                    norm=colors.LogNorm(vmin=np.absolute(np.array(data[k, :, index1, index2, bandpass])).T.min(), vmax=np.absolute(np.array(data[k, :, index1, index2, bandpass])).T.max()),
                                     cmap='winter_r' ) #selects average time, frequencies, and then the periodogram 
 
                 elif index1==5:
-                    img = axes[len(user_select["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
-                            np.absolute(data[k, 0, 0, 0, :]), np.absolute(np.array(data[k, :, index1, index2, :])).T , shading='auto', 
-                            norm=colors.LogNorm(vmin=np.absolute(np.array(data[k, :, index1, index2, :])).T.min(), vmax=np.absolute(np.array(data[k, :, index1, index2, :])).T.max()),
+                    img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                            np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass])) , shading='auto', 
+                            norm=colors.LogNorm(vmin=np.absolute(np.array(data[k, :, index1, index2, bandpass])).min(), vmax=np.absolute(np.array(data[k, :, index1, index2, bandpass])).max()),
                             cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 elif index1 ==6: #phase
                     #print(np.real(data[k, 0, 0, 0, :]), np.real(np.array(data[k, 0, index1, index2, :])).T, 'heatmap')
-                    positive_frequencies=np.where(data[k, 0, 0, 0, :] >= 0)[0]
-                    img=axes[len(user_select["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
-                                np.absolute(data[k, 0, 0,0, positive_frequencies]),
-                                (np.around(np.real(np.array(data[k, :, index1, index2, positive_frequencies]))/5, decimals=0))*5, shading='auto', cmap=plt.get_cmap('cmr.infinity')) #selects average time, frequencies, and then the periodogram 
-                elif index1 ==7: #not complex, allow non magnitude
-                   
-                    img = axes[len(user_select["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
-                            np.absolute(data[k, 0, 0, 0, :]), np.real(np.array(data[k, :, index1, index2, :]).T) , shading='auto', cmap='winter' ) #selects average time, frequencies, and then the periodogram #selects average time, frequencies, and then the periodogram 
+                    img=axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                                np.absolute(data[k, 0, 0,0, bandpass]),
+                                (np.around(np.real(np.array(data[k, :, index1, index2, bandpass]))/5, decimals=0))*5, shading='auto', cmap=plt.get_cmap('cmr.infinity')) #selects average time, frequencies, and then the periodogram 
+                elif index1 ==7 and k==1: #B B component only goes once
+                    if index2==0: #power
+                        masked_data = np.ma.masked_invalid(np.absolute(np.array(data[k, :, index1, index2, bandpass]))) #for lognorm to deal with np.nans
+                        img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                                np.absolute(data[k, 0, 0, 0, bandpass]),masked_data , shading='auto',
+                                norm=colors.LogNorm()  ) #selects average time, frequencies, and then the periodogram #selects average time, frequencies, and then the periodogram 
+                    if index2 ==1: #phase
+                        img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                                np.absolute(data[k, 0, 0, 0, bandpass]),np.real(np.array(data[k, :, index1, index2, bandpass])), shading='auto', cmap=plt.get_cmap('cmr.infinity')) #selects average time, frequencies, and then the periodogram #selects average time, frequencies, and then the periodogram 
+
+                      
                 else: #uses absolute value
-                     #print(np.real(np.array(data[k, :, index1, index2, :])).T.min(), np.real(np.array(data[k, :, index1, index2, :])).T.max()) #selects average time, frequencies, and then the periodogram )
-                     img = axes[len(user_select["satellite_graph"])*i+k + length_for_axis].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , np.absolute(data[k, 0, 0, 0, :]), np.real(np.array(data[k, :, index1, index2, :])).T , shading='auto', norm=colors.LogNorm(vmin=np.real(np.array(data[k, :, index1, index2, :])).T.min(), vmax=np.real(np.array(data[k, :, index1, index2, :])).T.max()), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
-                #print(index1)
-                fig.colorbar(img, ax=axes[len(user_select["satellite_graph"])*i+k+length_for_axis], extend='max', label=user_select["heatmap"][i])
-                axes[len(user_select["satellite_graph"])*i+k + length_for_axis].set_ylabel(
-                    "Frequencies"
-                )
-                axes[len(user_select["satellite_graph"])*i+k + length_for_axis].set_xlabel(
-                    "Times"
-                )
-                axes[len(user_select["satellite_graph"])*i+k + length_for_axis].set_title(
-                   user_select['satellite_graph'][k]
-                )
-                axes[len(user_select["satellite_graph"])*i+k + length_for_axis].set_ylim(user_select["bandpass"][1])
+                     
+                     pass  
+                              
+                if index1 ==7 and k==0:
+                    pass
+                else:
+                    fig.colorbar(img, ax=axes[length_for_axis+indicies], extend='max', label=user_select["heatmap"][i])
+                    axes[length_for_axis+indicies].set_ylabel(
+                        "Frequencies"
+                    )
+                    axes[length_for_axis+indicies].set_xlabel(
+                        "Times"
+                    )
+                    axes[length_for_axis+indicies].set_title(
+                        user_select['satellite_graph'][k]
+                    )
+                    axes[length_for_axis+indicies].set_ylim(user_select["bandpass"][1])
+                    indicies+=1
+
         
         return
     
@@ -547,16 +587,23 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
     print(length_of_windows)
 
     efield=np.multiply(efield,1e-3)
-    data = np.zeros((len_satellite, length_of_windows, 8, 2,  (8*user_select["window_length"])), dtype=np.complex_) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
+    
     B_sinc,B_resample = np.zeros(np.shape(efield)),np.zeros(np.shape(efield))
     indicies_total = []
+    if user_select['nperseg'] == 'window length':
+            nperseg=16*user_select["window_length"]
+    if user_select['nperseg'] == 'half window length':
+        nperseg=8*user_select["window_length"]
+    if user_select['nperseg'] == 'quarter window':
+        nperseg=4*user_select["window_length"]
+    data = np.zeros((len_satellite, length_of_windows, 8, 2,  nperseg), dtype=np.complex_) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
     for k in range(len(user_select["satellite_graph"])): #length of satellites
         for i in range(3):
             B_sinc[k][:, i] =sinc_interpolation(bfield[k][:, i]*1e-9, time_B[k],time_E)
             B_resample[k][:,i]= signal.resample(bfield[k][:, i]*1e-9, len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
         indicies_window=[]
         for i in range(length_of_windows): #Loops through each window and at the end stops early so window length doesnt cause error
-            data[k, i], indicies = Logic_for_one_step(i, k,  B_resample)
+            data[k, i], indicies = Logic_for_one_step(i, k,  B_resample, nperseg)
             indicies_window.append(indicies) #don't
         indicies_total.append(indicies_window)
     if user_select["heatmap"] != None:
@@ -575,11 +622,14 @@ def lag(x,y):
     returns an array that is time-corrected to the first
     
     """
+    #if len(x) != len(y):
+    #    y=np.delete(y,-1, axis=0)
+    print(np.shape(x), np.shape(y))
     correlation = signal.correlate(
-    x, y, mode="full")
-    lags = signal.correlation_lags(x,
-                               y)
-    delta=lags[np.argmax(correlation)]/50*16
+    x[:,1], y[:,1], mode="full")
+    lags = signal.correlation_lags(len(x[:,1]),
+                               len(y[:,1]))
+    delta=lags[np.argmax(correlation)]/50
     return correlation, lags,delta
 
 
@@ -647,6 +697,10 @@ def EBplotsNEC(user_select):
             length_for_axis += len(user_select["graph_PF_chosen"])
         if user_select["heatmap"] != None:
             length_for_axis += len(user_select["heatmap"])*len(user_select["satellite_graph"])
+            if 'B B lag cross power' in user_select["heatmap"]:
+                length_for_axis -=1
+            if 'B B lag cross phase' in user_select["heatmap"]:
+                length_for_axis -=1
         if user_select["conductivities"] != None:
             length_for_axis += len(user_select["conductivities"])
 
@@ -660,7 +714,7 @@ def EBplotsNEC(user_select):
                 length_for_axis += len(user_select["sky_map_values"])
             except TypeError:
                 raise ValueError("Sky Map not Selected")
-
+        print(length_for_axis, 'rows')
         return length_for_axis
 
     fig, axes = plt.subplots(
@@ -768,6 +822,22 @@ def EBplotsNEC(user_select):
                     index = 1
                 elif user_select["graph_E_chosen"][i] == "Mean-field":
                     index = 2
+            try:
+                if user_select['lag'] == True:
+                    if lag_data[3] == process_string(label):
+
+                        lag_seconds = int(lag_data[2])
+                        lag_fraction = lag_data[2] - lag_seconds
+                        lag_nanoseconds = int(lag_fraction * 1e9)
+                        # Create timedelta64 objects
+                        seconds_delta = np.timedelta64(lag_seconds, 's')
+                        nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
+
+                        # Add the timedelta to the datetime array
+                        arrayx = arrayx + seconds_delta + nanoseconds_delta
+
+            except NameError:
+                pass
             axes[i].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex])
             axes[i].set_ylabel(
                 r"$E_{{{}}}$ $(mV/m)$".format(user_select["graph_E_chosen"][i])
@@ -809,6 +879,19 @@ def EBplotsNEC(user_select):
                     index = 1
                 elif user_select["graph_B_chosen"][i] == "Mean-field":
                     index = 2
+            if user_select['lag'] == True:
+                print(lag_data[3], process_string(label))
+                if lag_data[3] == process_string(label):
+                    lag_seconds = int(lag_data[2])
+                    lag_fraction = lag_data[2] - lag_seconds
+                    lag_nanoseconds = int(lag_fraction * 1e9)
+                    # Create timedelta64 objects
+                    seconds_delta = np.timedelta64(lag_seconds, 's')
+                    nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
+
+                    # Add the timedelta to the datetime array
+                    arrayx = arrayx + seconds_delta + nanoseconds_delta
+
             axes[i + length_for_axis].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex])
             axes[i + length_for_axis].legend(loc=2)
             axes[i + length_for_axis].set_ylabel(
@@ -861,6 +944,17 @@ def EBplotsNEC(user_select):
                     index = 2
             try:
                 if index_band==0:
+                    if user_select['lag'] == True:
+                        if lag_data[3] == process_string(label):
+                            lag_seconds = int(lag_data[2])
+                            lag_fraction = lag_data[2] - lag_seconds
+                            lag_nanoseconds = int(lag_fraction * 1e9)
+                            # Create timedelta64 objects
+                            seconds_delta = np.timedelta64(lag_seconds, 's')
+                            nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
+
+                            # Add the timedelta to the datetime array
+                            arrayx = arrayx + seconds_delta + nanoseconds_delta
                     p1,=axes[i + length_for_axis].plot(arrayx, arrayy[index], label=label, color=colors[satelliteindex])
 
                     axes[i + length_for_axis].set_ylabel(
@@ -1001,7 +1095,7 @@ def EBplotsNEC(user_select):
             satellites_with_E = []
             times_for_flux = []
             twin_axis=False
-            lag=False
+            lag_bool=False
             B_lag_earlier=[]
             for i in range(len(collectionE)):
                 dsE = requester(  # requests data
@@ -1035,7 +1129,7 @@ def EBplotsNEC(user_select):
                             
 
 
-                        def B_Logic_For_E():
+                        def B_Logic_For_E(lag_bool):
                             # finds the closest index in B for each time
                             def Time_corrections(E_time, B_time):
                                 # finds the closest time value for each element in E_time
@@ -1061,21 +1155,21 @@ def EBplotsNEC(user_select):
 
                             meanfield=arrangement(dsB.index.to_numpy(),dsB["B_NEC_CHAOS"].to_numpy(),3)[times_of_b_for_flux, :]
                             #TODO if swarm a and c selected
-
-                            if lag==True:
+                            global B_lag_earlier 
+                            if user_select['lag'] and lag_bool:
                                 B_synoptic = arrangement(dsB.index.to_numpy(), dsB["B_NEC"].to_numpy()-dsB["B_NEC_CHAOS"].to_numpy(),3)
                                 global lag_data
-                                lag_data=lag(B_lag_earlier,B_synoptic)
-                                lag_data.append("".join(("swarm", dsE["Spacecraft"][0].lower())))
-
+                                lag_data=list(lag(B_lag_earlier,B_synoptic))
+                                lag_data.append("".join(("swarm", dsE["Spacecraft"][0].lower()))) 
                             else:
-                                lag=True
+                                lag_bool=True
+                                ##TODO make cleaner
                                 B_lag_earlier = arrangement(dsB.index.to_numpy(), dsB["B_NEC"].to_numpy()-dsB["B_NEC_CHAOS"].to_numpy(),3)
                             
 
-                            return times_of_b_for_flux, meanfield, B_synoptic
+                            return times_of_b_for_flux, meanfield,  lag_bool
 
-                        times_for_flux, meanfield = B_Logic_For_E()
+                        times_for_flux, meanfield,lag_bool = B_Logic_For_E(lag_bool)
 
                         if user_select['coordinate_system'][0] == "Mean-field aligned":
                             latitude, longitude, radius = dsE['Latitude'].to_numpy(), dsE['Longitude'].to_numpy(),  dsE["Radius"].to_numpy()  # Gets Emphermis data
