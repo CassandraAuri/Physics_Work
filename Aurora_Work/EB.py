@@ -407,8 +407,9 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
             if user_select["EB_cross phase"] != None:
                 EB_phase_plot(axes_used)
             return
-
+        print('ani start', frames)
         ani = animation.FuncAnimation(fig=fig_ani, func=animate, frames=frames) #What
+        print('ani end')
         FFwriter = animation.FFMpegWriter(fps=int(6*sampling_rate_seconds))  #TODO given the framerate of 2 frames per second, which is equivalent to 6 seconds imager time = 1 second animation time, calculate the number of windows inbetween given a set step size
         ani.save("animationAlfven.mp4", writer=FFwriter)
         
