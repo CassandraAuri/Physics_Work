@@ -523,22 +523,26 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 #else: bandpass = datetimes[np.where(data[k, 0, 0, 0, :] >=0)[0]]
                 print(index1,index2,k,i)
                 print(length_for_axis+indicies, 'maybe')
-                if index1==2:
+                if index1==2: #B's
                     img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] ,
                                 np.absolute(data[k, 0, 0, 0, bandpass]), np.real(np.array(data[k, :, index1, index2,bandpass])),
                                 shading='auto',
-                                    norm=colors.LogNorm(vmin=np.real(np.array(data[k, :, index1, index2, bandpass])).min(),
-                                                         vmax=np.real(np.array(data[k, :, index1, index2, bandpass])).max()), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
-                elif index1==3 or index1==0 or index1==1: #Change scaling
+                                    norm=colors.LogNorm(vmax=1e-7, vmin=1e-11), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
+                elif  index1==1: #E's
+                    img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                                    np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass])) , shading='auto', 
+                                    norm=colors.LogNorm(vmax=1e-2,vmin=1e-5),
+                                    cmap='winter' ) #selects average time, frequencies, and then the periodogram 
+                elif index1==3: #E/B ratio
                     img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
                                     np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass])) , shading='auto', 
                                     norm=colors.LogNorm(vmin=np.absolute(np.array(data[k, :, index1, index2, bandpass])).T.min(), vmax=np.absolute(np.array(data[k, :, index1, index2, bandpass])).T.max()),
                                     cmap='winter' ) #selects average time, frequencies, and then the periodogram 
 
-                elif index1==5:
+                elif index1==5: #cross power
                     img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
                             np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass])) , shading='auto', 
-                            norm=colors.LogNorm(vmin=np.absolute(np.array(data[k, :, index1, index2, bandpass])).min(), vmax=np.absolute(np.array(data[k, :, index1, index2, bandpass])).max()),
+                            norm=colors.LogNorm(vmax=1e-11, vmin=1e-16),
                             cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 elif index1 ==6: #phase
                     #print(np.real(data[k, 0, 0, 0, :]), np.real(np.array(data[k, 0, index1, index2, :])).T, 'heatmap')

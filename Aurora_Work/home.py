@@ -874,7 +874,7 @@ def Graph():
     
     if st.session_state["E_B_ratio"] == True:
         st.select_slider(label="Please select the running window interval (sampling rate)", value=1, options=[0.1,0.2,0.5, 1, 2], key="sampling_rate")
-        st.select_slider(label="Please select the running window length", value=4, options=[2,3,4,5,6,8,10, 20,30,40,60,120], key="Window_Length")
+        st.select_slider(label="Please select the running window length", value=4, options=[2,3,4,5,6,8,10, 20,30,40,60,119], key="Window_Length")
         st.select_slider(label="Please select the number of samples per segment (note 16sps)", value='window length', options=['window length', 'half window length', 'quarter window'], key="nperseg")
 
 
