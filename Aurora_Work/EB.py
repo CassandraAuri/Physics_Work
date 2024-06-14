@@ -518,45 +518,60 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                         index2=  1
                 if user_select['bandpass'][0] == True:
                     bandpass=np.where((data[k, 0, 0, 0, :] >= user_select['bandpass'][1][0]) & (data[k, 0, 0, 0, :] <= user_select['bandpass'][1][1]))[0]
-                #if user_select['lag']  == True: ##TODO implement
-                #    times=datetimes[np.array(data[k, :, 4,0, 0] , dtype=int)]
-                #else: bandpass = datetimes[np.where(data[k, 0, 0, 0, :] >=0)[0]]
+                print(lag_data[3],user_select['satellite_graph'][k] )
+                if user_select['lag']  == True and lag_data[3] == user_select['satellite_graph'][k]: ##TODO implement
+                    lag_seconds = int(lag_data[2])
+                    lag_fraction = lag_data[2] - lag_seconds
+                    lag_nanoseconds = int(lag_fraction * 1e9)
+                    # Create timedelta64 objects
+                    seconds_delta = np.timedelta64(lag_seconds, 's')
+                    nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
+
+                    # Add the timedelta to the datetime array
+                    print(times, 'before')
+                    times= datetimes[np.array(data[k, :, 4,0, 0] , dtype=int)] + timedelta(seconds=lag_data[2])
+                    #times = datetimes[np.array(data[k, :, 4,0, 0] , dtype=int)] + seconds_delta + nanoseconds_delta
+                    print(times, 'after')
+                    print(timedelta(seconds=lag_data[2]), lag_data[2])
+
+                else: times=datetimes[np.array(data[k, :, 4,0, 0] , dtype=int)]
+
                 print(index1,index2,k,i)
                 print(length_for_axis+indicies, 'maybe')
                 if index1==2: #B's
-                    img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] ,
+                    img = axes[length_for_axis+indicies].pcolormesh(times ,
                                 np.absolute(data[k, 0, 0, 0, bandpass]), np.real(np.array(data[k, :, index1, index2,bandpass])),
                                 shading='auto',
                                     norm=colors.LogNorm(vmax=1e-7, vmin=1e-11), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 elif  index1==1: #E's
-                    img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                    img = axes[length_for_axis+indicies].pcolormesh(times , 
                                     np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass])) , shading='auto', 
                                     norm=colors.LogNorm(vmax=1e-2,vmin=1e-5),
                                     cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 elif index1==3: #E/B ratio
-                    img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                    img = axes[length_for_axis+indicies].pcolormesh(times , 
                                     np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass])) , shading='auto', 
                                     norm=colors.LogNorm(vmin=np.absolute(np.array(data[k, :, index1, index2, bandpass])).T.min(), vmax=np.absolute(np.array(data[k, :, index1, index2, bandpass])).T.max()),
                                     cmap='winter' ) #selects average time, frequencies, and then the periodogram 
 
                 elif index1==5: #cross power
-                    img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                    img = axes[length_for_axis+indicies].pcolormesh(times , 
                             np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass])) , shading='auto', 
                             norm=colors.LogNorm(vmax=1e-11, vmin=1e-16),
                             cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 elif index1 ==6: #phase
                     #print(np.real(data[k, 0, 0, 0, :]), np.real(np.array(data[k, 0, index1, index2, :])).T, 'heatmap')
-                    img=axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                    img=axes[length_for_axis+indicies].pcolormesh(times , 
                                 np.absolute(data[k, 0, 0,0, bandpass]),
                                 (np.around(np.real(np.array(data[k, :, index1, index2, bandpass]))/5, decimals=0))*5, shading='auto', cmap=plt.get_cmap('cmr.infinity')) #selects average time, frequencies, and then the periodogram 
                 elif index1 ==7 and k==1: #B B component only goes once
                     if index2==0: #power
                         masked_data = np.ma.masked_invalid(np.absolute(np.array(data[k, :, index1, index2, bandpass]))) #for lognorm to deal with np.nans
-                        img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                        img = axes[length_for_axis+indicies].pcolormesh(times , 
                                 np.absolute(data[k, 0, 0, 0, bandpass]),masked_data , shading='auto',
                                 norm=colors.LogNorm()  ) #selects average time, frequencies, and then the periodogram #selects average time, frequencies, and then the periodogram 
                     if index2 ==1: #phase
-                        img = axes[length_for_axis+indicies].pcolormesh(datetimes[np.array(data[k, :, 4,0, 0], dtype=int)] , 
+                        img = axes[length_for_axis+indicies].pcolormesh(times , 
                                 np.absolute(data[k, 0, 0, 0, bandpass]),np.real(np.array(data[k, :, index1, index2, bandpass])), shading='auto', cmap=plt.get_cmap('cmr.infinity')) #selects average time, frequencies, and then the periodogram #selects average time, frequencies, and then the periodogram 
                       
                 else: #uses absolute value
@@ -577,7 +592,9 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                         user_select['satellite_graph'][k]
                     )
                     axes[length_for_axis+indicies].set_ylim(user_select["bandpass"][1])
+                    axes[length_for_axis+indicies].set_xlim(user_select["time_range"])
                     indicies+=1
+                    
 
         
         return
@@ -946,19 +963,20 @@ def EBplotsNEC(user_select):
                     index = 1
                 elif user_select["graph_PF_chosen"][i] == "Mean-field":
                     index = 2
+            if user_select['lag'] == True:
+                if lag_data[3] == process_string(label):
+                    lag_seconds = int(lag_data[2])
+                    lag_fraction = lag_data[2] - lag_seconds
+                    lag_nanoseconds = int(lag_fraction * 1e9)
+                    # Create timedelta64 objects
+                    seconds_delta = np.timedelta64(lag_seconds, 's')
+                    nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
+
+                    # Add the timedelta to the datetime array
+                    arrayx = arrayx + seconds_delta + nanoseconds_delta
+
             try:
                 if index_band==0:
-                    if user_select['lag'] == True:
-                        if lag_data[3] == process_string(label):
-                            lag_seconds = int(lag_data[2])
-                            lag_fraction = lag_data[2] - lag_seconds
-                            lag_nanoseconds = int(lag_fraction * 1e9)
-                            # Create timedelta64 objects
-                            seconds_delta = np.timedelta64(lag_seconds, 's')
-                            nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
-
-                            # Add the timedelta to the datetime array
-                            arrayx = arrayx + seconds_delta + nanoseconds_delta
                     p1,=axes[i + length_for_axis].plot(arrayx, arrayy[index], label=label, color=colors[satelliteindex])
 
                     axes[i + length_for_axis].set_ylabel(
@@ -1483,6 +1501,7 @@ def EBplotsNEC(user_select):
                 pixel_chosen_average = np.zeros((len(emph), len(emph[0][0])))
 
                 def average(index, grid, average_pixels=5):
+                    #Averages a grid, feel like theres a bug
                     value = 0
                     bounds = (average_pixels - 1) / 2
                     for row in range(
@@ -1560,11 +1579,11 @@ def EBplotsNEC(user_select):
                             )
                         except IndexError:
                             pixel_chosen[satellite][i] = 0
-
+                #TODO implement a GUI option for 5x5 averaged, 3x3 averaged or single
                 pixel_chosen_total.append(pixel_chosen)
                 sat_time_each_platform.append(sat_time)
 
-                pixel_chosen_average_total.append(pixel_chosen)
+                pixel_chosen_average_total.append(pixel_chosen_average)
 
             return pixel_chosen_average_total, sat_time_each_platform, space_craft_label
         
