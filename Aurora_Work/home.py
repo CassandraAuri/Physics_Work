@@ -879,7 +879,7 @@ def Graph():
 
 
         if st.session_state["Coordinate_system"][0] == "North East Centre":
-            options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"], ["ENorth/BEast coherence", "EEast/BNorth coherence"], ['B B lag cross power', 'B B lag cross phase']]
+            options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"],  ['B B lag cross power', 'B B lag cross phase']]
         else:
             options=[["E_Azimuthal", "E_Polodial"], ["B_Azimuthal", "B_Polodial"], ["EAzimuthal/BPolodial", "EPolodial/BAzimuthal"]]
 
