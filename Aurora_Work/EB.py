@@ -289,7 +289,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         if user_select["EB_cross phase"] != None:
             for i in range(len(user_select["EB_cross power"])):
                 user_select_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
-        if user_select["EB_cross phase"] != None:
+        if user_select["lags_cross"] != None:
             for i in range(len(user_select["lags_cross"])):
                 user_select_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
         else:
@@ -429,14 +429,14 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                             bandpass=np.where((np.real(data[k, 0, 0, 0, :]) >= user_select['bandpass'][1][0]) & (np.real(data[k, 0, 0, 0, :]) <= user_select['bandpass'][1][1]))[0]
                         else: bandpass =np.where(np.real((data[k, 0, 0, 0, :]) >= 0))[0]
                         if index==0:
-                            axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, bandpass ]), data[k, i, 7,index, bandpass], "-o",label=val_sat) #Frequencies E's
+                            axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, bandpass ]), np.absolute(data[k, i, 7,index, bandpass]), "-o",label=val_sat) #Frequencies E's
+                            axes_ani[axes_used + l ].set_yscale("log")
                         else:
-                            axes_ani[axes_used + l ].plot(np.real(data[k, i, 0, 0, bandpass ]), data[k, i, 7,index, bandpass], "-o",label=val_sat) #Frequencies E's
+                            axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, bandpass ]), data[k, i, 7,index, bandpass], "-o",label=val_sat) #Frequencies E's
                     axes_ani[axes_used + l ].set_ylabel(str(val))
                     axes_ani[axes_used + l ].legend()
-                    axes_ani[axes_used + l ].set_yscale("log")
                     axes_ani[axes_used + l ].set_xlim(user_select["bandpass"][1])
-                return  axes_used + len(user_select["EB_cross power"])
+                return  axes_used + len(user_select["lags_cross"])
             
 
 
@@ -832,7 +832,7 @@ def EBplotsNEC(user_select):
             # Since time array is one hertz and we want to look for 1/cadence hertz we simply use
             lat_satellite_not_footprint = data_stuff[i]["Latitude"].to_numpy()
             lon_satellite_not_footprint = data_stuff[i]["Longitude"].to_numpy()
-            altitude = data_stuff[i]["Radius"].to_numpy() / 1000 - 6378.1370
+            altitude = data_stuff[i]["Radius"].to_numpy() / 1000 - 6378.14
             delete_array = np.linspace(0, cadence - 1, cadence, dtype=int)
             emph.append(
                 [
@@ -1563,7 +1563,7 @@ def EBplotsNEC(user_select):
                             location_code,
                             time_range=time_range,
                             alt=alt,
-                            custom_alt="geodetic",
+                            custom_alt="interp",
                         )
                         cadence = 3
                     elif asi_array_code.lower() == "rego":
@@ -1571,7 +1571,7 @@ def EBplotsNEC(user_select):
                             location_code,
                             time_range=time_range,
                             alt=alt,
-                            custom_alt="geodetic",
+                            custom_alt="interp",
                         )
                         cadence = 3
                     elif asi_array_code.lower() == "trex_nir":
@@ -1579,7 +1579,7 @@ def EBplotsNEC(user_select):
                             location_code,
                             time_range=time_range,
                             alt=alt,
-                            custom_alt="geodetic",
+                            custom_alt="interp",
                         )
                         cadence = 6
                     elif asi_array_code.lower() == "trex_rgb":
@@ -1589,7 +1589,7 @@ def EBplotsNEC(user_select):
                             time_range=time_range,
                             alt=alt,
                             colors="rgb",
-                            custom_alt="geodetic",
+                            custom_alt="interp",
                         )
 
                     return asi, cadence
@@ -1603,6 +1603,7 @@ def EBplotsNEC(user_select):
                     # Trex is 6 second cadence compared to 3 of rego and themos
 
                     sat_time = np.array(emph[i][0])  # sets timestamp
+                    print(sat_time, 'sat_time')
                     sat_lla = np.array([emph[i][1], emph[i][2], emph[i][3]]).T
 
                     conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
@@ -1610,30 +1611,15 @@ def EBplotsNEC(user_select):
                     # Converts altitude to assumed auroral height
 
                     conjunction_obj.lla_footprint(alt=alt)
-                    lat_sat, lon_sat, ignored = (
-                        aacgmv2.convert_latlon_arr(  # Converts to magnetic coordinates
-                            in_lat=conjunction_obj.sat["lat"].to_numpy(),
-                            in_lon=conjunction_obj.sat["lon"].to_numpy(),
-                            height=alt,
-                            dtime=datetime(2021, 3, 18, 8, 0),
-                            method_code="G2A",
-                        )
-                    )
 
-                    lat_satellite.append(lat_sat)
-                    lon_satellite.append(lon_sat)
+                    lat_satellite.append(conjunction_obj.sat["lat"].to_numpy())
+                    lon_satellite.append(conjunction_obj.sat["lon"].to_numpy())
+                print(lat_satellite)
+                print(lon_satellite)
+                print('EB, lat, lon')
 
                 lat, lon = asi.skymap["lat"], asi.skymap["lon"]
-                for indi in range(len(lat)):
-                    lat[indi], lon[indi], ignored = (
-                        aacgmv2.convert_latlon_arr(  # Converts to magnetic coordinates
-                            in_lat=lat[indi],
-                            in_lon=lon[indi],
-                            height=alt,
-                            dtime=datetime(2021, 3, 18, 8, 0),
-                            method_code="G2A",
-                        )
-                    )
+
                 lat[np.isnan(lat)] = np.inf
                 lon[np.isnan(lon)] = np.inf
 
@@ -1643,20 +1629,33 @@ def EBplotsNEC(user_select):
                 index_of_image = 0
                 pixel_chosen_average = np.zeros((len(emph), len(emph[0][0])))
 
-                def average(index, grid, average_pixels=5):
-                    #Averages a grid, feel like theres a bug
-                    value = 0
-                    bounds = (average_pixels - 1) / 2
-                    for row in range(
-                        average_pixels,
-                        int(index[0] - bounds),
-                    ):
-                        for col in range(
-                            average_pixels,
-                            int(index[1] - bounds),
-                        ):
-                            value = value + grid[row][col]
-                    return value / average_pixels**2
+                def average(start_index,grid, subregion_size=user_select['pixel_average'][0]):
+                    """
+                    Calculate the average of a subregion in a grid.
+                    
+                    Parameters:
+                    grid (np.ndarray): The input 2D grid of values.
+                    start_index (tuple): A tuple (row, col) indicating the starting index of the subregion.
+                    subregion_size (tuple): A tuple (height, width) indicating the size of the subregion.
+                    
+                    Returns:
+                    float: The average value of the subregion.
+                    """
+                    print(start_index)
+                    row, col = start_index
+                    row=int(row)
+                    col=int(col)
+                    height, width = subregion_size, subregion_size
+                    
+                    # Extract the subregion
+                    ##if (row + height > grid.shape[0]) or (col + width > grid.shape[1]):
+                        ##raise ValueError("Subregion exceeds grid boundaries.")
+                    subregion = grid[row:row+height, col:col+width]
+                    
+                    # Calculate the average of the subregion
+                    average_value = np.sum(subregion)
+                    print(average_value)
+                    return average_value
 
                 for i in range(len(emph[0][0])):  # len of time series
                     # Themis starts at time_range[0], rego and trex start a time_range[0] + a cadence
@@ -1727,6 +1726,9 @@ def EBplotsNEC(user_select):
                 sat_time_each_platform.append(sat_time)
 
                 pixel_chosen_average_total.append(pixel_chosen_average)
+                #Temporary
+                #pixel_chosen_average_total.append()
+
 
             return pixel_chosen_average_total, sat_time_each_platform, space_craft_label
         
