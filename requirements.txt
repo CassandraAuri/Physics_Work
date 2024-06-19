@@ -1,0 +1,15 @@
+streamlit
+pandas
+numpy
+aurora-asilib
+viresclient
+scipy
+moviepy
+mplcyberpunk
+matplotlib
+cmasher
+aacgmv2
+cdflib
+pickle
+itertools
+tqdm.notebook
