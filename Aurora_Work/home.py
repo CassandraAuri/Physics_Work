@@ -100,7 +100,7 @@ def empharisis_processing(dict, cadence):
             True,
             asynchronous=False,
             show_progress=False,
-            sampling_step="PT{}S".format(1),
+            sampling_step="PT{}S".format(cadence),
             dict=dict,
             cadence=cadence,
         )
@@ -110,11 +110,10 @@ def empharisis_processing(dict, cadence):
             pass
     for i in range(len(data_stuff)):
         time_array = data_stuff[i]["Spacecraft"].index
-        print(time_array)
         # Since time array is one hertz and we want to look for 1/cadence hertz we simply use
         lat_satellite_not_footprint = data_stuff[i]["Latitude"].to_numpy()
         lon_satellite_not_footprint = data_stuff[i]["Longitude"].to_numpy()
-        altitude = data_stuff[i]["Radius"].to_numpy() / 1000 - 6378.14
+        altitude = data_stuff[i]["Radius"].to_numpy() / 1000 - 6378.1370
         # delete_array = np.linspace(0, cadence-1, cadence, dtype=int)
         delete_array = 0
         emph.append(
@@ -187,17 +186,13 @@ def graphing_animation(dict):
         for i, (time, image, _, im) in enumerate(movie_generator):
             # Plot the entire satellite track, its current location, and a 20x20 km box
             # around its location.
-            ax[1].clear()
-            ax[2].clear()
             for j in range(len(sat_azel_pixels_total)):
-                ax[0].plot(sat_azel_pixels_total[j][:, 0],
+                ax.plot(sat_azel_pixels_total[j][:, 0],
                         sat_azel_pixels_total[j][:, 1])
-                ax[0].scatter(sat_azel_pixels_total[j][i, 0], sat_azel_pixels_total[j][i, 1],
+                ax.scatter(sat_azel_pixels_total[j][i, 0], sat_azel_pixels_total[j][i, 1],
                             marker='o', s=50)
-                ax[1].plot( nearest_pixel_intensity)
-                ax[2].plot( area_intensity)
     fig, ax = plt.subplots(  # intializes plots
-        3,
+        1,
         1,
         figsize=(10, 15),
         constrained_layout=True,
@@ -232,7 +227,7 @@ def graphing_animation(dict):
                     location_code,
                     time_range=time_range,
                     alt=alt,
-                    colors="g",
+                    colors="rgb",
                     custom_alt="interp"
                 )
             else:
@@ -244,7 +239,7 @@ def graphing_animation(dict):
                 )
             else:
                 movie_generator = asi.animate_fisheye_gen(  # initaliziation
-                    ax=ax[0], overwrite=True, ffmpeg_params={"framerate": frame_rate}
+                    ax=ax, overwrite=True, ffmpeg_params={"framerate": frame_rate}
                 )
 
             return asi, movie_generator
@@ -265,12 +260,8 @@ def graphing_animation(dict):
             conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
 
             # Converts altitude to assumed auroral height
-            conjunction_obj.interp_sat()
 
             conjunction_obj.lla_footprint(alt=alt)
-            print(conjunction_obj.sat["lat"].to_numpy())
-            print(conjunction_obj.sat["lon"].to_numpy())
-            print('lat,lon from home')
             if dict["sky_map_values"][k][3] == 'Map':
                 lat_satellite.append(conjunction_obj.sat["lat"].to_numpy())
                 lon_satellite.append(conjunction_obj.sat["lon"].to_numpy())
@@ -278,10 +269,6 @@ def graphing_animation(dict):
                 conj_obj_array.append(conjunction_obj)
                 sat_azel, sat_azel_pixels = conjunction_obj.map_azel()
                 sat_azel_pixels_total.append(sat_azel_pixels)
-                area_intensity = conjunction_obj.intensity(box=(10, 10))
-                nearest_pixel_intensity = conjunction_obj.intensity(box=None)
-            print(conjunction_obj.sat)
-            sat_time_short=(conjunction_obj.sat["time"].to_numpy())
 
         # from asilib
         if dict["sky_map_values"][k][3] == 'Map': #creates a map in lat lon
@@ -588,7 +575,7 @@ def Animation(timerange):
                             ):
                                 st.number_input(
                                     "Height of Skymap",
-                                    min_value=150,
+                                    min_value=70,
                                     max_value=230,
                                     step=10,
                                     key="".join([str(i), "height"]),
@@ -606,7 +593,7 @@ def Animation(timerange):
                             ):
                                 st.number_input(
                                     "Height of Skymap",
-                                    min_value=90,
+                                    min_value=70,
                                     max_value=170,
                                     step=10,
                                     key="".join([str(i), "height"])
@@ -625,7 +612,7 @@ def Animation(timerange):
                             ):
                                 st.number_input(
                                     "Height of Skymap",
-                                    min_value=90,
+                                    min_value=70,
                                     max_value=230,
                                     step=10,
                                     key="".join([str(i), "height"]),
@@ -643,7 +630,7 @@ def Animation(timerange):
                             ):
                                 st.number_input(
                                     "Height of Skymap",
-                                    min_value=90,
+                                    min_value=70,
                                     max_value=170,
                                     step=10,
                                     key="".join([str(i), "height"]),
@@ -817,8 +804,6 @@ def Graph():
         st.session_state["Conductivities"] = False
     if "Alfven_Animation" not in st.session_state:
         st.session_state["Alfven_Animation"] = False
-    if "pixel_intensity_average" not in st.session_state:
-        st.session_state['pixel_intensity_average'] = None
 
 
     st.checkbox(
@@ -837,9 +822,6 @@ def Graph():
         value=st.session_state["Pixel_intensity"],
         key="Pixel_intensity",
     )
-
-    if st.session_state["Pixel_intensity"] == True:
-        st.multiselect(label="Please select the number of pixels to average over", options=[1,3,5,7], default=3,max_selections=1, key='pixel_intensity_average' )
     st.checkbox(
         label=r"Would you like to bandpass filter for Alfven (50km, 1km)",
         value=st.session_state["Filtering"],
@@ -897,7 +879,7 @@ def Graph():
 
 
         if st.session_state["Coordinate_system"][0] == "North East Centre":
-            options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"],  ['B B lag cross power', 'B B lag cross phase']]
+            options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"], ["ENorth/BEast coherence", "EEast/BNorth coherence"], ['B B lag cross power', 'B B lag cross phase']]
         else:
             options=[["E_Azimuthal", "E_Polodial"], ["B_Azimuthal", "B_Polodial"], ["EAzimuthal/BPolodial", "EPolodial/BAzimuthal"]]
 
@@ -921,7 +903,7 @@ def Graph():
 
             if "Time Series" in st.session_state["Alfven_graphs"]:
                 print(options[:-1])
-                st.multiselect(label="Please select the time series you want to plot through", options=sum(options[:-4], []), key="Time_Series_Graph")
+                st.multiselect(label="Please select the time series you want to plot through", options=sum(options[:-5], []), key="Time_Series_Graph")
 
             if "E Periodogram" in st.session_state["Alfven_graphs"]:
                 st.multiselect(label="Please select the E polarization you want to plot", options=options[0], key="E_Peridogram_Graph")
@@ -1029,8 +1011,7 @@ def Render_Graph(timerange):
         "EB_cross phase": st.session_state["EB_cross phase"],
         "lags_cross": st.session_state["lags_cross"],
         "nperseg": st.session_state["nperseg"],
-        "lag": st.session_state["lag"],
-        "pixel_average": st.session_state['pixel_intensity_average']
+        "lag": st.session_state["lag"]
 
     }
 

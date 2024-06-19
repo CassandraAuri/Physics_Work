@@ -89,6 +89,34 @@ def arrangement(time, array, shape):  # arranges B into a useable format for use
         for k in range(shape):
             barranged[j][k] = array[j][k]
     return barranged
+def find_indices(datetime_array, dt1, dt2, sps=16):
+    """
+    Find indices in datetime_array that correspond to dt1 and dt2.
+
+    Parameters:
+    datetime_array (np.array): Array of datetime objects.
+    dt1 (datetime.datetime): First datetime to find.
+    dt2 (datetime.datetime): Second datetime to find.
+    sps (int): Samples per second, default is 16.
+
+    Returns:
+    int: Index corresponding to dt1.
+    int: Index corresponding to dt2.
+    """
+    # Ensure the array is sorted
+    datetime_array = np.sort(datetime_array)
+
+    # Calculate the time differences
+    start_time = datetime_array[0]
+    dt1_diff = (dt1 - start_time).total_seconds()
+    dt2_diff = (dt2 - start_time).total_seconds()
+
+    # Convert time differences to indices
+    dt1_index = int(dt1_diff * sps)
+    dt2_index = int(dt2_diff * sps)
+
+    return dt1_index, dt2_index
+
 
 
 def unit_array(array):
@@ -101,12 +129,15 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
     """
     Gives the ratio of E/B in the spectral domain, either returning an animation or a plot of the conductivies it derived
     """
-    def Logic_for_one_step(index, index_satellite,Bresamp, nperseg):
+    def Logic_for_one_step(index, index_satellite,Bresamp, nperseg, overwrite_indicies=None):
         """
         Finds periodogram, Conductivity and Alfven speed for each window
         """
-        window_length=user_select["window_length"]
-        index_start,index_end= int(index*16*user_select['sampling_rate']), int(index*16*user_select['sampling_rate'])+16*window_length
+        if overwrite_indicies != None:
+            index_start, index_end= overwrite_indicies
+        else:
+            window_length=user_select["window_length"]
+            index_start,index_end= int(index*16*user_select['sampling_rate']), int(index*16*user_select['sampling_rate'])+16*window_length
         
         
         #TODO do this per space-craft and do it in the ratio desired, currently North over Eas
@@ -742,6 +773,114 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         
         return
     
+    def graph_singles(data,datetimes):
+        def subplot_select():
+            #TODO clean up with for loop and apply to other
+            length_for_axis = 0
+            try:
+                length_for_axis += len(user_select["graph_E_chosen"])
+            except TypeError:
+                pass
+            try:
+                length_for_axis += len(user_select["graph_B_chosen"])
+            except TypeError:
+                pass
+            try:
+                length_for_axis += len(user_select["graph_PF_chosen"])
+            except TypeError:
+                pass
+            if user_select["FAC"] == True:
+                length_for_axis += 1
+            else:
+                pass
+            if user_select["Difference"] == True:
+                length_for_axis += 1
+            else:
+                pass
+            if user_select["Pixel_intensity"] == True:
+                try:
+                    length_for_axis += len(user_select["sky_map_values"])
+                except TypeError:
+                    raise ValueError("Sky Map not Selected")
+            return length_for_axis
+        length_for_axis=subplot_select()
+            
+        indicies=0
+        for i in range(len(user_select["heatmap"])):
+            for k in range(len(user_select["satellite_graph"])):
+                if user_select['coordinate_system'][0] == "North East Centre":
+                    if user_select["heatmap"][i] == "E_North":
+                        index1 = 1
+                        index2=  0
+                        
+                    elif user_select["heatmap"][i] == "E_East":
+                        index1 = 1
+                        index2=  1
+                    elif user_select["heatmap"][i] == "B_North":
+                        index1 = 2
+                        index2=  0
+                    elif user_select["heatmap"][i] == "B_East":
+                        index1 = 2
+                        index2=  1
+                    elif user_select["heatmap"][i] == "ENorth/BEast ratio":
+                        index1 = 3
+                        index2=  0
+                    elif user_select["heatmap"][i] == "EEast/BNorth ratio":
+                        index1 = 3
+                        index2=  1
+                    elif user_select["heatmap"][i] == "ENorth/BEast crosspower":
+                        index1 = 5
+                        index2=  0
+                    elif user_select["heatmap"][i] == "EEast/BNorth crosspower":
+                        index1 = 5
+                        index2=  1
+                    elif user_select["heatmap"][i] == "ENorth/BEast cross phase":
+                        index1 = 6
+                        index2=  0
+                    elif user_select["heatmap"][i] == "EEast/BNorth cross phase":
+                        index1 = 6
+                        index2=  1
+                    elif user_select["heatmap"][i] == 'B B lag cross power':
+                        index1 = 7
+                        index2=  0
+                    elif user_select["heatmap"][i] == 'B B lag cross phase':
+                        index1 = 7
+                        index2=  1
+                    elif user_select["heatmap"][i] == "ENorth/BEast coherence":
+                        index1 = 8
+                        index2=  0
+                    elif user_select["heatmap"][i] == "EEast/BNorth coherence":
+                        index1 = 8
+                        index2=  1
+                    
+                else:
+                    if user_select["heatmap"][i] == "E_Azimuth":
+                        index1 = 1
+                        index2=  0
+                    elif user_select["heatmap"][i] == "E_Polodial":
+                        index1 = 1
+                        index2=  1
+                    elif user_select["heatmap"][i] == "B_Azimuth":
+                        index1 = 2
+                        index2=  0
+                    elif user_select["heatmap"][i] == "B_Polodial":
+                        index1 = 2
+                        index2=  1
+                    elif user_select["heatmap"][i] == "E Azimuth / B Polodial":
+                        index1 = 3
+                        index2=  0
+                    elif user_select["heatmap"][i] == "E Polodial / B Azimuth":
+                        index1 = 3
+                        index2=  1
+                if user_select['bandpass'][0] == True:
+                    bandpass=np.where((np.real(data[k, 0, 0, :]) >= user_select['bandpass'][1][0]) & (np.real(data[k, 0, 0, :]) <= user_select['bandpass'][1][1]))[0]
+                else: 
+                    bandpass =np.where(np.real((data[k, 0, 0, :]) >= 0))[0]
+                axes[length_for_axis+ indicies].plot( np.absolute(data[k, 0, 0, bandpass]))#frequency, data
+                indicies +=1
+
+
+
     time_range = user_select["time_range"]
     sampling_rate_seconds=user_select["sampling_rate"]
     sampled_datetimes = create_sampled_datetimes(time_range, sampling_rate_seconds)
@@ -760,22 +899,39 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         nperseg=8*user_select["window_length"]
     if user_select['nperseg'] == 'quarter window':
         nperseg=4*user_select["window_length"]
+
     data = np.zeros((len_satellite, length_of_windows, 8, 2,  nperseg), dtype=np.complex_) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
+
     for k in range(len(user_select["satellite_graph"])): #length of satellites
+
         for i in range(3):
+
             B_sinc[k][:, i] =sinc_interpolation(bfield[k][:, i]*1e-9, time_B[k],time_E)
             B_resample[k][:,i]= signal.resample(bfield[k][:, i]*1e-9, len(time_E)) #As shown in testing, use sinc in time time domain, resample in spectral domain. Need to resample from 50, to 16 Hz for periodograms
-        indicies_window=[]
-        for i in range(length_of_windows): #Loops through each window and at the end stops early so window length doesnt cause error
-            data[k, i], indicies = Logic_for_one_step(i, k,  B_resample, nperseg)
-            indicies_window.append(indicies) #don't
-        indicies_total.append(indicies_window)
-    if user_select["heatmap"] != None:
-        graph_heatmap(data, sampled_datetimes)
-    if user_select["animation"] != False:
-        Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies_total, length_of_windows, time_E)
-    if user_select["conductivities"] != None:
-        conductivities(data, sampled_datetimes)
+
+        if user_select['EB_steppies'] == True:
+            indicies_window=[]
+            for i in range(length_of_windows): #Loops through each window and at the end stops early so window length doesnt cause error
+                data[k, i], indicies = Logic_for_one_step(i, k,  B_resample, nperseg)
+                indicies_window.append(indicies) #don't
+            indicies_total.append(indicies_window)
+
+            if user_select["heatmap"] != None:
+                graph_heatmap(data, sampled_datetimes)
+            if user_select["animation"] != False:
+                Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies_total, length_of_windows, time_E)
+            if user_select["conductivities"] != None:
+                conductivities(data, sampled_datetimes)
+
+        else: 
+            #User selected two times to be used in periodogram
+            indicies_used_for_logic=find_indices(time_E, user_select['periodogram_time_1'], user_select['peridogram_time_2'])
+            data, indicies = Logic_for_one_step(None, k, B_resample, nperseg, indicies_used_for_logic  )
+            sampled_datetimes=time_E[indicies]
+            graph_singles()
+
+
+    
 
     
 
