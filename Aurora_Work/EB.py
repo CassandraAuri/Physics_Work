@@ -269,9 +269,22 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
             for ax in axs.reshape(-1):
                 ax.clear()
             def EB_Periodogram_Plot(axes_used):
+                
                 try:
                     for l, val in enumerate(user_select["EB_periodogram"]):
                         for k, val_sat in enumerate((user_select["satellite_graph"])):
+                            if user_select['lag']  == True and lag_data[3] == user_select['satellite_graph'][k]: ##TODO implement
+                                lag_seconds = int(lag_data[2])
+                                lag_fraction = lag_data[2] - lag_seconds
+                                lag_nanoseconds = int(lag_fraction * 1e9)
+                                # Create timedelta64 objects
+                                seconds_delta = np.timedelta64(lag_seconds, 's')
+                                nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
+
+                                # Add the timedelta to the datetime array
+                                delta =seconds_delta + nanoseconds_delta
+                            else:
+                                delta=np.timedelta64(0,'s')
                             if val == 'ENorth/BEast':
                                 index=0
                             else:
@@ -298,12 +311,24 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
             def EB_power_plot(axes_used):
                 for l, val in enumerate(user_select["EB_cross power"]):
                     for k, val_sat in enumerate((user_select["satellite_graph"])):
+                        if user_select['lag']  == True and lag_data[3] == user_select['satellite_graph'][k]: ##TODO implement
+                            lag_seconds = int(lag_data[2])
+                            lag_fraction = lag_data[2] - lag_seconds
+                            lag_nanoseconds = int(lag_fraction * 1e9)
+                            # Create timedelta64 objects
+                            seconds_delta = np.timedelta64(lag_seconds, 's')
+                            nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
+
+                            # Add the timedelta to the datetime array
+                            delta =seconds_delta + nanoseconds_delta
+                        else:
+                            delta=np.timedelta64(0,'s')
                         if val == 'ENorth/BEast crosspower':
                             index=0
                         else:
                             index=1
-                        #print(data[k, i, 5,index, :], 'power')
-                        axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, : ]), data[k, i, 5,index, :], "-o",label=val_sat) #Frequencies E's
+                        bandpass=np.where((data[k, 0, 0, 0, :] >= user_select['bandpass'][1][0]) & (data[k, 0, 0, 0, :] <= user_select['bandpass'][1][1]))[0]
+                        axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, bandpass ]), data[k, i, 5,index, bandpass], "-o",label=val_sat) #Frequencies E's
                     axes_ani[axes_used + l ].set_ylabel(str(val) + " nT ")
                     axes_ani[axes_used + l ].legend()
                     axes_ani[axes_used + l ].set_yscale("log")
@@ -313,12 +338,25 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
             def EB_phase_plot(axes_used):
                 for l, val in enumerate(user_select["EB_cross phase"]):
                     for k, val_sat in enumerate((user_select["satellite_graph"])):
+                        if user_select['lag']  == True and lag_data[3] == user_select['satellite_graph'][k]: ##TODO implement
+                            lag_seconds = int(lag_data[2])
+                            lag_fraction = lag_data[2] - lag_seconds
+                            lag_nanoseconds = int(lag_fraction * 1e9)
+                            # Create timedelta64 objects
+                            seconds_delta = np.timedelta64(lag_seconds, 's')
+                            nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
+
+                            # Add the timedelta to the datetime array
+                            delta =seconds_delta + nanoseconds_delta
+                        else:
+                            delta=np.timedelta64(0,'s')
+
                         if val == 'ENorth/BEast cross phase':
                             index=0
                         else:
                             index=1
-                        positive_frequencies=np.where(data[k, i, 0, 0, :] >= 0)[0]
-                        axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, positive_frequencies ]), data[k, i, 6,index, positive_frequencies],"-o", label=val_sat) #Frequencies E's
+                        bandpass=np.where((data[k, 0, 0, 0, :] >= user_select['bandpass'][1][0]) & (data[k, 0, 0, 0, :] <= user_select['bandpass'][1][1]))[0]
+                        axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, bandpass ]), data[k, i, 6,index, bandpass],"-o", label=val_sat) #Frequencies E's
                     axes_ani[axes_used + l ].set_ylabel(str(val) + " nT ")
                     axes_ani[axes_used + l ].legend()
                     if i==0:
@@ -327,31 +365,49 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 return  axes_used + len(user_select["EB_cross phase"])
 
             def B_Periodogram_Plot(axes_used):
+                
                 for l, val in enumerate(user_select["B_periodogram"]):
                     for k, val_sat in enumerate((user_select["satellite_graph"])):
+                        if user_select['lag']  == True and lag_data[3] == user_select['satellite_graph'][k]: ##TODO implement
+                            lag_seconds = int(lag_data[2])
+                            lag_fraction = lag_data[2] - lag_seconds
+                            lag_nanoseconds = int(lag_fraction * 1e9)
+                            # Create timedelta64 objects
+                            seconds_delta = np.timedelta64(lag_seconds, 's')
+                            nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
+
+                            # Add the timedelta to the datetime array
+                            delta =seconds_delta + nanoseconds_delta
+                        else:
+                            delta=np.timedelta64(0,'s')
                         if val == 'B_North':
                             index=0
                         else:
                             index=1
-                        axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, : ]), data[k, i, 2,index, :]*1e9, label=val_sat) #Frequencies E's
+                        bandpass=np.where((data[k, 0, 0, 0, :] >= user_select['bandpass'][1][0]) & (data[k, 0, 0, 0, :] <= user_select['bandpass'][1][1]))[0]
+                        axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, bandpass ]), data[k, i, 2,index, bandpass]*1e9, label=val_sat) #Frequencies E's
+                    
                     axes_ani[axes_used + l ].set_ylabel(str(val) + " nT ")
                     axes_ani[axes_used + l ].legend()
                     axes_ani[axes_used + l ].set_yscale("log")
-                    axes_ani[axes_used + l ].set_xlim(user_select["bandpass"][1])
                 return  axes_used + len(user_select["B_periodogram"])
 
             def E_Periodogram_Plot(axes_used):
                 for l, val in enumerate(user_select["E_periodogram"]):
                     for k, val_sat in enumerate((user_select["satellite_graph"])):
+                        if user_select['lag']  == True and lag_data[3] == user_select['satellite_graph'][k]: ##TODO implement
+                            lag_seconds = int(round(lag_data[2]*16))
+                        else:
+                            lag_seconds=0
                         if val == 'E_North':
                             index=0
                         else:
                             index=1
-                        axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, : ]), data[k, i, 1,index, :]*1e3, label=val_sat) #Frequencies E's
+                        bandpass=np.where((data[k, 0, 0, 0, :] >= user_select['bandpass'][1][0]) & (data[k, 0, 0, 0, :] <= user_select['bandpass'][1][1]))[0]
+                        axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, bandpass ]), data[k, i, 1,index, bandpass]*1e3, label=val_sat) #Frequencies E's
                     axes_ani[axes_used + l ].set_ylabel(str(val) + " mV/m ")
                     axes_ani[axes_used + l ].legend()
                     axes_ani[axes_used + l ].set_yscale("log")
-                    axes_ani[axes_used + l ].set_xlim(user_select["bandpass"][1])
                 return  axes_used + len(user_select["E_periodogram"])
             
 
@@ -363,23 +419,35 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                     twin_x_axes[k].clear()
                     twin_x_axes[k].yaxis.set_label_position("right")
                     for l in range(len(user_select["Time_Series"])):
+                        if user_select['lag']  == True and lag_data[3] == user_select['satellite_graph'][k]: ##TODO implement
+                            lag_seconds = int(lag_data[2])
+                            lag_fraction = lag_data[2] - lag_seconds
+                            lag_nanoseconds = int(lag_fraction * 1e9)
+                            # Create timedelta64 objects
+                            seconds_delta = np.timedelta64(lag_seconds, 's')
+                            nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
+
+                            # Add the timedelta to the datetime array
+                            delta =seconds_delta + nanoseconds_delta
+                        else:
+                            delta=np.timedelta64(0,'s')
                         if user_select['coordinate_system'][0] == "North East Centre":  #Make one plot over plotted with eachother
                             if user_select["Time_Series"][l] == 'E_North': #Make Electric field twin x axis.
-                                twin_x_axes[k].plot(time_E[indicies[k][i]], efield[k][indicies[k][i], 0], color=colors[k+3], label='E North')
+                                twin_x_axes[k].plot(time_E[indicies[k][i]]+delta, efield[k][indicies[k][i], 0], color=colors[k+3], label='E North')
                                 twin_x_axes[k].set_ylabel("E (mV/m)")
 
                             elif user_select["Time_Series"][l] == "E_East":
                                 
-                                twin_x_axes[k].plot(time_E[indicies[k][i]], efield[k][indicies[k][i], 1], color=colors[k+4], label='E East')
+                                twin_x_axes[k].plot(time_E[indicies[k][i]]+delta, efield[k][indicies[k][i], 1], color=colors[k+4], label='E East')
                                 twin_x_axes[k].set_ylabel("E (mV/m)")
                                 
                             elif user_select["Time_Series"][l] == "B_East":
-                                axes_ani[k].plot(time_E[indicies[k][i]] , B_sinc[k][indicies[k][i], 1], color=colors[k], label= 'B East')
+                                axes_ani[k].plot(time_E[indicies[k][i]]+delta , B_sinc[k][indicies[k][i], 1], color=colors[k], label= 'B East')
                                 axes_ani[k].set_ylabel("B (nT)")
                                 pass
                                 
                             elif user_select["Time_Series"][l] == "B_North":
-                                axes_ani[k].plot(time_E[indicies[k][i]] , B_sinc[k][indicies[k][i], 0], color=colors[k+1] , label='B North') 
+                                axes_ani[k].plot(time_E[indicies[k][i]]+delta , B_sinc[k][indicies[k][i], 0], color=colors[k+1] , label='B North') 
                                 axes_ani[k].set_ylabel("B(nT)")
                     axes_ani[k].legend(loc=2)
                     twin_x_axes[k].legend(loc=1)
@@ -520,19 +588,8 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                     bandpass=np.where((data[k, 0, 0, 0, :] >= user_select['bandpass'][1][0]) & (data[k, 0, 0, 0, :] <= user_select['bandpass'][1][1]))[0]
                 print(lag_data[3],user_select['satellite_graph'][k] )
                 if user_select['lag']  == True and lag_data[3] == user_select['satellite_graph'][k]: ##TODO implement
-                    lag_seconds = int(lag_data[2])
-                    lag_fraction = lag_data[2] - lag_seconds
-                    lag_nanoseconds = int(lag_fraction * 1e9)
-                    # Create timedelta64 objects
-                    seconds_delta = np.timedelta64(lag_seconds, 's')
-                    nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
-
-                    # Add the timedelta to the datetime array
-                    print(times, 'before')
                     times= datetimes[np.array(data[k, :, 4,0, 0] , dtype=int)] + timedelta(seconds=lag_data[2])
-                    #times = datetimes[np.array(data[k, :, 4,0, 0] , dtype=int)] + seconds_delta + nanoseconds_delta
-                    print(times, 'after')
-                    print(timedelta(seconds=lag_data[2]), lag_data[2])
+
 
                 else: times=datetimes[np.array(data[k, :, 4,0, 0] , dtype=int)]
 
@@ -542,22 +599,22 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                     img = axes[length_for_axis+indicies].pcolormesh(times ,
                                 np.absolute(data[k, 0, 0, 0, bandpass]), np.real(np.array(data[k, :, index1, index2,bandpass])),
                                 shading='auto',
-                                    norm=colors.LogNorm(vmax=1e-7, vmin=1e-11), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
+                                    norm=colors.LogNorm(), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 elif  index1==1: #E's
                     img = axes[length_for_axis+indicies].pcolormesh(times , 
                                     np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass])) , shading='auto', 
-                                    norm=colors.LogNorm(vmax=1e-2,vmin=1e-5),
+                                    norm=colors.LogNorm(),
                                     cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 elif index1==3: #E/B ratio
                     img = axes[length_for_axis+indicies].pcolormesh(times , 
                                     np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass])) , shading='auto', 
-                                    norm=colors.LogNorm(vmin=np.absolute(np.array(data[k, :, index1, index2, bandpass])).T.min(), vmax=np.absolute(np.array(data[k, :, index1, index2, bandpass])).T.max()),
+                                    norm=colors.LogNorm(),
                                     cmap='winter' ) #selects average time, frequencies, and then the periodogram 
 
                 elif index1==5: #cross power
                     img = axes[length_for_axis+indicies].pcolormesh(times , 
                             np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass])) , shading='auto', 
-                            norm=colors.LogNorm(vmax=1e-11, vmin=1e-16),
+                            norm=colors.LogNorm(),
                             cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 elif index1 ==6: #phase
                     #print(np.real(data[k, 0, 0, 0, :]), np.real(np.array(data[k, 0, index1, index2, :])).T, 'heatmap')
