@@ -796,6 +796,10 @@ def Graph():
         st.session_state["E_B_ratio"] = False
     if "Pixel_intensity" not in st.session_state:
         st.session_state["Pixel_intensity"] = False
+    if "pixel_average" not in st.session_state:
+        st.session_state["pixel_average"] = None   
+    if st.session_state['Pixel_intensity'] == True:
+        st.multiselect(label="Number of pixels to be averaged", options=[1,3,5,7],  key="pixel_average")
     if "Filtering" not in st.session_state:
         st.session_state["Filtering"] = False
     if "Heatmap" not in st.session_state:
@@ -867,60 +871,110 @@ def Graph():
         st.session_state["lags_cross"] = None
     if 'lag' not in st.session_state:
         st.session_state['lag'] = None
+    if "graph_type" not in st.session_state:
+        st.session_state['graph_type'] = None
+    if "singles_graphs" not in st.session_state:
+        st.session_state["singles_graphs"] = None
+
+    global timerange_singles
+    timerange_singles=None
 
     if st.session_state["Filtering"] == True:
         st.select_slider(label="Please select the low pass in Hz", value=0.2, options=[0.1,0.2,0.5, 1, 2, 4], key="low_pass")
         st.select_slider(label="Please select the low pass in Hz", value=7, options=[0.5, 1, 2, 4, 6, 7, 7.9], key="high_pass")
     
     if st.session_state["E_B_ratio"] == True:
-        st.select_slider(label="Please select the running window interval (sampling rate)", value=1, options=[0.1,0.2,0.5, 1, 2], key="sampling_rate")
-        st.select_slider(label="Please select the running window length", value=4, options=[2,3,4,5,6,8,10, 20,30,40,60,119], key="Window_Length")
-        st.select_slider(label="Please select the number of samples per segment (note 16sps)", value='window length', options=['window length', 'half window length', 'quarter window'], key="nperseg")
-
-
+        graph_type=st.multiselect(label="Would you like a heatmap (running windows) or a single interval", options=["heatmap", "single value"], key="graph_type")
+        print(graph_type)
         if st.session_state["Coordinate_system"][0] == "North East Centre":
             options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"], ["ENorth/BEast coherence", "EEast/BNorth coherence"], ['B B lag cross power', 'B B lag cross phase']]
         else:
             options=[["E_Azimuthal", "E_Polodial"], ["B_Azimuthal", "B_Polodial"], ["EAzimuthal/BPolodial", "EPolodial/BAzimuthal"]]
+        if graph_type[0] == 'heatmap':
+            st.select_slider(label="Please select the running window interval (sampling rate)", value=1, options=[0.1,0.2,0.5, 1, 2], key="sampling_rate")
+            st.select_slider(label="Please select the running window length", value=4, options=[2,3,4,5,6,8,10, 20,30,40,60,119], key="Window_Length")
+            st.select_slider(label="Please select the number of samples per segment (note 16sps)", value='window length', options=['window length', 'half window length', 'quarter window'], key="nperseg")
 
+            st.checkbox(label="Would you like to graph a heatmap of the event through timed (frequency versus time versus ampltiude spectra)", key="Heatmap")
+            st.checkbox(label="Would you like to graph the conductivies derived the EB ratio versus time", key="Conductivies")
+            st.checkbox(label="Would you like to create an animation of the peridograms through time", key="Alfven_Animation")
 
-        st.checkbox(label="Would you like to graph a heatmap of the event through timed (frequency versus time versus ampltiude spectra)", key="Heatmap")
-        st.checkbox(label="Would you like to graph the conductivies derived the EB ratio versus time", key="Conductivies")
-        st.checkbox(label="Would you like to create an animation of the peridograms through time", key="Alfven_Animation")
+            if st.session_state["Heatmap"] == True:
+                if st.session_state['lag'] == True:
+                    st.multiselect(label="Choose the variable in the heatmap(s)", options=sum(options, []), key="heatmap_graphs")
+                else:
+                    st.multiselect(label="Choose the variable in the heatmap(s)", options=sum(options[:-1], []), key="heatmap_graphs")
 
-        if st.session_state["Heatmap"] == True:
-            if st.session_state['lag'] == True:
-                st.multiselect(label="Choose the variable in the heatmap(s)", options=sum(options, []), key="heatmap_graphs")
-            else:
-                st.multiselect(label="Choose the variable in the heatmap(s)", options=sum(options[:-1], []), key="heatmap_graphs")
+            if st.session_state["Conductivies"] == True:
+                st.multiselect(label="Choose the polarization used for conductivies", options=options[2], key="conductivity_graphs")
 
-        if st.session_state["Conductivies"] == True:
-            st.multiselect(label="Choose the polarization used for conductivies", options=options[2], key="conductivity_graphs")
+            if st.session_state["Alfven_Animation"] == True:
 
-        if st.session_state["Alfven_Animation"] == True:
+                st.multiselect(label="Please select the plots in the Alfven animation", options=["Time Series", "E Periodogram", "B Periodogram", "E/B Periodogram", "Cross Power Spectrum", "Cross phase", 'B B lag'], key="Alfven_graphs")
 
-            st.multiselect(label="Please select the plots in the Alfven animation", options=["Time Series", "E Periodogram", "B Periodogram", "E/B Periodogram", "Cross Power Spectrum", "Cross phase", 'B B lag'], key="Alfven_graphs")
+                if "Time Series" in st.session_state["Alfven_graphs"]:
+                    print(options[:-1])
+                    st.multiselect(label="Please select the time series you want to plot through", options=sum(options[:-5], []), key="Time_Series_Graph")
 
-            if "Time Series" in st.session_state["Alfven_graphs"]:
-                print(options[:-1])
-                st.multiselect(label="Please select the time series you want to plot through", options=sum(options[:-5], []), key="Time_Series_Graph")
+                if "E Periodogram" in st.session_state["Alfven_graphs"]:
+                    st.multiselect(label="Please select the E polarization you want to plot", options=options[0], key="E_Peridogram_Graph")
 
-            if "E Periodogram" in st.session_state["Alfven_graphs"]:
-                st.multiselect(label="Please select the E polarization you want to plot", options=options[0], key="E_Peridogram_Graph")
+                if "B Periodogram" in st.session_state["Alfven_graphs"]:
+                    st.multiselect(label="Please select the B polarization you want to plot", options=options[1], key="B_Peridogram_Graph")
 
-            if "B Periodogram" in st.session_state["Alfven_graphs"]:
-                st.multiselect(label="Please select the B polarization you want to plot", options=options[1], key="B_Peridogram_Graph")
+                if "E/B Periodogram" in st.session_state["Alfven_graphs"]:
+                    st.multiselect(label="Please select the E/B polarization you would like to plot", options=options[2], key="E/B_Periodogram_Graph")
+                
+                if "Cross Power Spectrum" in st.session_state["Alfven_graphs"]:
+                    st.multiselect(label="Please select the E/B cross power you would like to plot", options=options[3], key="EB_cross power")
 
-            if "E/B Periodogram" in st.session_state["Alfven_graphs"]:
-                st.multiselect(label="Please select the E/B polarization you would like to plot", options=options[2], key="E/B_Periodogram_Graph")
+                if "Cross phase" in st.session_state["Alfven_graphs"]:
+                    st.multiselect(label="Please select the E/B cross phase you would like to plot", options=options[4], key="EB_cross phase")
+                if 'B B lag' in st.session_state["Alfven_graphs"]:
+                    st.multiselect(label="Please select the B lags you would like to plot", options=options[5], key="lags_cross")
+        elif graph_type[0] == "single value":
+            time_rangestart = st.time_input(
+            label="Time to the start of the conjunction",
+            step=60,
+            key="time_start_single",
+            value=st.session_state["time_start"],
+            )
+
+            time_rangeend = st.time_input(
+                label="Time to the end of the conjunction",
+                step=60,
+                key="time_end_single",
+                value=st.session_state["time_end"],
+            )
+            seconds_start = st.slider(
+                "Seconds start",
+                min_value=0,
+                max_value=60,
+                step=1,
+                value=0,
+                key="second_start_single",
+            )
+            seconds_end = st.slider(
+                "Seconds ends",
+                min_value=0,
+                max_value=60,
+                step=1,
+                value=60,
+                key="second_end_single",
+            )
             
-            if "Cross Power Spectrum" in st.session_state["Alfven_graphs"]:
-                st.multiselect(label="Please select the E/B cross power you would like to plot", options=options[3], key="EB_cross power")
+            timerange_singles = (
+                datetime.combine(st.session_state['date'], st.session_state['time_start_single'])
+                + timedelta(seconds=int(seconds_start)),
+                datetime.combine(st.session_state['date'], st.session_state['time_end_single'])
+                + timedelta(seconds=int(seconds_end)),
+            )
+            if st.session_state['lag'] == True:
+                st.multiselect(label="Choose the variable in the single graphs", options=sum(options, []), key="singles_graphs")
+            else:
+                st.multiselect(label="Choose the variable in the singles", options=sum(options[:-1], []), key="singles_graphs")
+            st.select_slider(label="Please select the number of samples per segment (note 16sps)", value='window length', options=['window length', 'half window length', 'quarter window'], key="nperseg")
 
-            if "Cross phase" in st.session_state["Alfven_graphs"]:
-                st.multiselect(label="Please select the E/B cross phase you would like to plot", options=options[4], key="EB_cross phase")
-            if 'B B lag' in st.session_state["Alfven_graphs"]:
-                st.multiselect(label="Please select the B lags you would like to plot", options=options[5], key="lags_cross")
 
 
             ##TODO IMPLEMENT THE Cross PHASE and POWEr
@@ -1011,7 +1065,10 @@ def Render_Graph(timerange):
         "EB_cross phase": st.session_state["EB_cross phase"],
         "lags_cross": st.session_state["lags_cross"],
         "nperseg": st.session_state["nperseg"],
-        "lag": st.session_state["lag"]
+        "lag": st.session_state["lag"],
+        "time_range_single": timerange_singles,
+        "singles_graph": st.session_state["singles_graphs"],
+        "pixel_average": st.session_state["pixel_average"]
 
     }
 
@@ -1084,6 +1141,7 @@ def Main():
         datetime.combine(date_range, time_rangeend)
         + timedelta(seconds=int(seconds_end)),
     )
+    
 
     st.multiselect(
         label="What satellites would you like to Graph",
