@@ -16,7 +16,8 @@ from scipy.optimize import minimize
 from viresclient import set_token
 from viresclient import SwarmRequest
 import asilib.skymap
-
+import warnings
+warnings.filterwarnings('ignore')
 plt.style.use("cyberpunk")
 
 st.title("Date and conjunction time")
@@ -543,6 +544,8 @@ def Animation(timerange):
                                         "atha",
                                         "tpas",
                                         "inuv",
+                                        "gako",
+                                        "mcgr"
                                     ],
                                     key="".join([str(i), "site"]),
                                     max_selections=1,
