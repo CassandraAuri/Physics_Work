@@ -28,7 +28,10 @@ def process_string(input_string):
     return concatenated_string
 
 def butter_bandpass(cutoffs, fs, order=4):
-    return butter(order, cutoffs, fs=fs, btype="band")
+    if cutoffs[0] ==0:
+        return butter(order, cutoffs[1], fs=fs, btype="low")
+    else:
+        return butter(order, cutoffs, fs=fs, btype="band")
 
 
 def butter_bandpass_filter(data, cutoffs, fs, order=4):
@@ -308,7 +311,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         
 
 
-        return
+        return 
     
     def Animation_rows():
         #TODO Creates an animation of times series of deviations E and B, plot periodograms, plot E/B ratio for given, and what polarization or coordinate should be graphed for each plot
@@ -964,7 +967,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
 
     
 
-    return 
+    return  data
 
 def lag(x,y):
     """
@@ -983,7 +986,7 @@ def lag(x,y):
 
 
 def EBplotsNEC(user_select):
-    
+    data_returned=None
     set_token(
         "https://vires.services/ows",
         set_default=True,

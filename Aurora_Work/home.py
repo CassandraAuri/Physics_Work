@@ -883,7 +883,7 @@ def Graph():
     timerange_singles=None
 
     if st.session_state["Filtering"] == True:
-        st.select_slider(label="Please select the low pass in Hz", value=0.2, options=[0.1,0.2,0.5, 1, 2, 4], key="low_pass")
+        st.select_slider(label="Please select the low pass in Hz", value=0.2, options=[0,0.1,0.2,0.5, 1, 2, 4], key="low_pass")
         st.select_slider(label="Please select the low pass in Hz", value=7, options=[0.5, 1, 2, 4, 6, 7, 7.9], key="high_pass")
     
     if st.session_state["E_B_ratio"] == True:
@@ -1081,9 +1081,9 @@ def Render_Graph(timerange):
     print("axes")
     print(dict["coordinate_system"][0])
     if dict["coordinate_system"][0] == "Mean-field aligned":
-        figaxes = EBplotsNEC(dict)
+        fig,axes,data = EBplotsNEC(dict)
         print("called")
-        st.session_state["Graph"] = figaxes
+        st.session_state["Graph"] = [fig,axes]
     return
 
 
