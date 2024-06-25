@@ -1952,7 +1952,7 @@ def EBplotsNEC(user_select):
             else:
                 efield = efield_nonband
                 bfield = bfield_non_band
-            Graphing_Ratio(
+            data_returned=Graphing_Ratio(
                 space_craft_with_E, efield, bfield, time_E, time_B, user_select, fig, axes
             )
         if user_select["sky_map_values"] != None and user_select["Pixel_intensity"] == True:
@@ -1972,4 +1972,4 @@ def EBplotsNEC(user_select):
     # mplcyberpunk.add_gradient_fill(
     # ax=axes[i], alpha_gradientglow=0.8, gradient_start="zero")
 
-    return fig, axes, 
+    return fig, axes, data_returned
