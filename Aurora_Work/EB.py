@@ -456,8 +456,6 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                         axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, bandpass ]), data[k, i, 6,index, bandpass],"-o", label=val_sat) #Frequencies E's
                     axes_ani[axes_used + l ].set_ylabel(str(val) + " nT ")
                     axes_ani[axes_used + l ].legend()
-                    if i==0:
-                        print(data[k, 0, 6,index, :], 'plotted')
                     axes_ani[axes_used + l ].set_xlim(user_select["bandpass"][1])
                 return  axes_used + len(user_select["EB_cross phase"])
             
@@ -495,7 +493,6 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                             bandpass=np.where((np.real(data[k, 0, 0, 0, :]) >= user_select['bandpass'][1][0]) & (np.real(data[k, 0, 0, 0, :]) <= user_select['bandpass'][1][1]))[0]
                         else: bandpass =np.where(np.real((data[k, 0, 0, 0, :]) >= 0))[0]
 
-                        print((np.real(data[k, 0, 0, 0, :]), val_sat))
                         axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, bandpass ]), data[k, i, 2,index, bandpass]*1e9, label=val_sat) #Frequencies E's
                     
                     axes_ani[axes_used + l ].set_ylabel(str(val) + " nT ")
@@ -578,16 +575,15 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
             axes_used=0
             if user_select["Time_Series"] != None:
                 axes_used=Time_Series_plot()
-                print(axes_used, 'axestimeree')
             if user_select["E_periodogram"] != None:
                 axes_used = E_Periodogram_Plot(axes_used) 
-                print(axes_used, 'axesE')
+
             if user_select["B_periodogram"] != None:
                 axes_used = B_Periodogram_Plot(axes_used)
-                print(axes_used, 'axesB')
+
             if user_select["EB_periodogram"] != None:
                 axes_used = EB_Periodogram_Plot(axes_used)
-                print('EB_Periodogram_Plot')
+
             if user_select["EB_cross power"] != None:
                 axes_used  = EB_power_plot(axes_used)
             if user_select["EB_cross phase"] != None:
@@ -595,9 +591,9 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
             if user_select["lags_cross"] !=None:
                 axes_used=BB_power_plot(axes_used)
             return
-        print('ani start', frames)
+
         ani = animation.FuncAnimation(fig=fig_ani, func=animate, frames=frames) #What
-        print('ani end')
+
         FFwriter = animation.FFMpegWriter(fps=int(6*sampling_rate_seconds))  #TODO given the framerate of 2 frames per second, which is equivalent to 6 seconds imager time = 1 second animation time, calculate the number of windows inbetween given a set step size
         ani.save("animationAlfven.mp4", writer=FFwriter)
         
@@ -713,8 +709,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
 
                 # Get the indices of non-NaN elements
                 non_nan_indices = np.where(non_nan_mask)[0]
-                print(non_nan_indices, 'indiciess')
-                print(data[k, non_nan_indices, 4,0, 0])
+
                 
                 times= datetimes[np.real(np.array(data[k, non_nan_indices, 4,0, 0] , dtype=int))] 
                 
@@ -884,7 +879,6 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                     elif user_select["heatmap"][i] == "E Polodial / B Azimuth":
                         index1 = 3
                         index2=  1
-                print(np.shape(data))
                 if user_select['bandpass'][0] == True:
                     bandpass=np.where((np.real(data[k, 0, 0, 0, :]) >= user_select['bandpass'][1][0]) & (np.real(data[k, 0, 0, 0, :]) <= user_select['bandpass'][1][1]))[0]
                 else: 
@@ -892,8 +886,6 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 if index1 ==7 and index2==1 or index1==6: #phase
                     axes[length_for_axis+ indicies].plot( np.absolute(data[k, 0, 0, 0, bandpass]),np.real(data[k, 0, index1,index2,bandpass]))#frequency, data
                 else:
-                    print(np.absolute(data[k, 0, 0,0,bandpass]))
-                    print(np.absolute(data[k, 0, index1,index2,bandpass]), 'test1234')
                     axes[length_for_axis + indicies].plot(np.absolute(data[k, 0, 0,0,bandpass]), np.absolute(data[k, 0, index1,index2,bandpass]))
                     axes[length_for_axis + indicies].set_yscale("log")
                 axes[length_for_axis+indicies].set_title(
@@ -911,9 +903,9 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
     if user_select['heatmap'] !=None:
         sampling_rate_seconds=user_select["sampling_rate"]
         sampled_datetimes = create_sampled_datetimes(time_range, sampling_rate_seconds)
-        print(len(sampled_datetimes), 1/sampling_rate_seconds *user_select['window_length'])
+
         length_of_windows=int(len(sampled_datetimes) - 1/sampling_rate_seconds *user_select['window_length'])
-        print(length_of_windows)
+
         window_length=user_select["window_length"]
     else:
         window_length=int((user_select["time_range_single"][1]-user_select["time_range_single"][0]).total_seconds())
@@ -976,7 +968,6 @@ def lag(x,y):
     """
     #if len(x) != len(y):
     #    y=np.delete(y,-1, axis=0)
-    print(np.shape(x), np.shape(y))
     correlation = signal.correlate(
     x[:,1], y[:,1], mode="full")
     lags = signal.correlation_lags(len(x[:,1]),
@@ -1068,7 +1059,6 @@ def EBplotsNEC(user_select):
                 length_for_axis += len(user_select["sky_map_values"])
             except TypeError:
                 raise ValueError("Sky Map not Selected")
-        print(length_for_axis, 'rows')
         return length_for_axis
 
     fig, axes = plt.subplots(
@@ -1237,7 +1227,6 @@ def EBplotsNEC(user_select):
                 elif user_select["graph_B_chosen"][i] == "Mean-field":
                     index = 2
             if user_select['lag'] == True:
-                print(lag_data[3], process_string(label))
                 if lag_data[3] == process_string(label):
                     lag_seconds = int(lag_data[2])
                     lag_fraction = lag_data[2] - lag_seconds
@@ -1284,7 +1273,6 @@ def EBplotsNEC(user_select):
                 global axes_twin_PF
                 axes_twin_PF=[ axes[x+length_for_axis].twinx() for x in range(len(user_select["graph_PF_chosen"])) ] 
         except TypeError:
-            print('singleaxes')
             if user_select["bandpass"][0] == True and has_twin==False:
                 axes_twin_PF=axes.twinx() 
         for i in range(len(user_select["graph_PF_chosen"])):
@@ -1400,7 +1388,6 @@ def EBplotsNEC(user_select):
         for i in range(2):
             axes_2.plot(time, arrayx[i], label=label[i], alpha=0.2)
         max_lim=np.nanmax(np.absolute(arrayx))
-        print(max_lim, 'maxes')
         axes_2.set_ylim(-max_lim,max_lim)
         axes[length_for_axis].legend()
         if user_select['singles_graph'] != None:
@@ -1434,7 +1421,6 @@ def EBplotsNEC(user_select):
                 for k in range(len(pixel[i][j])):
                     if pixel[i][j][k] == 0:
                         pixel[i][j][k] = np.nan
-                print(i + length_for_axis, i, length_for_axis, 'skymap')
                 axes[i + length_for_axis].plot(
                     time[i], pixel[i][j], label="".join(["swarm ", spacecraft[j]])
                 )
@@ -1453,6 +1439,7 @@ def EBplotsNEC(user_select):
         return np.array([x, y, -1*z])
 
     def requesterarraylogic():
+        nonlocal data_returned
         def E():
             return_data_non_band = []
             return_data_band =[]
@@ -1474,7 +1461,7 @@ def EBplotsNEC(user_select):
                     # Checks if space-craft is selected
                     if "".join(("swarm", dsE["Spacecraft"][0].lower())) in labels:
                         
-                        print(has_E, dsE["Spacecraft"][0].lower())
+
                         has_E.append(True)
                         satellites_with_E.append(
                             "".join(("swarm", dsE["Spacecraft"][0].lower()))
@@ -1546,7 +1533,7 @@ def EBplotsNEC(user_select):
                             ElectricData = ElectricNEC
 
                         # Plots electric field time seres
-                        print(sum(has_E)-1, 'E length')
+
                         if user_select["graph_E_chosen"] != None:
                             twin_axis=graphingE(
                                 "".join(("Swarm ", dsE["Spacecraft"][0])),
@@ -1618,17 +1605,17 @@ def EBplotsNEC(user_select):
                         for l in range(3):  # moving average of bres for all three components
                             bresarrangedband[:, l] = butter_bandpass_filter(bresarranged[:, l], user_select["bandpass"][1], 50)
                     
-
                     ##TODO Add MFA
                     if user_select['coordinate_system'][0] == "Mean-field aligned":
-                        latitude, longitude, radius = ds['Latitude'].to_numpy(), ds['Longitude'].to_numpy(),  ds["Radius"].to_numpy()  # Gets Emphermis data
+                        latitude, longitude, radius = ds['Latitude'].to_numpy(), ds['Longitude'].to_numpy(),  ds["Radius"].to_numpy()-6.371e6  # Gets Emphermis data
+                        
                         r_nec = Coordinate_change(latitude, longitude, radius) #Changes coordinates of r to NEC
                         Bdata = MFA(bresarranged, bmodelarranged, r_nec.T) #puts data into MFA coordinate system
                         Bdataband =MFA(bresarrangedband, bmodelarranged,r_nec.T)
                     else:
                         Bdata = bresarranged
                         Bdataband = bresarrangedband
-                    print(i, "bcall")
+
                     if user_select["graph_B_chosen"] != None: #plots if selected
                         twin_axis=graphingB(
                             "".join(("Swarm ", dsmodel_res["Spacecraft"][0])),
@@ -1729,26 +1716,30 @@ def EBplotsNEC(user_select):
                     )
             return return_data
 
-        def Difference_plots(bfield,btime, blabel):
+        def Difference_plots(bfield, efield, btime, etime, blabel):
             # flux is 16Hz, change to 2Hz to match FAC,
             for index in range(len(bfield)):
-                print(lag_data[3], blabel, process_string(blabel[index]))
+
                 if lag_data[3] == process_string(blabel[index]):
                     if index==1:
                         indexopposite=0
                     else:
                         indexopposite=1
                     lag_used=np.round(lag_data[2]*50).astype(int)
-                    print(lag_used)
+
                     if lag_used > 0:
-                        offset_ts1 = np.concatenate((np.full(lag_used, np.nan), bfield[index][:, 1]))[:len(bfield[indexopposite][:,1])]
-                        offset_ts2 = bfield[indexopposite][:,1]
+                        offset_ts1_B = np.concatenate((np.full(lag_used, np.nan), bfield[index][:, 1]))[:len(bfield[indexopposite][:,1])]
+                        offset_ts2_B = bfield[indexopposite][:,1]
+                        offset_ts1_E = np.concatenate((np.full(lag_used, np.nan), bfield[index][:, 1]))[:len(bfield[indexopposite][:,1])]
+                        offset_ts2_E = bfield[indexopposite][:,1]
                     elif lag_used < 0:
-                        offset_ts1 = bfield[index][:, 1]
-                        offset_ts2 = np.concatenate((np.full(-lag_used, np.nan), bfield[indexopposite][:,1]))[:len(bfield[index][:, 1])]
+                        offset_ts1_B = bfield[index][:, 1]
+                        offset_ts2_B = np.concatenate((np.full(-lag_used, np.nan), bfield[indexopposite][:,1]))[:len(bfield[index][:, 1])]
             graphingDifference(
-                [offset_ts1,offset_ts2],
+                [offset_ts1_B,offset_ts2_B],
+                [offset_ts1_E, offset_ts2_E],
                 btime[indexopposite],
+                etime[indexopposite],
                 blabel
             )
 
@@ -1808,7 +1799,7 @@ def EBplotsNEC(user_select):
                     # Trex is 6 second cadence compared to 3 of rego and themos
 
                     sat_time = np.array(emph[i][0])  # sets timestamp
-                    print(sat_time, 'sat_time')
+
                     sat_lla = np.array([emph[i][1], emph[i][2], emph[i][3]]).T
 
                     conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
@@ -1819,9 +1810,6 @@ def EBplotsNEC(user_select):
 
                     lat_satellite.append(conjunction_obj.sat["lat"].to_numpy())
                     lon_satellite.append(conjunction_obj.sat["lon"].to_numpy())
-                print(lat_satellite)
-                print(lon_satellite)
-                print('EB, lat, lon')
 
                 lat, lon = asi.skymap["lat"], asi.skymap["lon"]
 
@@ -1846,7 +1834,6 @@ def EBplotsNEC(user_select):
                     Returns:
                     float: The average value of the subregion.
                     """
-                    print(start_index)
                     row, col = start_index
                     row=int(row)
                     col=int(col)
@@ -1859,7 +1846,7 @@ def EBplotsNEC(user_select):
                     
                     # Calculate the average of the subregion
                     average_value = np.sum(subregion)
-                    print(average_value)
+
                     return average_value
 
                 for i in range(len(emph[0][0])):  # len of time series

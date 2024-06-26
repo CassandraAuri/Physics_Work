@@ -1,23 +1,26 @@
+# inttatlize packages
 import numpy as np
-
 import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 import arviz as az
 
+# import mplcyberpunk
 from itertools import chain
-
+import pickle
 from scipy.fft import fft, fftfreq
 
 import xarray
 from scipy import signal
 from scipy import constants
+import pytensor
 import pytensor.tensor as pt
 import pymc as pm
+
 mu0 = constants.mu_0
 from scipy.special import gamma, jv
-import copy
-import matplotlib.pyplot as plt
 
-powerspec,omega, conducitivies,Alfven_speed = np.genfromtxt('powerspectrum.csv', delimiter=','), np.genfromtxt('frequencies.csv', delimiter=',' ), np.genfromtxt('conducitivies.csv', delimiter=','), np.genfromtxt('Alfven.csv', delimiter=',')
+import copy
+
 
 def cbesselj2(nu, x):
     kMax = 100
@@ -75,7 +78,7 @@ class model(object):
         self.SigmaA = 1 / (
             Vai * mu0
         )  # Alven conductance as given by equation on the right side at the top of pg 1556
-        self.omega  = omega * 2 * np.pi
+        self.omega = np.arange(interval, 8 + interval, interval) * 2 * np.pi
 
     def x0(self):
         return 2 * self.h * self.omega / self.Vai
@@ -127,25 +130,26 @@ class model(object):
         # normalisedPhiOverVaiAz[i] = phiOverVaiAz*alpha
         # phiOverAz[i] = phiOverVaiAz*self.Vai
         # impedance[i] = phiOverAz*mu0
-        return R, np.abs(phiOverVaiAz)
+        return R, np.real(phiOverVaiAz)
 
 
 def my_loglike(theta, data):
-    Vai=theta[1]*3e6
     model_init = model(
         theta[0],
-        Vai,
-        theta[3], #Z
-        theta[2]*100e3, #H
-        theta[4],
-        0.01
+        theta[1] * 500e3,
+        theta[2] * 400e3,
+        theta[3] * 100e3,
+        theta[4] * 0.001,
+        0.0348,
     )
-
     dat = model_init.r_bayes()[1]
-    
-    model_data = np.abs(dat * Vai)
 
-    return -1/(2*theta[5]**2) * (np.log10(data) - np.log10(model_data)) ** 2 - np.log(np.sqrt(2 * np.pi)) - np.log(theta[5]) # Simple distance minimization
+    model_data = np.abs(dat * theta[1] * 500e3)
+    plt.plot(model_data)
+    plt.show()
+    return -0.5 * np.sum(
+        (data / np.max(data) - model_data / np.max(data)) ** 2
+    )  # Simple distance minimization
 
 
 # define a pytensor Op for our likelihood function
@@ -159,7 +163,7 @@ class LogLike(pt.Op):
     """
 
     itypes = [pt.dvector]  # expects a vector of parameter values when called
-    otypes = [pt.dvector]  # outputs a single scalar value (the log likelihood)
+    otypes = [pt.dscalar]  # outputs a single scalar value (the log likelihood)
 
     def __init__(self, loglike, data):
         """
@@ -192,31 +196,30 @@ class LogLike(pt.Op):
 
         outputs[0][0] = np.array(logl)  # output the log-likelihood
 
-#TODO need height
+
 def main():
-    logl = LogLike(my_loglike, powerspec)
-    print(conducitivies[0],Alfven_speed[0]/1.5e6 )
+    powerspec = np.genfromtxt(
+        r"C:\Users\1101w\Documents\GitHub\Physics_Work\Aurora_Work\alfven_data.csv", delimiter=","
+    )
+    logl = LogLike(my_loglike, np.sqrt(powerspec))
     with pm.Model():
         # uniform priors on m and c
-        
-        sigmap = pm.Uniform("sigmap", lower=1, upper=10, initval=conducitivies[0])
 
-        VA_norm = pm.Uniform("vai", lower=0.2, upper=4, initval=1)
-        h_norm = pm.Uniform("h", lower=0.1, upper=4, initval=1)
-        deviation= pm.HalfCauchy("deviation", beta=10 ) # from https://www.pymc.io/projects/docs/en/stable/learn/core_notebooks/GLM_linear.html#glm-linear
-        epsilon=pm.Uniform("epsilon", lower=0.005,  upper=0.5, initval=0.01)
+        sigmap = pm.Uniform("sigmap", lower=1, upper=5, initval=2.5)
+        Vai_norm = pm.Uniform("vai", lower=0.3, upper=3, initval=1)
+        h_norm = pm.Uniform("h", lower=0.3, upper=3, initval=1)
+        z_norm = pm.Uniform("z", lower=0.3, upper=3, initval=1)
+        epsilon = pm.Uniform("epsilon", lower=0.3, upper=3, initval=1)
         # convert m and c to a tensor vector
-        theta = pt.as_tensor_variable([sigmap, VA_norm, h_norm, 428e3-100e3, epsilon, deviation])
+        theta = pt.as_tensor_variable([sigmap, Vai_norm, h_norm, z_norm, epsilon])
 
         # use a Potential to "call" the Op and include it in the logp computation
         pm.Potential("likelihood", logl(theta))
 
         # Use custom number of draws to replace the HMC based defaults
-        idata_mh = pm.sample(1500, tune=1500, cores=6, return_inferencedata=True)
-    idata_mh.to_netcdf("stressor.nc")
+        idata_mh = pm.sample(350, tune=350, cores=8, return_inferencedata=True)
+    idata_mh.to_netcdf("filename.nc")
 
 
 if __name__ == "__main__":
     main()
-
-

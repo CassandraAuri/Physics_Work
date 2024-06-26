@@ -523,7 +523,7 @@ def Animation(timerange):
                             ):
                                 st.multiselect(
                                     "Name of Site",
-                                    ["FSMI", "GILL", "RESU", "TALO", "rank", "fsim"],
+                                    ["FSMI", "GILL", "RESU", "TALO", "rank", "fsim", "sach"],
                                     key="".join([str(i), "site"]),
                                     max_selections=1,
                                 )
