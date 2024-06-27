@@ -621,8 +621,12 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 length_for_axis += 1
             else:
                 pass
-            if user_select["Difference"] == True:
-                length_for_axis += 1
+            if user_select ["E_difference"] != None:
+                length_for_axis +=len(user_select["E_difference"])
+            if user_select ["B_difference"] != None:
+                length_for_axis +=len(user_select["B_difference"])
+            if user_select ["PF_difference"] != None:
+                length_for_axis +=len(user_select["PF_difference"])
             else:
                 pass
             if user_select["Pixel_intensity"] == True:
@@ -800,8 +804,12 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 length_for_axis += 1
             else:
                 pass
-            if user_select["Difference"] == True:
-                length_for_axis += 1
+            if user_select ["E_difference"] != None:
+                length_for_axis +=len(user_select["E_difference"])
+            if user_select ["B_difference"] != None:
+                length_for_axis +=len(user_select["B_difference"])
+            if user_select ["PF_difference"] != None:
+                length_for_axis +=len(user_select["PF_difference"])
             else:
                 pass
             if user_select["Pixel_intensity"] == True:
@@ -1052,8 +1060,13 @@ def EBplotsNEC(user_select):
         if user_select["FAC"] == True:
             length_for_axis += 1
 
-        if user_select["Difference"] == True:
-            length_for_axis += 1
+        if user_select ["E_difference"] != None:
+            length_for_axis +=len(user_select["E_difference"])
+        if user_select ["B_difference"] != None:
+            length_for_axis +=len(user_select["B_difference"])
+            print('yay', len(user_select["B_difference"]))
+        if user_select ["PF_difference"] != None:
+            length_for_axis +=len(user_select["PF_difference"])
         if user_select["Pixel_intensity"] == True:
             try:
                 length_for_axis += len(user_select["sky_map_values"])
@@ -1362,7 +1375,7 @@ def EBplotsNEC(user_select):
                 axes[length_for_axis].axvline(user_select["time_range_single"][0], color='orchid', linestyle='dashed')
                 axes[length_for_axis].axvline(user_select["time_range_single"][1], color='orchid', linestyle='dashed')
 
-    def graphingDifference(arrayx, time, label):
+    def graphingDifference(arrayx, time, label, i, plotted, fieldtype):
         length_for_axis = 0
         try:
             length_for_axis += len(user_select["graph_E_chosen"])
@@ -1381,18 +1394,19 @@ def EBplotsNEC(user_select):
         else:
             pass
 
-        axes[length_for_axis].plot(time, arrayx[1]-arrayx[0], label='Subtracted')
+        axes[length_for_axis +i].plot(time, arrayx[1]-arrayx[0], label='Subtracted')
         max_lim=np.nanmax(np.absolute(arrayx[1]-arrayx[0]))
-        axes[length_for_axis].set_ylim(-max_lim,max_lim)
-        axes_2=axes[length_for_axis].twinx()
-        for i in range(2):
-            axes_2.plot(time, arrayx[i], label=label[i], alpha=0.2)
+        axes[length_for_axis +i].set_ylim(-max_lim,max_lim)
+        axes_2=axes[length_for_axis +i].twinx()
+        for l in range(2):
+            axes_2.plot(time, arrayx[l], label=label[l], alpha=0.2)
         max_lim=np.nanmax(np.absolute(arrayx))
         axes_2.set_ylim(-max_lim,max_lim)
-        axes[length_for_axis].legend()
+        axes[length_for_axis +i].legend()
         if user_select['singles_graph'] != None:
-                axes[length_for_axis].axvline(user_select["time_range_single"][0], color='orchid', linestyle='dashed')
-                axes[length_for_axis].axvline(user_select["time_range_single"][1], color='orchid', linestyle='dashed')
+                axes[length_for_axis +i].axvline(user_select["time_range_single"][0], color='orchid', linestyle='dashed')
+                axes[length_for_axis + i].axvline(user_select["time_range_single"][1], color='orchid', linestyle='dashed')
+        axes[length_for_axis + i].set_title(f"Difference of {fieldtype} in the {plotted} direction with appropriate units")
 
     def Graphing_skymap(pixel, time, spacecraft):
         length_for_axis = 0
@@ -1412,10 +1426,13 @@ def EBplotsNEC(user_select):
             length_for_axis += 1
         else:
             pass
-        if user_select["Difference"] == True:
-            length_for_axis += 1
-        else:
-            pass
+        if user_select ["E_difference"] != None:
+            length_for_axis +=len(user_select["E_difference"])
+        if user_select ["B_difference"] != None:
+            length_for_axis +=len(user_select["B_difference"])
+        if user_select ["PF_difference"] != None:
+            length_for_axis +=len(user_select["PF_difference"])
+            
         for i in range(len(pixel)):  # length of platforms basically
             for j in range(len(pixel[0])):  # Length of satellites selected
                 for k in range(len(pixel[i][j])):
@@ -1697,6 +1714,7 @@ def EBplotsNEC(user_select):
             return_data = []
             looping_list=[[efieldnonband, bfieldnonband], [efieldband, bfieldband]]
             twin_axis=False
+            band_or_no=["nonband", "band"]
             for k in range(2):
                 efield=looping_list[k][0]
                 bfield=looping_list[k][1]
@@ -1712,37 +1730,66 @@ def EBplotsNEC(user_select):
 
                     twin_axis=graphingFlux(space_craft_with_E[i], time_E, flux_individual, k, i, twin_axis)
                     return_data.append(
-                        [space_craft_with_E[i], time_E, flux_individual[2]]
+                        [space_craft_with_E[i], time_E, flux_individual[2], band_or_no[k]]
                     )
             return return_data
 
-        def Difference_plots(bfield, efield, btime, etime, blabel):
-            # flux is 16Hz, change to 2Hz to match FAC,
-            for index in range(len(bfield)):
+        def Difference_plots(bfield,  btime, blabel, efield, etime, elabel, poynting_flux_data,poynting_flux_time, poynting_flux_label):
 
-                if lag_data[3] == process_string(blabel[index]):
-                    if index==1:
-                        indexopposite=0
-                    else:
-                        indexopposite=1
-                    lag_used=np.round(lag_data[2]*50).astype(int)
+            data=[[user_select["B_difference"], bfield,btime,blabel], [user_select["E_difference"], efield,etime,elabel], [user_select["PF_difference"],
+                    poynting_flux_data, poynting_flux_time, poynting_flux_label]] #creates a list of the different field types the user may want to difference
+            field_type=["Magnetic", "Electric", "Poynting Flux"] #list of fields
+            indicies_used=0 #holder to say which axes to plot on 
+            for i in range(len(data)): #Loops through data list
+                if data[i][0] == None: #if not selected pass
+                    pass
+                else:
+                    for k in range(len(data[i][0])): #Loop through different coordinates
+                        for index in range(len(data[i][1])): #Loops through satellite
+                            if lag_data[3] == process_string(data[i][3][index]):
+                                if index==1: #Ask's if the space-craft is the lagged one or fixed one
+                                    indexopposite=0
+                                else:
+                                    indexopposite=1
+                                if i==0: #Only magnetic field has an sps 50, rest have 16
+                                    lag_used=np.round(lag_data[2]*50).astype(int)
+                                else:
+                                    lag_used=np.round(lag_data[2]*16).astype(int)
+                                if  data[i][0][k] == "North": #Asks the coordinate system #TODO add MFA
+                                    index_coordinate=0
+                                elif data[i][0][k] == "East":
+                                    index_coordinate=1
+                                else:
+                                    index_coordinate=2
 
-                    if lag_used > 0:
-                        offset_ts1_B = np.concatenate((np.full(lag_used, np.nan), bfield[index][:, 1]))[:len(bfield[indexopposite][:,1])]
-                        offset_ts2_B = bfield[indexopposite][:,1]
-                        offset_ts1_E = np.concatenate((np.full(lag_used, np.nan), bfield[index][:, 1]))[:len(bfield[indexopposite][:,1])]
-                        offset_ts2_E = bfield[indexopposite][:,1]
-                    elif lag_used < 0:
-                        offset_ts1_B = bfield[index][:, 1]
-                        offset_ts2_B = np.concatenate((np.full(-lag_used, np.nan), bfield[indexopposite][:,1]))[:len(bfield[index][:, 1])]
-            graphingDifference(
-                [offset_ts1_B,offset_ts2_B],
-                [offset_ts1_E, offset_ts2_E],
-                btime[indexopposite],
-                etime[indexopposite],
-                blabel
-            )
+                                if lag_used > 0: #Offsets the time series of the lagged satellite and cuts the ends off to make sure its the same length as the other
+                                    offset_ts1 = np.concatenate((np.full(lag_used, np.nan), data[i][1][index][:, index_coordinate]))[:len(data[i][1][indexopposite][:,index_coordinate])]
+                                    offset_ts2 = data[i][1][indexopposite][:,index_coordinate]
+                                elif lag_used < 0:
+                                    offset_ts1 = data[i][1][index][:, index_coordinate]
+                                    offset_ts2 = np.concatenate((np.full(-lag_used, np.nan), data[i][1][indexopposite][:,1]))[:len(data[i][1][index][:, index_coordinate])]
+                        print(offset_ts1,offset_ts2,field_type[i], len(data[i][2]) )
+                        if len(data[i][2]) ==  len(data[i][1]): #Asks if the length of time series, E's are always synced up but B's differ
+                            graphingDifference(
+                                [offset_ts1,offset_ts2], #data
+                                data[i][2][indexopposite], #time
+                                data[i][3], #label
+                                indicies_used, #axes 
+                                data[i][0][k], # coordinate selected
+                                field_type[i] #field type
+                            )
+                        else:
+                            graphingDifference(
+                                [offset_ts1,offset_ts2], #data
+                                data[i][2], #time
+                                data[i][3], #label
+                                indicies_used, #axes 
+                                data[i][0][k], # coordinate selected
+                                field_type[i] #field type
+                            )
 
+                        indicies_used+=1 #increments the axes plotted
+ 
         def skymap():
             pixel_chosen_total = []
             sat_time_each_platform = []
@@ -1931,8 +1978,48 @@ def EBplotsNEC(user_select):
         else:
             flux = pontying_flux(efield_band,efield_nonband, bfield_band,bfield_non_band)
 
-        if user_select["Difference"] == True:
-            Difference_plots(bfield_band, time_B, blabels)
+        if user_select['E_difference'] !=None or user_select["B_difference"] !=None or user_select["PF_difference"] !=None:
+            if user_select['E_difference'] == None:
+                efield=None
+                etime=None
+                elabel=None
+            else:
+                if user_select["bandpass"][0] == True:
+                    efield = efield_band
+                else:
+                    efield = efield_nonband
+                etime=time_E
+                elabel=space_craft_with_E
+            if user_select["B_difference"] == None:
+                bfield=None
+                btime=None
+                blabel=None
+            else:
+                if user_select["bandpass"][0] == True:
+                    bfield = bfield_band
+                else:
+                    bfield = bfield_non_band
+                btime=time_B
+                blabel=blabels
+            if user_select["PF_difference"] == None:
+                PFfield=None
+                PFtime=None
+                PFlabel=None
+            else:
+                if user_select["bandpass"][0] == True:
+                    band="band"
+                else:
+                    band="nonband"
+                PFtime=[]
+                PFlabel=[]
+                PFfield=[]
+                for i in range(len(flux)):
+                    if flux[i][3] == band:
+                        PFtime.append(flux[i][1])
+                        PFlabel.append(flux[i][0])
+                        PFfield.append(flux[i][2])
+
+            Difference_plots(bfield, btime, blabel, efield,etime,elabel,PFfield,PFtime,PFlabel)
 
         ##TODO Implement ratio
         if user_select["E_B_ratio"] == True:

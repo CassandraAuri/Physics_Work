@@ -129,14 +129,14 @@ class model(object):
 
 
 model_init = model(
-    10,
-    776e3*1.25,
-    100e3*0.2,
+    1,
+    1e6*0.2,
+    100e3*1.5,
     0.01,
     0.15)
 
 dat = model_init.r_bayes()[1]
-model_data = np.abs(dat * 776e3*1.25)
+model_data = np.abs(dat * 1e6)
 plt.plot(np.log10(model_data), color='orange')
 plt.plot(np.log10(data))
 plt.show()

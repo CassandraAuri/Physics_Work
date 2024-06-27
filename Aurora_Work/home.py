@@ -370,7 +370,7 @@ def graphing_animation(dict):
 def Animation_function_caller(Animation_dict):
     def Animate_graph():
         # Gets the figures and axes from cache
-        fig, axes = st.session_state["Graph"]
+        fig, axes,data = st.session_state["Graph"]
         n = int(
             (
                 Animation_dict["time_range"][1]
@@ -707,6 +707,7 @@ def Animation(timerange):
 
 def Graph():
     st.title("Graph Interface:")
+    
 
     def Graph_options_B(coord_options):
         st.multiselect(
@@ -719,6 +720,10 @@ def Graph():
             key="Frequency_B",
             options=["1Hz", "50Hz"],
             max_selections=1,
+        )
+        st.checkbox(
+            label="Would you like to difference theses B's versus each satellite (lag)",
+            key="B_difference",
         )
 
     def Graph_options_E(coord_options):
@@ -733,6 +738,10 @@ def Graph():
             options=["2Hz", "16Hz"],
             max_selections=1,
         )
+        st.checkbox(
+            label="Would you like to difference theses E's versus each satellite (lag)",
+            key="E_difference",
+        )
 
     def Graph_options_F(ignored):
         pass
@@ -743,7 +752,16 @@ def Graph():
             options=coord_options,
             key="PF_options_to_use",
         )
-
+        st.checkbox(
+            label="Would you like to difference theses Ponyting Flux's versus each satellite (lag)",
+            key="PF_difference",
+        )
+    if "B_difference" not in st.session_state:
+        st.session_state["B_difference"] = False
+    if "E_difference" not in st.session_state:
+        st.session_state["E_difference"] = False
+    if "PF_difference" not in st.session_state:
+        st.session_state["PF_difference"] = False
     options_for_graphs = ["B", "E", "FAC", "Poynting flux"]
     Graph_functions = [
         Graph_options_B,
@@ -1040,6 +1058,21 @@ def Render_Graph(timerange):
     except KeyError:
         skymap_values = None
 
+
+    if st.session_state['B_difference'] == True:
+        B_difference=st.session_state['B_options_to_use']
+    else:
+        B_difference = None
+    if st.session_state['E_difference'] == True:
+        E_difference=st.session_state['E_options_to_use']
+    else:
+        E_difference = None
+    if st.session_state['PF_difference'] == True:
+        PF_difference=st.session_state['PF_options_to_use']
+    else:
+        PF_difference = None
+
+
     dict = {
         "time_range": timerange,
         "satellite_graph": st.session_state["Satellite_Graph"],
@@ -1071,7 +1104,10 @@ def Render_Graph(timerange):
         "lag": st.session_state["lag"],
         "time_range_single": timerange_singles,
         "singles_graph": st.session_state["singles_graphs"],
-        "pixel_average": st.session_state["pixel_average"]
+        "pixel_average": st.session_state["pixel_average"],
+        "B_difference": B_difference,
+        "E_difference": E_difference,
+        "PF_difference": PF_difference,
 
     }
 

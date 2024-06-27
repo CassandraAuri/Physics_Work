@@ -131,7 +131,7 @@ class model(object):
 
 
 def my_loglike(theta, data):
-    Vai=theta[1]*3e6
+    Vai=theta[1]*1.5e6*np.sqrt(theta[4]**2+np.exp(-theta[3]/(theta[2]*100e3)))
     model_init = model(
         theta[0],
         Vai,
@@ -145,7 +145,7 @@ def my_loglike(theta, data):
     
     model_data = np.abs(dat * Vai)
 
-    return -1/(2*theta[5]**2) * (np.log10(data) - np.log10(model_data)) ** 2 - np.log(np.sqrt(2 * np.pi)) - np.log(theta[5]) # Simple distance minimization
+    return -1/(2*theta[5]**2) * (np.log10(data) - np.log10(model_data)) ** 2# Simple distance minimization
 
 
 # define a pytensor Op for our likelihood function
@@ -201,12 +201,11 @@ def main():
         
         sigmap = pm.Uniform("sigmap", lower=1, upper=10, initval=conducitivies[0])
 
-        VA_norm = pm.Uniform("vai", lower=0.2, upper=4, initval=1)
-        h_norm = pm.Uniform("h", lower=0.1, upper=4, initval=1)
+        VA_norm = pm.Uniform("va", lower=0.2, upper=4, initval=Alfven_speed[0]/1.5e6)
+        h_norm = pm.Uniform("h", lower=0.2, upper=4, initval=1)
         deviation= pm.HalfCauchy("deviation", beta=10 ) # from https://www.pymc.io/projects/docs/en/stable/learn/core_notebooks/GLM_linear.html#glm-linear
-        epsilon=pm.Uniform("epsilon", lower=0.005,  upper=0.5, initval=0.01)
         # convert m and c to a tensor vector
-        theta = pt.as_tensor_variable([sigmap, VA_norm, h_norm, 428e3-100e3, epsilon, deviation])
+        theta = pt.as_tensor_variable([sigmap, VA_norm, h_norm, 428e3-100e3, 0.01, deviation])
 
         # use a Potential to "call" the Op and include it in the logp computation
         pm.Potential("likelihood", logl(theta))
