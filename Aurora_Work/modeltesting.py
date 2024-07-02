@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 filename = 'powerspectrum.csv'
 data = pd.read_csv(filename, sep=",", header=None)
-
+powerspec,omega, conducitivies,Alfven_speed = np.genfromtxt('powerspectrum.csv', delimiter=','), np.genfromtxt('frequencies.csv', delimiter=',' ), np.genfromtxt('conducitivies.csv', delimiter=','), np.genfromtxt('Alfven.csv', delimiter=',')
 def cbesselj2(nu, x):
     kMax = 100
     tol = 1e-2
@@ -126,18 +126,18 @@ class model(object):
         # impedance[i] = phiOverAz*mu0
         return R, np.abs(phiOverVaiAz)
 
-
-
+h=150e3
+Vai=5e5
 model_init = model(
     1,
-    1e6*0.2,
-    100e3*1.5,
+    Vai,
+    h,
     0.01,
     0.15)
 
 dat = model_init.r_bayes()[1]
-model_data = np.abs(dat * 1e6)
+model_data = np.abs(dat * Vai)
 plt.plot(np.log10(model_data), color='orange')
-plt.plot(np.log10(data))
+plt.plot(np.log10(powerspec))
 plt.show()
 

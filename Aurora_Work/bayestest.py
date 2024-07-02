@@ -206,7 +206,7 @@ def main():
         # uniform priors on m and c
 
         sigmap = pm.Uniform("sigmap", lower=1, upper=5, initval=2.5)
-        Vai_norm = pm.Uniform("vai", lower=0.3, upper=3, initval=1)
+        Vai_norm = pm.Uniform("vai", lower=0.1, upper=3, initval=1)
         h_norm = pm.Uniform("h", lower=0.3, upper=3, initval=1)
         z_norm = pm.Uniform("z", lower=0.3, upper=3, initval=1)
         epsilon = pm.Uniform("epsilon", lower=0.3, upper=3, initval=1)

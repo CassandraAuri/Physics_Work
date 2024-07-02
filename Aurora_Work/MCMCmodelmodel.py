@@ -1,13 +1,10 @@
 import numpy as np
 
 import matplotlib.pyplot as plt
-import arviz as az
 
 from itertools import chain
 
 from scipy.fft import fft, fftfreq
-
-import xarray
 from scipy import signal
 from scipy import constants
 import pytensor.tensor as pt
@@ -15,10 +12,9 @@ import pymc as pm
 mu0 = constants.mu_0
 from scipy.special import gamma, jv
 import copy
-import matplotlib.pyplot as plt
 
-powerspec,omega, conducitivies,Alfven_speed = np.genfromtxt('powerspectrum.csv', delimiter=','), np.genfromtxt('frequencies.csv', delimiter=',' ), np.genfromtxt('conducitivies.csv', delimiter=','), np.genfromtxt('Alfven.csv', delimiter=',')
-
+#powerspec,omega, conducitivies,Alfven_speed = np.genfromtxt('powerspectrum.csv', delimiter=','), np.genfromtxt('frequencies.csv', delimiter=',' ), np.genfromtxt('conducitivies.csv', delimiter=','), np.genfromtxt('Alfven.csv', delimiter=',')
+#print(conducitivies,Alfven_speed)
 def cbesselj2(nu, x):
     kMax = 100
     tol = 1e-2
@@ -131,12 +127,12 @@ class model(object):
 
 
 def my_loglike(theta, data):
-    Vai=theta[1]*1.5e6*np.sqrt(theta[4]**2+np.exp(-theta[3]/(theta[2]*100e3)))
+    Vai=theta[1]*5e5
     model_init = model(
         theta[0],
         Vai,
         theta[3], #Z
-        theta[2]*100e3, #H
+        theta[2]*120e3, #H
         theta[4],
         0.01
     )
@@ -145,7 +141,7 @@ def my_loglike(theta, data):
     
     model_data = np.abs(dat * Vai)
 
-    return -1/(2*theta[5]**2) * (np.log10(data) - np.log10(model_data)) ** 2# Simple distance minimization
+    return -1/(2*theta[5]**2) * (np.log10(data) - np.log10(model_data)) ** 2 - np.log(np.sqrt(2 * np.pi)) - np.log(theta[5]) # Simple distance minimization
 
 
 # define a pytensor Op for our likelihood function
@@ -193,16 +189,35 @@ class LogLike(pt.Op):
         outputs[0][0] = np.array(logl)  # output the log-likelihood
 
 #TODO need height
+omega = np.array([
+    0.080, 0.160, 0.240, 0.320, 0.400, 0.480, 0.560, 0.640, 0.720, 0.800,
+    0.880, 0.960, 1.04, 1.12, 1.20, 1.28, 1.36, 1.44, 1.52, 1.60, 1.68, 1.76,
+    1.84, 1.92, 2.00, 2.08, 2.16, 2.24, 2.32, 2.40, 2.48, 2.56, 2.64, 2.72,
+    2.80, 2.88, 2.96, 3.04, 3.12, 3.20, 3.28, 3.36, 3.44, 3.52, 3.60, 3.68,
+    3.76, 3.84, 3.92, 4.00, 4.08, 4.16, 4.24, 4.32, 4.40, 4.48, 4.56, 4.64,
+    4.72, 4.80, 4.88, 4.96, 5.04, 5.12, 5.20, 5.28, 5.36, 5.44, 5.52, 5.60,
+    5.68, 5.76, 5.84, 5.92, 6.00
+])
+model_init = model(
+    1.35,
+    3.532e5,
+    328e3,
+    300e3,
+    0.01,
+    0.01)
+
+dat = model_init.r_bayes()[1]
+powerspec = np.abs(dat * 3.532e5)
+conducitivies=2
 def main():
     logl = LogLike(my_loglike, powerspec)
-    print(conducitivies[0],Alfven_speed[0]/1.5e6 )
     with pm.Model():
         # uniform priors on m and c
         
-        sigmap = pm.Uniform("sigmap", lower=1, upper=10, initval=conducitivies[0])
+        sigmap = pm.Uniform("sigmap", lower=0.1, upper=12, initval=conducitivies)
 
-        VA_norm = pm.Uniform("va", lower=0.2, upper=4, initval=Alfven_speed[0]/1.5e6)
-        h_norm = pm.Uniform("h", lower=0.2, upper=4, initval=1)
+        VA_norm = pm.Uniform("va", lower=0.3, upper=3, initval=1)
+        h_norm = pm.Uniform("h", lower=0.3, upper=3, initval=1)
         deviation= pm.HalfCauchy("deviation", beta=10 ) # from https://www.pymc.io/projects/docs/en/stable/learn/core_notebooks/GLM_linear.html#glm-linear
         # convert m and c to a tensor vector
         theta = pt.as_tensor_variable([sigmap, VA_norm, h_norm, 428e3-100e3, 0.01, deviation])
@@ -211,8 +226,8 @@ def main():
         pm.Potential("likelihood", logl(theta))
 
         # Use custom number of draws to replace the HMC based defaults
-        idata_mh = pm.sample(1500, tune=1500, cores=6, return_inferencedata=True)
-    idata_mh.to_netcdf("stressor.nc")
+        idata_mh = pm.sample(5, tune=5, cores=6, return_inferencedata=True)
+    idata_mh.to_netcdf("convergencetest1.nc")
 
 
 if __name__ == "__main__":

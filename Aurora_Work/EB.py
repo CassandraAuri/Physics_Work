@@ -823,20 +823,25 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         indicies=0
         for i in range(len(user_select["singles_graph"])):
             for k in range(len(user_select["satellite_graph"])):
+                factor=1
+                print('weoweeee')
                 if user_select['coordinate_system'][0] == "North East Centre":
                     if user_select["singles_graph"][i] == "E_North":
                         index1 = 1
                         index2=  0
-                        
+                        factor=1e3
                     elif user_select["singles_graph"][i] == "E_East":
                         index1 = 1
                         index2=  1
+                        factor= 1e3
                     elif user_select["singles_graph"][i] == "B_North":
                         index1 = 2
                         index2=  0
+                        factor=1e9
                     elif user_select["singles_graph"][i] == "B_East":
                         index1 = 2
                         index2=  1
+                        factor=1e9
                     elif user_select["singles_graph"][i] == "ENorth/BEast ratio":
                         index1 = 3
                         index2=  0
@@ -894,8 +899,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 if index1 ==7 and index2==1 or index1==6: #phase
                     axes[length_for_axis+ indicies].plot( np.absolute(data[k, 0, 0, 0, bandpass]),np.real(data[k, 0, index1,index2,bandpass]))#frequency, data
                 else:
-                    axes[length_for_axis + indicies].plot(np.absolute(data[k, 0, 0,0,bandpass]), np.absolute(data[k, 0, index1,index2,bandpass]))
-                    axes[length_for_axis + indicies].set_yscale("log")
+                    axes[length_for_axis + indicies].plot(np.absolute(data[k, 0, 0,0,bandpass]), np.log10(np.absolute(data[k, 0, index1,index2,bandpass])*factor))
                 axes[length_for_axis+indicies].set_title(
                         user_select['satellite_graph'][k]
                     )
