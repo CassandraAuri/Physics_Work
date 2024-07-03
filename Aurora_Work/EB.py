@@ -156,8 +156,8 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         #if index==0:
             #print(phase_ENorth_BEast, 'calculated')
         ##print(np.absolute(crossspectral_ENorth_BEast[0]),np.sqrt(np.multiply(powerspec_E_0, powerspec_B_1))[0] )
-        #coherence_ENorth_BEast = signal.coherence(efield[index_satellite][range(index_start, index_end), 0], Bresamp[index_satellite][range(index_start, index_end),1], 16,window="hann", detrend='linear', return_onesided=False,  nperseg=nperseg)
-        #coherence_EEast_BNorth = signal.coherence(efield[index_satellite][range(index_start, index_end), 0], Bresamp[index_satellite][range(index_start, index_end),1], 16,window="hann", detrend='linear',return_onesided=False , nperseg=nperseg)
+        #coherence_ENorth_BEast = signal.coherence(efield[index_satellite][range(index_start, index_end), 0], Bresamp[index_satellite][range(index_start, index_end),1], 16,window="hann", detrend=None, return_onesided=False,  nperseg=nperseg)
+        #coherence_EEast_BNorth = signal.coherence(efield[index_satellite][range(index_start, index_end), 0], Bresamp[index_satellite][range(index_start, index_end),1], 16,window="hann", detrend=None,return_onesided=False , nperseg=nperseg)
        
         #coherence_ENorth_BEast, coherence_EEast_BNorth = coherence_ENorth_BEast[sorted_frequencies_indicies], coherence_EEast_BNorth[sorted_frequencies_indicies]
 
@@ -169,19 +169,19 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 idex_lag=-np.round(lag_data[2]*16).astype(int)
                 index_start_test,index_end_test =index_start + idex_lag, index_end+idex_lag
                 indicies= range(index_start_test,index_end_test)
-                frequencies_E_0, powerspec_E_0 = signal.welch(efield[index_satellite][range(index_start_test,index_end_test), 0], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
-                _, powerspec_B_0 = signal.welch(Bresamp[index_satellite][range(index_start_test,index_end_test), 0], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False,  nperseg=nperseg)
+                frequencies_E_0, powerspec_E_0 = signal.welch(efield[index_satellite][range(index_start_test,index_end_test), 0], 16, window="hann",detrend=None, scaling='spectrum', return_onesided=False, nperseg=nperseg)
+                _, powerspec_B_0 = signal.welch(Bresamp[index_satellite][range(index_start_test,index_end_test), 0], 16, window="hann",detrend=None, scaling='spectrum', return_onesided=False,  nperseg=nperseg)
 
-                _, powerspec_E_1 = signal.welch(efield[index_satellite][range(index_start_test,index_end_test), 1], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
-                _, powerspec_B_1 = signal.welch(Bresamp[index_satellite][range(index_start_test,index_end_test),1], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
+                _, powerspec_E_1 = signal.welch(efield[index_satellite][range(index_start_test,index_end_test), 1], 16, window="hann",detrend=None, scaling='spectrum', return_onesided=False, nperseg=nperseg)
+                _, powerspec_B_1 = signal.welch(Bresamp[index_satellite][range(index_start_test,index_end_test),1], 16, window="hann",detrend=None, scaling='spectrum', return_onesided=False, nperseg=nperseg)
                 sorted_frequencies_indicies= np.argsort(frequencies_E_0)
                 frequencies_E_0= frequencies_E_0[sorted_frequencies_indicies]
 
                 powerspec_E_0, powerspec_B_0, powerspec_E_1, powerspec_B_1 = powerspec_E_0[sorted_frequencies_indicies],  powerspec_B_0[sorted_frequencies_indicies], powerspec_E_1[sorted_frequencies_indicies], powerspec_B_1[sorted_frequencies_indicies]
                 ratio_EB_01 = np.sqrt((powerspec_E_0/ powerspec_B_1))
                 ratio_EB_10 = np.sqrt((powerspec_E_1/ powerspec_B_0))
-                _ , crossspectral_ENorth_BEast = signal.csd(efield[index_satellite][range(index_start_test,index_end_test), 0], Bresamp[index_satellite][range(index_start_test,index_end_test),1], 16, window="hann", detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
-                _ ,   crossspectral_EEast_BNorth = signal.csd(efield[index_satellite][range(index_start_test,index_end_test), 1], Bresamp[index_satellite][range(index_start_test,index_end_test),0], 16, window="hann", detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
+                _ , crossspectral_ENorth_BEast = signal.csd(efield[index_satellite][range(index_start_test,index_end_test), 0], Bresamp[index_satellite][range(index_start_test,index_end_test),1], 16, window="hann", detrend=None, scaling='spectrum', return_onesided=False, nperseg=nperseg)
+                _ ,   crossspectral_EEast_BNorth = signal.csd(efield[index_satellite][range(index_start_test,index_end_test), 1], Bresamp[index_satellite][range(index_start_test,index_end_test),0], 16, window="hann", detrend=None, scaling='spectrum', return_onesided=False, nperseg=nperseg)
 
 
                 crossspectral_ENorth_BEast, crossspectral_EEast_BNorth = crossspectral_ENorth_BEast[sorted_frequencies_indicies], crossspectral_EEast_BNorth[sorted_frequencies_indicies]
@@ -189,7 +189,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
 
                 phase_ENorth_BEast= np.angle(crossspectral_ENorth_BEast, deg=True)
                 phase_EEast_BNorth = np.angle(crossspectral_EEast_BNorth, deg=True)
-                _ ,cross_BB=signal.csd(Bresamp[index_satellite-1][range(index_start, index_end),1], Bresamp[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend='linear', nperseg=nperseg )
+                _ ,cross_BB=signal.csd(Bresamp[index_satellite-1][range(index_start, index_end),1], Bresamp[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend=None, nperseg=nperseg )
 
                 phase_BB= np.angle(cross_BB, deg=True)
                 cross_BB, phase_BB = cross_BB[sorted_frequencies_indicies], phase_BB[sorted_frequencies_indicies]
@@ -197,7 +197,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 return np.array([[frequencies_E_0, [None] * nperseg], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start_test/16,index_end_test/16], dtype=int)]*nperseg, [None]*nperseg], [np.absolute(crossspectral_ENorth_BEast), np.absolute(crossspectral_EEast_BNorth)], [phase_ENorth_BEast, phase_EEast_BNorth], [cross_BB, phase_BB]]), indicies #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
             else: 
                 indicies=None
-                frequencies_E_0, _ =  signal.welch(efield[index_satellite][range(index_start, index_end), 0], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
+                frequencies_E_0, _ =  signal.welch(efield[index_satellite][range(index_start, index_end), 0], 16, window="hann",detrend=None, scaling='spectrum', return_onesided=False, nperseg=nperseg)
                 sorted_frequencies_indicies= np.argsort(frequencies_E_0)
                 frequencies_E_0= frequencies_E_0[sorted_frequencies_indicies]
 
@@ -218,19 +218,19 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
 
 
         else:
-            frequencies_E_0, powerspec_E_0 = signal.welch(efield[index_satellite][range(index_start, index_end), 0], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
-            _, powerspec_B_0 = signal.welch(Bresamp[index_satellite][range(index_start, index_end), 0], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False,  nperseg=nperseg)
+            frequencies_E_0, powerspec_E_0 = signal.welch(efield[index_satellite][range(index_start, index_end), 0], 16, window="hann",detrend=None, scaling='spectrum', return_onesided=False, nperseg=nperseg)
+            _, powerspec_B_0 = signal.welch(Bresamp[index_satellite][range(index_start, index_end), 0], 16, window="hann",detrend=None, scaling='spectrum', return_onesided=False,  nperseg=nperseg)
 
-            _, powerspec_E_1 = signal.welch(efield[index_satellite][range(index_start, index_end), 1], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
-            _, powerspec_B_1 = signal.welch(Bresamp[index_satellite][range(index_start, index_end),1], 16, window="hann",detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
+            _, powerspec_E_1 = signal.welch(efield[index_satellite][range(index_start, index_end), 1], 16, window="hann",detrend=None, scaling='spectrum', return_onesided=False, nperseg=nperseg)
+            _, powerspec_B_1 = signal.welch(Bresamp[index_satellite][range(index_start, index_end),1], 16, window="hann",detrend=None, scaling='spectrum', return_onesided=False, nperseg=nperseg)
             sorted_frequencies_indicies= np.argsort(frequencies_E_0)
             frequencies_E_0= frequencies_E_0[sorted_frequencies_indicies]
 
             powerspec_E_0, powerspec_B_0, powerspec_E_1, powerspec_B_1 = powerspec_E_0[sorted_frequencies_indicies],  powerspec_B_0[sorted_frequencies_indicies], powerspec_E_1[sorted_frequencies_indicies], powerspec_B_1[sorted_frequencies_indicies]
             ratio_EB_01 = np.sqrt((powerspec_E_0/ powerspec_B_1))
             ratio_EB_10 = np.sqrt((powerspec_E_1/ powerspec_B_0))
-            _ , crossspectral_ENorth_BEast = signal.csd(efield[index_satellite][range(index_start, index_end), 0], Bresamp[index_satellite][range(index_start, index_end),1], 16, window="hann", detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
-            _ ,   crossspectral_EEast_BNorth = signal.csd(efield[index_satellite][range(index_start, index_end), 1], Bresamp[index_satellite][range(index_start, index_end),0], 16, window="hann", detrend='linear', scaling='spectrum', return_onesided=False, nperseg=nperseg)
+            _ , crossspectral_ENorth_BEast = signal.csd(efield[index_satellite][range(index_start, index_end), 0], Bresamp[index_satellite][range(index_start, index_end),1], 16, window="hann", detrend=None, scaling='spectrum', return_onesided=False, nperseg=nperseg)
+            _ ,   crossspectral_EEast_BNorth = signal.csd(efield[index_satellite][range(index_start, index_end), 1], Bresamp[index_satellite][range(index_start, index_end),0], 16, window="hann", detrend=None, scaling='spectrum', return_onesided=False, nperseg=nperseg)
 
 
             crossspectral_ENorth_BEast, crossspectral_EEast_BNorth = crossspectral_ENorth_BEast[sorted_frequencies_indicies], crossspectral_EEast_BNorth[sorted_frequencies_indicies]

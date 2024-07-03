@@ -129,9 +129,9 @@ class model(object):
 h=150e3
 Vai=5e5
 model_init = model(
-    1,
-    Vai,
-    h,
+    1.35,
+    3.532e5,
+    300e3,
     0.01,
     0.15)
 
