@@ -213,8 +213,10 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 phase_EEast_BNorth = [np.nan]*nperseg
                 cross_BB = [np.nan]*nperseg
                 phase_BB= [np.nan]*nperseg
+                cross_EE = [np.nan]*nperseg
+                phase_EE= [np.nan]*nperseg
                 index_start_test,index_end_test = np.nan, np.nan
-                return np.array([[frequencies_E_0, [None] * nperseg], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[None]*nperseg, [None]*nperseg], [np.absolute(crossspectral_ENorth_BEast), np.absolute(crossspectral_EEast_BNorth)], [phase_ENorth_BEast, phase_EEast_BNorth], [cross_BB, phase_BB]]), indicies #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
+                return np.array([[frequencies_E_0, [None] * nperseg], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[None]*nperseg, [None]*nperseg], [np.absolute(crossspectral_ENorth_BEast), np.absolute(crossspectral_EEast_BNorth)], [phase_ENorth_BEast, phase_EEast_BNorth], [cross_BB, phase_BB], [cross_EE, phase_EE]]), indicies #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
 
 
         else:
@@ -240,10 +242,12 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
             phase_EEast_BNorth = np.angle(crossspectral_EEast_BNorth, deg=True)
             cross_BB= [None] * nperseg
             phase_BB= [None] * nperseg
+            cross_EE =[None] * nperseg
+            phase_EE = [None] * nperseg
             indicies=  range(index_start, index_end)
             
         
-        return np.array([[frequencies_E_0, [None] * nperseg], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start/16,index_end/16], dtype=int)]*nperseg, [None]*nperseg], [np.absolute(crossspectral_ENorth_BEast), np.absolute(crossspectral_EEast_BNorth)], [phase_ENorth_BEast, phase_EEast_BNorth], [cross_BB, phase_BB]]), indicies #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
+        return np.array([[frequencies_E_0, [None] * nperseg], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start/16,index_end/16], dtype=int)]*nperseg, [None]*nperseg], [np.absolute(crossspectral_ENorth_BEast), np.absolute(crossspectral_EEast_BNorth)], [phase_ENorth_BEast, phase_EEast_BNorth], [cross_BB, phase_BB], [cross_EE, phase_EE]]), indicies #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
 
         
 
