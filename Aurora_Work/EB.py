@@ -164,7 +164,6 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         ##TODO implement a B-lag cross correlation
         if user_select['lag'] == True and index_satellite == 1: 
             #TODO add a condition that if index our of range just put np.Nans
-            print(np.ceil(lag_data[2])*16, np.floor(lag_data[2]*16).astype(int), index_start, index_end, len(Bresamp[index_satellite]))
             if np.ceil(lag_data[2])*16<= index_start and np.floor(lag_data[2]*16).astype(int)+index_end< len(Bresamp[index_satellite]):
                 idex_lag=-np.round(lag_data[2]*16).astype(int)
                 index_start_test,index_end_test =index_start + idex_lag, index_end+idex_lag
@@ -189,12 +188,24 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
 
                 phase_ENorth_BEast= np.angle(crossspectral_ENorth_BEast, deg=True)
                 phase_EEast_BNorth = np.angle(crossspectral_EEast_BNorth, deg=True)
-                _ ,cross_BB=signal.csd(Bresamp[index_satellite-1][range(index_start, index_end),1], Bresamp[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend=None, nperseg=nperseg )
+                if user_select['B_difference'] !=None:
+                    _ ,cross_BB=signal.welch(Bresamp[index_satellite-1][range(index_start, index_end),1]-Bresamp[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend=None, nperseg=nperseg )
+                else:
+                    _ ,cross_BB=signal.csd(Bresamp[index_satellite-1][range(index_start, index_end),1], Bresamp[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend=None, nperseg=nperseg )
 
                 phase_BB= np.angle(cross_BB, deg=True)
                 cross_BB, phase_BB = cross_BB[sorted_frequencies_indicies], phase_BB[sorted_frequencies_indicies]
-                print(frequencies_E_0)
-                return np.array([[frequencies_E_0, [None] * nperseg], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start_test/16,index_end_test/16], dtype=int)]*nperseg, [None]*nperseg], [np.absolute(crossspectral_ENorth_BEast), np.absolute(crossspectral_EEast_BNorth)], [phase_ENorth_BEast, phase_EEast_BNorth], [cross_BB, phase_BB]]), indicies #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
+                if user_select['E_difference'] != None:
+                    _ ,cross_EE=signal.welch(efield[index_satellite-1][range(index_start, index_end),1]-efield[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend=None, nperseg=nperseg )
+                else:
+                    _ ,cross_EE=signal.csd(efield[index_satellite-1][range(index_start, index_end),1], efield[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend=None, nperseg=nperseg )
+
+
+                phase_EE= np.angle(cross_EE, deg=True)
+                cross_EE, phase_BB = cross_EE[sorted_frequencies_indicies], phase_EE[sorted_frequencies_indicies]
+
+               
+                return np.array([[frequencies_E_0, [None] * nperseg], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start_test/16,index_end_test/16], dtype=int)]*nperseg, [None]*nperseg], [np.absolute(crossspectral_ENorth_BEast), np.absolute(crossspectral_EEast_BNorth)], [phase_ENorth_BEast, phase_EEast_BNorth], [cross_BB, phase_BB], [cross_EE, phase_EE]]), indicies #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
             else: 
                 indicies=None
                 frequencies_E_0, _ =  signal.welch(efield[index_satellite][range(index_start, index_end), 0], 16, window="hann",detrend=None, scaling='spectrum', return_onesided=False, nperseg=nperseg)
@@ -216,6 +227,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 cross_EE = [np.nan]*nperseg
                 phase_EE= [np.nan]*nperseg
                 index_start_test,index_end_test = np.nan, np.nan
+                
                 return np.array([[frequencies_E_0, [None] * nperseg], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[None]*nperseg, [None]*nperseg], [np.absolute(crossspectral_ENorth_BEast), np.absolute(crossspectral_EEast_BNorth)], [phase_ENorth_BEast, phase_EEast_BNorth], [cross_BB, phase_BB], [cross_EE, phase_EE]]), indicies #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
 
 
@@ -246,8 +258,8 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
             phase_EE = [None] * nperseg
             indicies=  range(index_start, index_end)
             
-        
-        return np.array([[frequencies_E_0, [None] * nperseg], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start/16,index_end/16], dtype=int)]*nperseg, [None]*nperseg], [np.absolute(crossspectral_ENorth_BEast), np.absolute(crossspectral_EEast_BNorth)], [phase_ENorth_BEast, phase_EEast_BNorth], [cross_BB, phase_BB], [cross_EE, phase_EE]]), indicies #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
+            
+            return np.array([[frequencies_E_0, [None] * nperseg], [np.sqrt(powerspec_E_0), np.sqrt(powerspec_E_1)], [np.sqrt(powerspec_B_0), np.sqrt(powerspec_B_1)], [ratio_EB_01, ratio_EB_10], [[np.mean([index_start/16,index_end/16], dtype=int)]*nperseg, [None]*nperseg], [np.absolute(crossspectral_ENorth_BEast), np.absolute(crossspectral_EEast_BNorth)], [phase_ENorth_BEast, phase_EEast_BNorth], [cross_BB, phase_BB], [cross_EE, phase_EE]]), indicies #all frequencies are the same ##TODO times need to be same length for numpy to work, create array of average time
 
         
 
@@ -321,7 +333,6 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         #TODO Creates an animation of times series of deviations E and B, plot periodograms, plot E/B ratio for given, and what polarization or coordinate should be graphed for each plot
         axes_length=0
         user_select_selected = [ user_select["E_periodogram"], user_select["B_periodogram"]]
-        print(user_select_selected)
         if user_select["Time_Series"] != None:
             for i in range(len(user_select["satellite_graph"])):
                 user_select_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
@@ -341,19 +352,15 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 user_select_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
         else:
             pass
-        print(user_select_selected)
         for key in user_select_selected:
-            print(key)
             if key != None:
                 axes_length += 1
-        print(axes_length, 'axes_length')
         return axes_length
 
     def Animation(data,sampled_datetimes, B_sinc, B_resample, efield, indicies, frames, time_E):
         """
         Creates an animation of each window
         """
-        print(Animation_rows())
         fig_ani, axes_ani = plt.subplots(figsize=(10,15),  nrows=Animation_rows(), constrained_layout=True)
         axs = np.array(axes_ani)
         if user_select["Time_Series"] != None:
@@ -933,9 +940,9 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
     if user_select['nperseg'] == 'quarter window':
         nperseg=4*window_length
     if user_select["heatmap"] !=None:
-        data = np.zeros((len_satellite, length_of_windows, 8, 2,  nperseg), dtype=np.complex_) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
+        data = np.zeros((len_satellite, length_of_windows, 9, 2,  nperseg), dtype=np.complex_) #[satelitte,number of windows, type of data, different polarizations,  data for each window ]
     else:
-        data = np.zeros((len_satellite, 1, 8, 2,  nperseg), dtype=np.complex_)
+        data = np.zeros((len_satellite, 1, 9, 2,  nperseg), dtype=np.complex_)
 
     efield=np.multiply(efield,1e-3)
     
@@ -1072,7 +1079,6 @@ def EBplotsNEC(user_select):
             length_for_axis +=len(user_select["E_difference"])
         if user_select ["B_difference"] != None:
             length_for_axis +=len(user_select["B_difference"])
-            print('yay', len(user_select["B_difference"]))
         if user_select ["PF_difference"] != None:
             length_for_axis +=len(user_select["PF_difference"])
         if user_select["Pixel_intensity"] == True:
@@ -1203,7 +1209,11 @@ def EBplotsNEC(user_select):
 
             except NameError:
                 pass
-            axes[i].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex])
+            if user_select["bandpass"][0] == True:
+                alpha=0.35
+            else:
+                alpha=1
+            axes[i].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
             axes[i].set_ylabel(
                 r"$E_{{{}}}$ $(mV/m)$".format(user_select["graph_E_chosen"][i])
             )
@@ -1214,7 +1224,7 @@ def EBplotsNEC(user_select):
                 axes[i].axvline(user_select["time_range_single"][1], color='orchid', linestyle='dashed')
 
             if user_select["bandpass"][0] == True:
-                axes_twin_E[i].plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=0.7)
+                axes_twin_E[i].plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
                 axes_twin_E[i].set_ylabel(
                 r"$E_{{{}}}$ bandpassed $(mV/m)$".format(user_select["graph_E_chosen"][i])
             )
@@ -1258,8 +1268,12 @@ def EBplotsNEC(user_select):
 
                     # Add the timedelta to the datetime array
                     arrayx = arrayx + seconds_delta + nanoseconds_delta
+            if user_select["bandpass"][0] == True:
+                alpha=0.35
+            else:
+                alpha=1
 
-            axes[i + length_for_axis].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex])
+            axes[i + length_for_axis].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
             axes[i + length_for_axis].legend(loc=2)
             axes[i + length_for_axis].set_ylabel(
                 r"$B_{{{}}}$".format(user_select["graph_B_chosen"][i]) + " (nT) "
@@ -1267,7 +1281,7 @@ def EBplotsNEC(user_select):
             axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
 
             if user_select["bandpass"][0] == True:
-                axes_twin_B[i].plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=0.7)
+                axes_twin_B[i].plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
                 axes_twin_B[i].set_ylabel(
                 r"$B_{{{}}}$ bandpassed $(nT)$".format(user_select["graph_B_chosen"][i])
             )
@@ -1776,7 +1790,6 @@ def EBplotsNEC(user_select):
                                 elif lag_used < 0:
                                     offset_ts1 = data[i][1][index][:, index_coordinate]
                                     offset_ts2 = np.concatenate((np.full(-lag_used, np.nan), data[i][1][indexopposite][:,1]))[:len(data[i][1][index][:, index_coordinate])]
-                        print(offset_ts1,offset_ts2,field_type[i], len(data[i][2]) )
                         if len(data[i][2]) ==  len(data[i][1]): #Asks if the length of time series, E's are always synced up but B's differ
                             graphingDifference(
                                 [offset_ts1,offset_ts2], #data
