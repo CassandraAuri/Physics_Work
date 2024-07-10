@@ -888,8 +888,10 @@ def Graph():
         st.session_state["EB_cross power"] = None
     if "EB_cross phase" not in st.session_state:
         st.session_state["EB_cross phase"] = None
-    if "lags_cross" not in st.session_state:
-        st.session_state["lags_cross"] = None
+    if "lags_cross_B" not in st.session_state:
+        st.session_state["lags_cross_B"] = None
+    if "lags_cross_E" not in st.session_state:
+        st.session_state["lags_cross_E"] = None
     if 'lag' not in st.session_state:
         st.session_state['lag'] = None
     if "graph_type" not in st.session_state:
@@ -901,14 +903,14 @@ def Graph():
     timerange_singles=None
 
     if st.session_state["Filtering"] == True:
-        st.select_slider(label="Please select the low pass in Hz", value=0.2, options=[0,0.1,0.2,0.5, 1, 2, 4], key="low_pass")
+        st.select_slider(label="Please select the low pass in Hz", value=0.2, options=[0,0.05,0.1,0.2,0.5, 1, 2, 4], key="low_pass")
         st.select_slider(label="Please select the low pass in Hz", value=7, options=[0.5, 1, 2, 4, 6, 7, 7.9], key="high_pass")
     
     if st.session_state["E_B_ratio"] == True:
         graph_type=st.multiselect(label="Would you like a heatmap (running windows) or a single interval", options=["heatmap", "single value"], key="graph_type")
         print(graph_type)
         if st.session_state["Coordinate_system"][0] == "North East Centre":
-            options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"], ["ENorth/BEast coherence", "EEast/BNorth coherence"], ['B B lag cross power', 'B B lag cross phase']]
+            options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"], ['B B lag cross power', 'B B lag cross phase'], ['E E lag cross power', 'E E lag cross phase']]
         else:
             options=[["E_Azimuthal", "E_Polodial"], ["B_Azimuthal", "B_Polodial"], ["EAzimuthal/BPolodial", "EPolodial/BAzimuthal"]]
         if graph_type[0] == 'heatmap':
@@ -924,7 +926,7 @@ def Graph():
                 if st.session_state['lag'] == True:
                     st.multiselect(label="Choose the variable in the heatmap(s)", options=sum(options, []), key="heatmap_graphs")
                 else:
-                    st.multiselect(label="Choose the variable in the heatmap(s)", options=sum(options[:-1], []), key="heatmap_graphs")
+                    st.multiselect(label="Choose the variable in the heatmap(s)", options=sum(options[:-2], []), key="heatmap_graphs")
 
             if st.session_state["Conductivies"] == True:
                 st.multiselect(label="Choose the polarization used for conductivies", options=options[2], key="conductivity_graphs")
@@ -952,7 +954,9 @@ def Graph():
                 if "Cross phase" in st.session_state["Alfven_graphs"]:
                     st.multiselect(label="Please select the E/B cross phase you would like to plot", options=options[4], key="EB_cross phase")
                 if 'B B lag' in st.session_state["Alfven_graphs"]:
-                    st.multiselect(label="Please select the B lags you would like to plot", options=options[5], key="lags_cross")
+                    st.multiselect(label="Please select the B lags you would like to plot", options=options[5], key="lags_cross_B")
+                if 'E E lag' in st.session_state["Alfven_graphs"]:
+                    st.multiselect(label="Please select the B lags you would like to plot", options=options[6], key="lags_cross_E")
         elif graph_type[0] == "single value":
             time_rangestart = st.time_input(
             label="Time to the start of the conjunction",
@@ -1099,7 +1103,8 @@ def Render_Graph(timerange):
         "window_length":st.session_state["Window_Length"],
         "EB_cross power": st.session_state["EB_cross power"],
         "EB_cross phase": st.session_state["EB_cross phase"],
-        "lags_cross": st.session_state["lags_cross"],
+        "lags_cross_B": st.session_state["lags_cross_B"],
+        "lags_cross_E": st.session_state["lags_cross_E"],
         "nperseg": st.session_state["nperseg"],
         "lag": st.session_state["lag"],
         "time_range_single": timerange_singles,

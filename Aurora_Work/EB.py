@@ -188,17 +188,12 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
 
                 phase_ENorth_BEast= np.angle(crossspectral_ENorth_BEast, deg=True)
                 phase_EEast_BNorth = np.angle(crossspectral_EEast_BNorth, deg=True)
-                if user_select['B_difference'] !=None:
-                    _ ,cross_BB=signal.welch(Bresamp[index_satellite-1][range(index_start, index_end),1]-Bresamp[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend=None, nperseg=nperseg )
-                else:
-                    _ ,cross_BB=signal.csd(Bresamp[index_satellite-1][range(index_start, index_end),1], Bresamp[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend=None, nperseg=nperseg )
+                _ ,cross_BB=signal.csd(Bresamp[index_satellite-1][range(index_start, index_end),1], Bresamp[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend=None, nperseg=nperseg )
 
                 phase_BB= np.angle(cross_BB, deg=True)
                 cross_BB, phase_BB = cross_BB[sorted_frequencies_indicies], phase_BB[sorted_frequencies_indicies]
-                if user_select['E_difference'] != None:
-                    _ ,cross_EE=signal.welch(efield[index_satellite-1][range(index_start, index_end),1]-efield[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend=None, nperseg=nperseg )
-                else:
-                    _ ,cross_EE=signal.csd(efield[index_satellite-1][range(index_start, index_end),1], efield[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend=None, nperseg=nperseg )
+
+                _ ,cross_EE=signal.csd(efield[index_satellite-1][range(index_start, index_end),1], efield[index_satellite][range(index_start_test,index_end_test),1], 16,window="hann", return_onesided=False, detrend=None, nperseg=nperseg )
 
 
                 phase_EE= np.angle(cross_EE, deg=True)
@@ -347,8 +342,11 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         if user_select["EB_cross phase"] != None:
             for i in range(len(user_select["EB_cross power"])):
                 user_select_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
-        if user_select["lags_cross"] != None:
-            for i in range(len(user_select["lags_cross"])):
+        if user_select["lags_cross_B"] != None:
+            for i in range(len(user_select["lags_cross_B"])):
+                user_select_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
+        if user_select["lags_cross_E"] != None:
+            for i in range(len(user_select["lags_cross_E"])):
                 user_select_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
         else:
             pass
@@ -393,11 +391,11 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                                 index=0
                             else:
                                 index=1
-                            axes_ani[axes_used + k ].plot(np.absolute(data[k, i, 0, 0, : ]), data[k, i, 3,index, :], "-o", label=val) #Frequencies E's
-                            axes_ani[axes_used + k ].set_ylabel(f" E over B ratio of {val_sat} m/s ")
-                            axes_ani[axes_used + k ].legend()
-                            axes_ani[axes_used + k ].set_yscale("log")
-                            axes_ani[axes_used + k ].set_xlim(user_select["bandpass"][1])
+                            axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, : ]), data[k, i, 3,index, :], "-o", label=val) #Frequencies E's
+                            axes_ani[axes_used +l ].set_ylabel(f" E over B ratio of {val_sat} m/s ")
+                            axes_ani[axes_used + l ].legend()
+                            axes_ani[axes_used + l ].set_yscale("log")
+                            axes_ani[axes_used + l ].set_xlim(user_select["bandpass"][1])
                 except TypeError:
                     for l, val in enumerate(user_select["EB_periodogram"]):
                         for k, val_sat in enumerate((user_select["satellite_graph"])):
@@ -471,7 +469,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 return  axes_used + len(user_select["EB_cross phase"])
             
             def BB_power_plot(axes_used):
-                for l, val in enumerate(user_select["lags_cross"]):
+                for l, val in enumerate(user_select["lags_cross_B"]):
                     for k, val_sat in enumerate((user_select["satellite_graph"])):
                         if val == 'B B lag cross power':
                             index=0
@@ -488,7 +486,27 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                     axes_ani[axes_used + l ].set_ylabel(str(val))
                     axes_ani[axes_used + l ].legend()
                     axes_ani[axes_used + l ].set_xlim(user_select["bandpass"][1])
-                return  axes_used + len(user_select["lags_cross"])
+                return  axes_used + len(user_select["lags_cross_B"])
+            
+            def EE_power_plot(axes_used):
+                for l, val in enumerate(user_select["lags_cross_E"]):
+                    for k, val_sat in enumerate((user_select["satellite_graph"])):
+                        if val == 'E E lag cross power':
+                            index=0
+                        else:
+                            index=1
+                        if user_select['bandpass'][0] == True:
+                            bandpass=np.where((np.real(data[k, 0, 0, 0, :]) >= user_select['bandpass'][1][0]) & (np.real(data[k, 0, 0, 0, :]) <= user_select['bandpass'][1][1]))[0]
+                        else: bandpass =np.where(np.real((data[k, 0, 0, 0, :]) >= 0))[0]
+                        if index==0:
+                            axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, bandpass ]), np.absolute(data[k, i, 7,index, bandpass]), "-o",label=val_sat) #Frequencies E's
+                            axes_ani[axes_used + l ].set_yscale("log")
+                        else:
+                            axes_ani[axes_used + l ].plot(np.absolute(data[k, i, 0, 0, bandpass ]), data[k, i, 7,index, bandpass], "-o",label=val_sat) #Frequencies E's
+                    axes_ani[axes_used + l ].set_ylabel(str(val))
+                    axes_ani[axes_used + l ].legend()
+                    axes_ani[axes_used + l ].set_xlim(user_select["bandpass"][1])
+                return  axes_used + len(user_select["lags_cross_E"])
             
 
 
@@ -599,8 +617,10 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                 axes_used  = EB_power_plot(axes_used)
             if user_select["EB_cross phase"] != None:
                 axes_used=EB_phase_plot(axes_used)
-            if user_select["lags_cross"] !=None:
+            if user_select["lags_cross_B"] !=None:
                 axes_used=BB_power_plot(axes_used)
+            if user_select["lags_cross_E"] !=None:
+                axes_used=EE_power_plot(axes_used)
             return
 
         ani = animation.FuncAnimation(fig=fig_ani, func=animate, frames=frames) #What
@@ -689,10 +709,10 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                     elif user_select["heatmap"][i] == 'B B lag cross phase':
                         index1 = 7
                         index2=  1
-                    elif user_select["heatmap"][i] == "ENorth/BEast coherence":
+                    elif user_select["heatmap"][i] == 'E E lag cross power':
                         index1 = 8
-                        index2=  0
-                    elif user_select["heatmap"][i] == "EEast/BNorth coherence":
+                        index2=  0 
+                    elif user_select["heatmap"][i] == 'E E lag cross phase':
                         index1 = 8
                         index2=  1
                     
@@ -760,7 +780,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                     img=axes[length_for_axis+indicies].pcolormesh(times+delta , 
                                 np.absolute(data[k, 0, 0,0, bandpass]),
                                 (np.around(np.real(np.array(data[k, :, index1, index2, bandpass])[:,  non_nan_indices])/5, decimals=0))*5, shading='auto', cmap=plt.get_cmap('cmr.infinity')) #selects average time, frequencies, and then the periodogram 
-                elif index1 ==7 and k==1: #B B component only goes once
+                elif index1 ==7 and k==1 or  index1 ==8 and k==1: #B B component only goes once
                     if index2==0: #power
                         masked_data = np.ma.masked_invalid(np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices]) #for lognorm to deal with np.nans
                         img = axes[length_for_axis+indicies].pcolormesh(times + delta, 
@@ -774,8 +794,9 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                      
                      pass  
                               
-                if index1 ==7 and k==0:
+                if index1 ==7 and k==0 or index1 ==8 and k==0:
                     pass
+
                 else:
                     fig.colorbar(img, ax=axes[length_for_axis+indicies], extend='max', label=user_select["heatmap"][i])
                     axes[length_for_axis+indicies].set_ylabel(
@@ -1066,6 +1087,10 @@ def EBplotsNEC(user_select):
             if 'B B lag cross power' in user_select["heatmap"]:
                 length_for_axis -=1
             if 'B B lag cross phase' in user_select["heatmap"]:
+                length_for_axis -=1
+            if 'E E lag cross power' in user_select["heatmap"]:
+                length_for_axis -=1
+            if 'E E lag cross phase' in user_select["heatmap"]:
                 length_for_axis -=1
         if user_select["singles_graph"] !=None:
             length_for_axis+=len(user_select['singles_graph'])
