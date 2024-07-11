@@ -10,4 +10,3 @@ moviepy
 moviepy
 asilib
 aacgmv2
-libgl1

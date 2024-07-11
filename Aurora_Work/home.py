@@ -209,17 +209,17 @@ def graphing_animation(dict):
             if asi_array_code.lower() == "themis":
                 frame_rate = 2
                 asi = asilib.asi.themis(
-                    location_code, time_range=time_range, alt=alt, custom_alt="interp"
+                    location_code, time_range=time_range, alt=alt, custom_alt=True
                 )
             elif asi_array_code.lower() == "rego":
                 frame_rate = 2
                 asi = asilib.asi.rego(
-                    location_code, time_range=time_range, alt=alt, custom_alt="interp"
+                    location_code, time_range=time_range, alt=alt, custom_alt=True
                 )
             elif asi_array_code.lower() == "trex_nir":
                 frame_rate = 1
                 asi = asilib.asi.trex.trex_nir(
-                    location_code, time_range=time_range, alt=alt, custom_alt="interp"
+                    location_code, time_range=time_range, alt=alt, custom_alt=True
                 )
 
             elif asi_array_code.lower() == "trex_rgb":
@@ -229,7 +229,7 @@ def graphing_animation(dict):
                     time_range=time_range,
                     alt=alt,
                     colors="rgb",
-                    custom_alt="interp"
+                    custom_alt=True
                 )
             else:
                 raise NotImplementedError("How did you get this to happen")
