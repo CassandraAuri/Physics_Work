@@ -2,18 +2,15 @@ from viresclient import set_token
 from viresclient import SwarmRequest
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
+import matplotlib.pyplot as pd
 from datetime import datetime, timedelta
 from tqdm.notebook import tqdm
 import mplcyberpunk
 from itertools import chain
 from MFA import MFA
-import pickle
 from scipy.fft import fft, fftfreq
 import asilib
 import asilib.asi
-import cdflib
-import aacgmv2
 from scipy import signal
 from scipy.signal import butter, filtfilt, freqz
 from numpy.typing import NDArray
@@ -1852,7 +1849,7 @@ def EBplotsNEC(user_select):
                             location_code,
                             time_range=time_range,
                             alt=alt,
-                            custom_alt="interp",
+                            custom_alt=True,
                         )
                         cadence = 3
                     elif asi_array_code.lower() == "rego":
@@ -1860,7 +1857,7 @@ def EBplotsNEC(user_select):
                             location_code,
                             time_range=time_range,
                             alt=alt,
-                            custom_alt="interp",
+                            custom_alt=True,
                         )
                         cadence = 3
                     elif asi_array_code.lower() == "trex_nir":
@@ -1868,7 +1865,7 @@ def EBplotsNEC(user_select):
                             location_code,
                             time_range=time_range,
                             alt=alt,
-                            custom_alt="interp",
+                            custom_alt=True,
                         )
                         cadence = 6
                     elif asi_array_code.lower() == "trex_rgb":
@@ -1878,7 +1875,7 @@ def EBplotsNEC(user_select):
                             time_range=time_range,
                             alt=alt,
                             colors="rgb",
-                            custom_alt="interp",
+                            custom_alt=True,
                         )
 
                     return asi, cadence
