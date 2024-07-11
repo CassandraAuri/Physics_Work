@@ -588,7 +588,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                                     
                                 elif user_select["Time_Series"][l] == "B_North":
                                     axes_ani[k].plot(time_E[indicies[k][i]] ,  B_sinc[k][indicies[k][i], 0]*1e9, color=colors[k+1] , label='B North') 
-                                    axes_ani[k].set_ylabel("B(nT)")
+                                    axes_ani[k].set_ylabel("custom_alt=TruenT)")
                     axes_ani[k].legend(loc=2)
                     twin_x_axes[k].legend(loc=1)
                     ##axes_ani[k].set_xlim(time_E[indicies[k][i]].min(),time_E[indicies[k][i]].max() )
@@ -1294,23 +1294,37 @@ def EBplotsNEC(user_select):
                 alpha=0.35
             else:
                 alpha=1
+            if length_for_axis ==0:
+                axes.plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
+                axes.legend(loc=2)
+                axes.set_ylabel(
+                    r"$B_{{{}}}$".format(user_select["graph_B_chosen"][i]) + " (nT) "
+                )
+                axes.set_xlim((time_range[0], time_range[1]))
 
-            axes[i + length_for_axis].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
-            axes[i + length_for_axis].legend(loc=2)
-            axes[i + length_for_axis].set_ylabel(
-                r"$B_{{{}}}$".format(user_select["graph_B_chosen"][i]) + " (nT) "
-            )
-            axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
+                if user_select["bandpass"][0] == True:
+                    axes_twin_B[i].plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
+                    axes_twin_B[i].set_ylabel(
+                    r"$B_{{{}}}$ bandpassed $(nT)$".format(user_select["graph_B_chosen"][i])
+                )
+                    axes_twin_B[i].legend(loc=1)
+            else:
+                axes[i + length_for_axis].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
+                axes[i + length_for_axis].legend(loc=2)
+                axes[i + length_for_axis].set_ylabel(
+                    r"$B_{{{}}}$".format(user_select["graph_B_chosen"][i]) + " (nT) "
+                )
+                axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
 
-            if user_select["bandpass"][0] == True:
-                axes_twin_B[i].plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
-                axes_twin_B[i].set_ylabel(
-                r"$B_{{{}}}$ bandpassed $(nT)$".format(user_select["graph_B_chosen"][i])
-            )
-                axes_twin_B[i].legend(loc=1)
-            if user_select['singles_graph'] != None:
-                axes[i+ length_for_axis].axvline(user_select["time_range_single"][0], color='orchid', linestyle='dashed')
-                axes[i+ length_for_axis].axvline(user_select["time_range_single"][1], color='orchid', linestyle='dashed')
+                if user_select["bandpass"][0] == True:
+                    axes_twin_B[i].plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
+                    axes_twin_B[i].set_ylabel(
+                    r"$B_{{{}}}$ bandpassed $(nT)$".format(user_select["graph_B_chosen"][i])
+                )
+                    axes_twin_B[i].legend(loc=1)
+                if user_select['singles_graph'] != None:
+                    axes[i+ length_for_axis].axvline(user_select["time_range_single"][0], color='orchid', linestyle='dashed')
+                    axes[i+ length_for_axis].axvline(user_select["time_range_single"][1], color='orchid', linestyle='dashed')
         return True
 
     def graphingFlux(label, arrayx, arrayy, index_band, satelliteindex, has_twin):
