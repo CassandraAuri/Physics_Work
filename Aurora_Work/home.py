@@ -513,7 +513,7 @@ def Animation(timerange):
                         st.session_state["".join([str(i), "site"])] = []
 
                     with col[i]:  # each column
-                        st.multiselect("Name of Project", ["REGO", "THEMIS", "trex_nir", "trex_rgb"],key="".join([str(i), "project"]),max_selections=1)  # Sets the project
+                        st.selectbox("Name of Project", ["REGO", "THEMIS", "trex_nir", "trex_rgb"],key="".join([str(i), "project"]))  # Sets the project
                         # if no project, do not execute site parameters
                         if st.session_state["".join([str(i), "project"])] != []:
                             # if rego project, select site
@@ -521,11 +521,10 @@ def Animation(timerange):
                                 st.session_state["".join([str(i), "project"])][0]
                                 == "REGO"
                             ):
-                                st.multiselect(
+                                st.selectbox(
                                     "Name of Site",
                                     ["FSMI", "GILL", "RESU", "TALO", "rank", "fsim", "sach"],
                                     key="".join([str(i), "site"]),
-                                    max_selections=1,
                                 )
 
                             # if project is themis, select themis site
@@ -533,7 +532,7 @@ def Animation(timerange):
                                 st.session_state["".join([str(i), "project"])][0]
                                 == "THEMIS"
                             ):
-                                st.multiselect(
+                                st.selectbox(
                                     "Name of Site",
                                     [
                                         "FSMI",
@@ -548,27 +547,24 @@ def Animation(timerange):
                                         "mcgr"
                                     ],
                                     key="".join([str(i), "site"]),
-                                    max_selections=1,
                                 )
                             if (
                                 st.session_state["".join([str(i), "project"])][0]
                                 == "trex_nir"
                             ):
-                                st.multiselect(
+                                st.selectbox(
                                     "Name of Site",
                                     ["rabb", "gill"],
                                     key="".join([str(i), "site"]),
-                                    max_selections=1,
                                 )
                             if (
                                 st.session_state["".join([str(i), "project"])][0]
                                 == "trex_rgb"
                             ):
-                                st.multiselect(
+                                st.selectbox(
                                     "Name of Site",
                                     ["rabb", "gill", "fsmi", "pina", "yknf"],
                                     key="".join([str(i), "site"]),
-                                    max_selections=1,
                                 )
 
 
@@ -583,12 +579,11 @@ def Animation(timerange):
                                     step=10,
                                     key="".join([str(i), "height"]),
                                 )
-                                st.multiselect(
+                                st.selectbox(
                                     "Type of Image",
                                     ["Fisheye", "Map"],
                                     "Fisheye",
                                     key="".join([str(i), "map"]),
-                                    max_selections=1,
                                 )
                             if (
                                 st.session_state["".join([str(i), "project"])][0]
@@ -601,12 +596,11 @@ def Animation(timerange):
                                     step=10,
                                     key="".join([str(i), "height"])
                                 )
-                                st.multiselect(
+                                st.selectbox(
                                     "Type of Image",
                                     ["Fisheye", "Map"],
                                     "Fisheye",
                                     key="".join([str(i), "map"]),
-                                    max_selections=1,
                                 )
                                 
                             if (
@@ -620,12 +614,11 @@ def Animation(timerange):
                                     step=10,
                                     key="".join([str(i), "height"]),
                                 )
-                                st.multiselect(
+                                st.selectbox(
                                     "Type of Image",
                                     ["Fisheye", "Map"],
                                     "Fisheye",
                                     key="".join([str(i), "map"]),
-                                    max_selections=1,
                                 )
                             if (
                                 st.session_state["".join([str(i), "project"])][0]
@@ -638,12 +631,11 @@ def Animation(timerange):
                                     step=10,
                                     key="".join([str(i), "height"]),
                                 )
-                                st.multiselect(
+                                st.selectbox(
                                     "Type of Image",
                                     ["Fisheye", "Map"],
                                     "Fisheye",
                                     key="".join([str(i), "map"]),
-                                    max_selections=1,
                                 )
 
 
@@ -715,11 +707,10 @@ def Graph():
             options=coord_options,
             key="B_options_to_use",
         )
-        st.multiselect(
+        st.selectbox(
             label="What frequency would you like to use",
             key="Frequency_B",
             options=["1Hz", "50Hz"],
-            max_selections=1,
         )
         st.checkbox(
             label="Would you like to difference theses B's versus each satellite (lag)",
@@ -732,11 +723,10 @@ def Graph():
             options=coord_options,
             key="E_options_to_use",
         )
-        st.multiselect(
+        st.selectbox(
             label="What frequency would you like to use",
             key="Frequency_E",
             options=["2Hz", "16Hz"],
-            max_selections=1,
         )
         st.checkbox(
             label="Would you like to difference theses E's versus each satellite (lag)",
@@ -778,10 +768,9 @@ def Graph():
             default=None,
         )
 
-        coordinate_system = st.multiselect(
+        coordinate_system = st.selectbox(
             label="What coordinate system would you like it in",
             options=["North East Centre", "Mean-field aligned"],
-            max_selections=1,
             key="Coordinate_system",
         )
         return coordinate_system, graphs
@@ -820,7 +809,7 @@ def Graph():
     if "pixel_average" not in st.session_state:
         st.session_state["pixel_average"] = None   
     if st.session_state['Pixel_intensity'] == True:
-        st.multiselect(label="Number of pixels to be averaged", options=[1,3,5,7],  key="pixel_average")
+        st.selectbox(label="Number of pixels to be averaged", options=[1,3,5,7],  key="pixel_average")
     if "Filtering" not in st.session_state:
         st.session_state["Filtering"] = False
     if "Heatmap" not in st.session_state:
@@ -1193,8 +1182,6 @@ def Main():
             "swarma",
             "swarmb",
             "swarmc",
-            "epop",
-            "dsmp16",
         ],
         key="Satellite_Graph",
     )
