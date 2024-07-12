@@ -297,7 +297,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         length_of_axis=subplot_select()
         for index in range(len(user_select["conductivities"])):
             for k in range(len(user_select["satellite_graph"])):
-                if user_select['coordinate_system'][0] == "North East Centre": 
+                if user_select['coordinate_system'] == "North East Centre": 
                     #From North East or East North, are they self similar who knows?
                     if user_select["conductivities"][index] == "ENorth/BEast":
                         conductivies= data[k, :,  3, 0, 0] # we want zeroth frequency term of the EB ratio
@@ -568,7 +568,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                         delta=np.timedelta64(0,'s')
                     for l in range(len(user_select["Time_Series"])):
                         
-                        if user_select['coordinate_system'][0] == "North East Centre":  #Make one plot over plotted with eachother
+                        if user_select['coordinate_system'] == "North East Centre":  #Make one plot over plotted with eachother
                             if indicies[k][i] == None:
                                 pass
                             else:
@@ -668,7 +668,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         indicies=0
         for i in range(len(user_select["heatmap"])):
             for k in range(len(user_select["satellite_graph"])):
-                if user_select['coordinate_system'][0] == "North East Centre":
+                if user_select['coordinate_system'] == "North East Centre":
                     if user_select["heatmap"][i] == "E_North":
                         index1 = 1
                         index2=  0
@@ -854,7 +854,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
             for k in range(len(user_select["satellite_graph"])):
                 factor=1
                 print('weoweeee')
-                if user_select['coordinate_system'][0] == "North East Centre":
+                if user_select['coordinate_system'] == "North East Centre":
                     if user_select["singles_graph"][i] == "E_North":
                         index1 = 1
                         index2=  0
@@ -1265,7 +1265,7 @@ def EBplotsNEC(user_select):
             global axes_twin_B
             axes_twin_B=[ axes[x +length_for_axis].twinx() for x in range(len(user_select["graph_B_chosen"])) ] 
         for i in range(len(user_select["graph_B_chosen"])):
-            if user_select['coordinate_system'][0] == "North East Centre":
+            if user_select['coordinate_system'] == "North East Centre":
                 if user_select["graph_B_chosen"][i] == "North":
                     index = 0
                 elif user_select["graph_B_chosen"][i] == "East":
@@ -1294,7 +1294,7 @@ def EBplotsNEC(user_select):
                 alpha=0.35
             else:
                 alpha=1
-            if length_for_axis ==0:
+            if length_for_axis ==0 and len(user_select["graph_B_chosen"]) ==1:
                 axes.plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
                 axes.legend(loc=2)
                 axes.set_ylabel(
@@ -1347,7 +1347,7 @@ def EBplotsNEC(user_select):
             if user_select["bandpass"][0] == True and has_twin==False:
                 axes_twin_PF=axes.twinx() 
         for i in range(len(user_select["graph_PF_chosen"])):
-            if user_select['coordinate_system'][0] == "North East Centre":
+            if user_select['coordinate_system'] == "North East Centre":
                 if user_select["graph_PF_chosen"][i] == "North":
                     index = 0
                 elif user_select["graph_PF_chosen"][i] == "East":
@@ -1598,7 +1598,7 @@ def EBplotsNEC(user_select):
 
                         times_for_flux, meanfield,lag_bool = B_Logic_For_E(lag_bool)
 
-                        if user_select['coordinate_system'][0] == "Mean-field aligned":
+                        if user_select['coordinate_system'] == "Mean-field aligned":
                             latitude, longitude, radius = dsE['Latitude'].to_numpy(), dsE['Longitude'].to_numpy(),  dsE["Radius"].to_numpy()  # Gets Emphermis data
                             r_nec = Coordinate_change(latitude, longitude, radius) #Changes coordinates of r to NEC
                           
@@ -1681,7 +1681,7 @@ def EBplotsNEC(user_select):
                             bresarrangedband[:, l] = butter_bandpass_filter(bresarranged[:, l], user_select["bandpass"][1], 50)
                     
                     ##TODO Add MFA
-                    if user_select['coordinate_system'][0] == "Mean-field aligned":
+                    if user_select['coordinate_system'] == "Mean-field aligned":
                         latitude, longitude, radius = ds['Latitude'].to_numpy(), ds['Longitude'].to_numpy(),  ds["Radius"].to_numpy()-6.371e6  # Gets Emphermis data
                         
                         r_nec = Coordinate_change(latitude, longitude, radius) #Changes coordinates of r to NEC

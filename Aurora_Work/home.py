@@ -706,6 +706,7 @@ def Graph():
             label="What directions of B would you like to graph",
             options=coord_options,
             key="B_options_to_use",
+            help="Subtracted from the CHAOS model to get rid of the mean field, the prodominent component due to the aurora is the East or Polodial Component"
         )
         st.selectbox(
             label="What frequency would you like to use",
@@ -713,7 +714,7 @@ def Graph():
             options=["1Hz", "50Hz"],
         )
         st.checkbox(
-            label="Would you like to difference theses B's versus each satellite (lag)",
+            label="Would you like to difference theses B's versus each satellite (lag required)",
             key="B_difference",
         )
 
@@ -722,6 +723,7 @@ def Graph():
             label="What directions of E would you like to graph",
             options=coord_options,
             key="E_options_to_use",
+            help="There is no electric field in a static ionosphere, main component is North or Azimuthal"
         )
         st.selectbox(
             label="What frequency would you like to use",
@@ -729,7 +731,7 @@ def Graph():
             options=["2Hz", "16Hz"],
         )
         st.checkbox(
-            label="Would you like to difference theses E's versus each satellite (lag)",
+            label="Would you like to difference theses E's versus each satellite (lag required)",
             key="E_difference",
         )
 
@@ -741,9 +743,10 @@ def Graph():
             label="What directions of Ponyting Flux would you like to graph",
             options=coord_options,
             key="PF_options_to_use",
+            help="Poynting flux is S=E cross B so main component is centre, E and B not required to be selected"
         )
         st.checkbox(
-            label="Would you like to difference theses Ponyting Flux's versus each satellite (lag)",
+            label="Would you like to difference theses Ponyting Flux's versus each satellite (lag required)",
             key="PF_difference",
         )
     if "B_difference" not in st.session_state:
@@ -762,7 +765,7 @@ def Graph():
 
     def GUI_interface():
         graphs = st.multiselect(
-            label="What would you like to graph",
+            label="What would you like to graph the satellite-related measurements (eg: Electric field, Pixel intensity etc)",
             options=options_for_graphs,
             key="Graph_select",
             default=None,
@@ -771,6 +774,7 @@ def Graph():
         coordinate_system = st.selectbox(
             label="What coordinate system would you like it in",
             options=["North East Centre", "Mean-field aligned"],
+            help="North East Centre is more common for quick study, mean field untested!!!!",
             key="Coordinate_system",
         )
         return coordinate_system, graphs
@@ -778,9 +782,9 @@ def Graph():
     def Drop_down_menus(coordinate_system, graphs):
         try:  # tries to generate column but doesn't work if the index of the coordinate system is 0
             # sets coordinate system to give to the functions in Graph_functions
-            if coordinate_system[0] == "North East Centre":
+            if coordinate_system == "North East Centre":
                 coord_options = ["North", "East", "Centre"]
-            elif coordinate_system[0] == "Mean-field aligned":
+            elif coordinate_system == "Mean-field aligned":
                 coord_options = ["Mean-field", "Azimuthal", "Polodial"]
             try:  # st.columns doesn't like len(0)
                 # creates columns for each variable to graph ie: B, E etc
@@ -948,14 +952,14 @@ def Graph():
                     st.multiselect(label="Please select the B lags you would like to plot", options=options[6], key="lags_cross_E")
         elif graph_type[0] == "single value":
             time_rangestart = st.time_input(
-            label="Time to the start of the conjunction",
+            label="Start time of interval for a single EB ratio plot",
             step=60,
             key="time_start_single",
             value=st.session_state["time_start"],
             )
 
             time_rangeend = st.time_input(
-                label="Time to the end of the conjunction",
+                label="end time of interval for a single EB ratio plot",
                 step=60,
                 key="time_end_single",
                 value=st.session_state["time_end"],
@@ -1105,12 +1109,12 @@ def Render_Graph(timerange):
 
     }
 
-    if dict["coordinate_system"][0] == "North East Centre":
+    if dict["coordinate_system"] == "North East Centre":
         figaxes = EBplotsNEC(dict)
         st.session_state["Graph"] = figaxes
     print("axes")
-    print(dict["coordinate_system"][0])
-    if dict["coordinate_system"][0] == "Mean-field aligned":
+    print(dict["coordinate_system"])
+    if dict["coordinate_system"] == "Mean-field aligned":
         fig,axes,data = EBplotsNEC(dict)
         print("called")
         st.session_state["Graph"] = [fig,axes]
@@ -1147,25 +1151,35 @@ def Main():
     )
     date_range = st.date_input(label="Date of conjunction", key="date")
     time_rangestart = st.time_input(
-        label="Time to the start of the conjunction",
+        label="Start time of Interval",
         step=60,
         key="time_start",
         value=st.session_state["time_start"],
     )
 
     time_rangeend = st.time_input(
-        label="Time to the end of the conjunction",
+        label="End time of interval",
         step=60,
         key="time_end",
         value=st.session_state["time_end"],
     )
-    seconds_start = st.selectbox(
-        "Seconds_start",
-        ("0", "6", "8", "10", "24", "35", "36", "42", "48", "55"),
+    seconds_start = st.slider(
+        "Seconds start",
+        min_value=0,
+        max_value=60,
+        step=1,
+        value=0,
         key="second_start",
+        help="If you would like to change the seconds of the start ie, to be start time + x sec"
     )
-    seconds_end = st.selectbox(
-        "Seconds_end", ("0", "12", "24", "30", "36", "42", "48", "55"), key="second_end"
+    seconds_end = st.slider(
+        "Seconds ends",
+        min_value=0,
+        max_value=60,
+        step=1,
+        value=0,
+        key="second_end",
+        help="If you would like to change the seconds of the end ie, to be end time + x sec"
     )
     global timerange
     timerange = (
@@ -1177,7 +1191,7 @@ def Main():
     
 
     st.multiselect(
-        label="What satellites would you like to Graph",
+        label="What satellites would you like to use in your graph",
         options=[
             "swarma",
             "swarmb",
