@@ -1021,14 +1021,14 @@ def EBplotsNEC(user_select):
     def generalerrors():
         if user_select["Pixel_intensity"] == True:
             try:
-                length_for_axis += len(user_select["sky_map_values"])
+                len(user_select["sky_map_values"])
             except TypeError:
                 raise Exception("Please select a auroral animation as required")
         differences=[user_select['B_difference'], user_select['E_difference'], user_select['PF_difference']]
         for difference in differences:
             if difference and user_select['lag'] == False:
                 raise Exception(f"Need to select lags for swarm A and C before selecting {difference}")
-
+    generalerrors()
     data_returned=None
     set_token(
         "https://vires.services/ows",
@@ -1114,8 +1114,8 @@ def EBplotsNEC(user_select):
             length_for_axis +=len(user_select["B_difference"])
         if user_select ["PF_difference"] != None:
             length_for_axis +=len(user_select["PF_difference"])
-
-        length_for_axis += len(user_select["sky_map_values"])
+        if user_select ["sky_map_values"] != None:
+            length_for_axis += len(user_select["sky_map_values"])
 
         return length_for_axis
 
