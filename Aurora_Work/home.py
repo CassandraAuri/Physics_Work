@@ -298,16 +298,23 @@ def graphing_animation(dict):
             lat_sat=conjunction_obj.sat["lat"].to_numpy()
             lon_sat=conjunction_obj.sat["lon"].to_numpy()
             alt_sat=conjunction_obj.sat["alt"].to_numpy()
-            print(alt, 'alt')
-            print(alt_sat)
-            lat_mag, lon_mag, alt_mag = aacgmv2.convert_latlon_arr(in_lat=lat_sat, in_lon=lon_sat, height=alt_sat, dtime=time_range[0], method_code="G2A")
-            print(lat_mag, 'latmag')
-            print(np.cos(np.deg2rad(lat_mag)), 'cosarcmag')
-            print(np.sqrt((alt_sat+6371)/(alt+6371)*np.cos(np.deg2rad(lat_mag))), 'arccos aargument')
-            lambda_foot=np.rad2deg(np.arccos(np.sqrt((alt_sat+6371)/(alt+6371))*np.cos(np.deg2rad(lat_mag))))
-            lat_new, _, _ = aacgmv2.convert_latlon_arr(in_lat=lambda_foot, in_lon=lon_sat, height=alt, dtime=time_range[0], method_code="A2G")
-            print(lat_new, 'lat newt')
-            conjunction_obj.lla_footprint(alt=alt)
+            import geopack as gp
+            lat_rad = np.radians(lat_sat)
+            lon_rad = np.radians(lon_sat)
+            alt_sat=alt_sat+6371
+            x_ecef = alt_sat * np.cos(lat_rad) * np.cos(lon_rad)
+            y_ecef = alt_sat * np.cos(lat_rad) * np.sin(lon_rad)
+            z_ecef = alt_sat * np.sin(lat_rad)
+            gp.geo_to_gsm()
+            gp.recalc(time_range[0])
+            x_gsm, y_gsm, z_gsm = gp.geigeo(x_ecef, y_ecef, z_ecef, 1)
+            x_foot, y_foot, z_foot = gp.trace(x_gsm, y_gsm, z_gsm, alt+6371)
+            lat_foot, lon_foot = gp.gsm_to_geo(x_foot, y_foot, z_foot)
+            sat_lla=np.array(lat_foot, lon_foot, [alt]*len(lat_foot))
+            conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
+
+
+            #conjunction_obj.lla_footprint(alt=alt)
             print(conjunction_obj.sat["lat"].to_numpy() , 'footprint')
             if dict["sky_map_values"][k][3] == 'Map':
                 lat_satellite.append(conjunction_obj.sat["lat"].to_numpy())
