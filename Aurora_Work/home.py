@@ -17,6 +17,7 @@ from viresclient import set_token
 from viresclient import SwarmRequest
 import asilib.skymap
 import warnings
+import geopack as gp
 warnings.filterwarnings('ignore')
 plt.style.use("cyberpunk")
 
@@ -298,7 +299,7 @@ def graphing_animation(dict):
             lat_sat=conjunction_obj.sat["lat"].to_numpy()
             lon_sat=conjunction_obj.sat["lon"].to_numpy()
             alt_sat=conjunction_obj.sat["alt"].to_numpy()
-            import geopack as gp
+
             lat_rad = np.radians(lat_sat)
             lon_rad = np.radians(lon_sat)
             alt_sat=alt_sat+6371
