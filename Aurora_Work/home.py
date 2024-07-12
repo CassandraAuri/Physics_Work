@@ -307,7 +307,7 @@ def graphing_animation(dict):
             y_ecef = alt_sat * np.cos(lat_rad) * np.sin(lon_rad)
             z_ecef = alt_sat * np.sin(lat_rad)
             t1 = time_range[0]
-            t0 = datetime.datetime(1970,1,1)
+            t0 = datetime(1970,1,1)
             ut = (t1-t0).total_seconds()
             gp.recalc(ut)
             x_gsm, y_gsm, z_gsm = gp.geigeo(x_ecef, y_ecef, z_ecef, 1)
