@@ -306,7 +306,6 @@ def graphing_animation(dict):
             x_ecef = alt_sat * np.cos(lat_rad) * np.cos(lon_rad)
             y_ecef = alt_sat * np.cos(lat_rad) * np.sin(lon_rad)
             z_ecef = alt_sat * np.sin(lat_rad)
-            gp.geo_to_gsm()
             gp.recalc(time_range[0])
             x_gsm, y_gsm, z_gsm = gp.geigeo(x_ecef, y_ecef, z_ecef, 1)
             x_foot, y_foot, z_foot = gp.trace(x_gsm, y_gsm, z_gsm, alt+6371)
