@@ -714,7 +714,7 @@ def Graph():
             options=["1Hz", "50Hz"],
         )
         st.checkbox(
-            label="Would you like to difference theses B's versus each satellite (lag required)",
+            label="Would you like to difference theses E's versus each satellite (requires the LAG option to selected which requires swarm A and C to be selected)",
             key="B_difference",
         )
 
@@ -731,7 +731,7 @@ def Graph():
             options=["2Hz", "16Hz"],
         )
         st.checkbox(
-            label="Would you like to difference theses E's versus each satellite (lag required)",
+            label="Would you like to difference theses E's versus each satellite (requires the LAG option to selected which requires swarm A and C to be selected)",
             key="E_difference",
         )
 
@@ -746,7 +746,7 @@ def Graph():
             help="Poynting flux is S=E cross B so main component is centre, E and B not required to be selected"
         )
         st.checkbox(
-            label="Would you like to difference theses Ponyting Flux's versus each satellite (lag required)",
+            label="Would you like to difference theses Ponyting Flux's versus each satellite (requires the LAG option to selected which requires swarm A and C to be selected)",
             key="PF_difference",
         )
     if "B_difference" not in st.session_state:
@@ -755,7 +755,7 @@ def Graph():
         st.session_state["E_difference"] = False
     if "PF_difference" not in st.session_state:
         st.session_state["PF_difference"] = False
-    options_for_graphs = ["B", "E", "FAC", "Poynting flux"]
+    options_for_graphs = ["B", "E", "Field Aligned Current", "Poynting flux"]
     Graph_functions = [
         Graph_options_B,
         Graph_options_E,
@@ -825,7 +825,7 @@ def Graph():
 
 
     st.checkbox(
-        label="would you like to find the normalized difference between FAC and Pyonting flux (must select both FAC and pyonting flux centre)",
+        label="would you like to find the normalized difference between Field Aligned Current and Pyonting flux (must select both FAC and pyonting flux centre)",
         key="Difference",
         value=st.session_state["Difference"],
     )
@@ -839,11 +839,13 @@ def Graph():
         label=r"Would you like to graph the pixel intesity",
         value=st.session_state["Pixel_intensity"],
         key="Pixel_intensity",
+        help="Graphs the pixel intensity from auroral animation"
     )
     st.checkbox(
-        label=r"Would you like to bandpass filter for Alfven (50km, 1km)",
+        label=r"Would you like to bandpass filter your satellite measurements",
         value=st.session_state["Filtering"],
         key="Filtering",
+        help="The swarm satellites are travelling at approximately 10km/s so a 0.1Hz and above gets rid of ionospheric signatures greater than 100km in azimuthal length"
     )
     if "swarma" in st.session_state["Satellite_Graph"] and "swarmc" in st.session_state["Satellite_Graph"]:
         st.checkbox(label='Would you like to lag the plots by the synoptic B scale', value=False, key='lag')
@@ -1019,7 +1021,7 @@ def Render_Graph(timerange):
             st.session_state[parameters[i]] = None
     # Index error because if Graph hasn't been selected, [0] doesn't work as stated in many comments
     try:
-        np.reshape([np.where(np.array(st.session_state["Graph_select"]) == "FAC")], -1)[
+        np.reshape([np.where(np.array(st.session_state["Graph_select"]) == "Field Aligned Current")], -1)[
             0
         ]  # Finds if any index exists named FAC in the graphs selected
         FAC_boolean = True
