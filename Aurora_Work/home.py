@@ -242,7 +242,7 @@ def graphing_animation(dict):
             if asi_array_code.lower() == "themis":
                 frame_rate = 2
                 asi = asilib.asi.themis(
-                    location_code, time_range=time_range, alt=alt, custom_alt=True
+                    location_code, time_range=time_range, alt=alt, custom_alt='interp'
                 )
             elif asi_array_code.lower() == "rego":
                 frame_rate = 2
@@ -295,7 +295,20 @@ def graphing_animation(dict):
 
             # Converts altitude to assumed auroral height
 
+            lat_sat=conjunction_obj.sat["lat"].to_numpy()
+            lon_sat=conjunction_obj.sat["lon"].to_numpy()
+            alt_sat=conjunction_obj.sat["alt"].to_numpy()
+            print(alt, 'alt')
+            print(alt_sat)
+            lat_mag, lon_mag, alt_mag = aacgmv2.convert_latlon_arr(in_lat=lat_sat, in_lon=lon_sat, height=alt_sat, dtime=time_range[0], method_code="G2A")
+            print(lat_mag, 'latmag')
+            print(np.cos(np.deg2rad(lat_mag)), 'cosarcmag')
+            print(np.sqrt((alt_sat+6371)/(alt+6371)*np.cos(np.deg2rad(lat_mag))), 'arccos aargument')
+            lambda_foot=np.rad2deg(np.arccos(np.sqrt((alt_sat+6371)/(alt+6371))*np.cos(np.deg2rad(lat_mag))))
+            lat_new, _, _ = aacgmv2.convert_latlon_arr(in_lat=lambda_foot, in_lon=lon_sat, height=alt, dtime=time_range[0], method_code="A2G")
+            print(lat_new, 'lat newt')
             conjunction_obj.lla_footprint(alt=alt)
+            print(conjunction_obj.sat["lat"].to_numpy() , 'footprint')
             if dict["sky_map_values"][k][3] == 'Map':
                 lat_satellite.append(conjunction_obj.sat["lat"].to_numpy())
                 lon_satellite.append(conjunction_obj.sat["lon"].to_numpy())
@@ -319,7 +332,7 @@ def graphing_animation(dict):
                         in_lat=lat_satellite[satellite],
                         in_lon=lon_satellite[satellite],
                         height=alt,
-                        dtime=sat_time[0],
+                        dtime=time_range[0],
                         method_code="G2A",
                     )
                 )
@@ -329,7 +342,7 @@ def graphing_animation(dict):
                         in_lat=lat[i],
                         in_lon=lon[i],
                         height=alt,
-                        dtime=sat_time[0],
+                        dtime=time_range[0],
                         method_code="G2A",
                     )
                 )
