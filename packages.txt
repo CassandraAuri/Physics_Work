@@ -1,4 +1,1 @@
 libgl1
-build-essential
-pkg-config
-default-IRBEM-dev
