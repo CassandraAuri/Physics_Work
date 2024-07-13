@@ -17,6 +17,8 @@ from numpy.typing import NDArray
 import matplotlib.animation as animation
 import matplotlib.colors as colors
 import cmasher as cmr
+import geopack.geopack as gp
+from scipy.optimize import curve_fit, fsolve
 def process_string(input_string):
     # Convert the string to lowercase
     lowercased_string = input_string.lower()
@@ -1304,7 +1306,7 @@ def EBplotsNEC(user_select):
                 alpha=0.35
             else:
                 alpha=1
-            if length_for_axis ==0 and len(user_select["graph_B_chosen"]) ==1:
+            if rows() ==1 :
                 axes.plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
                 axes.legend(loc=2)
                 axes.set_ylabel(
@@ -1915,12 +1917,79 @@ def EBplotsNEC(user_select):
                     sat_time = np.array(emph[i][0])  # sets timestamp
 
                     sat_lla = np.array([emph[i][1], emph[i][2], emph[i][3]]).T
-
+    
                     conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
+                    lat_sat=np.deg2rad(conjunction_obj.sat["lat"].to_numpy())
+                    lon_sat=np.deg2rad(conjunction_obj.sat["lon"].to_numpy())
+
+                    alt_sat=conjunction_obj.sat["alt"].to_numpy()
 
                     # Converts altitude to assumed auroral height
+                    def footprinting():
+                        t1 = time_range[0]
+                        t0 = datetime(1970,1,1)
+                        ut = (t1-t0).total_seconds()
 
-                    conjunction_obj.lla_footprint(alt=alt)
+                        gp.recalc(ut)
+                        r, theta= gp.geodgeo(alt_sat,lat_sat,1) #TODO magically, r is 10km less than if you calculated r manually, is this real
+
+                        x_gc,y_gc,z_gc = gp.sphcar((r)/6371,theta,lon_sat,1) 
+
+
+                        x_gsm, y_gsm, z_gsm = gp.geogsm(x_gc,y_gc,z_gc, 1)
+
+                        x_foot,y_foot,z_foot=np.zeros(len(x_gsm)), np.zeros(len(y_gsm)), np.zeros(len(z_gsm))
+
+
+                        for index in range(len(x_gsm)):
+                            x_foot_int, y_foot_int, z_foot_int, xx, _,zz = gp.trace(x_gsm[index], y_gsm[index], z_gsm[index], dir=1,rlim=10, r0=(alt-10+6371)/6371, maxloop=300 )
+                            _, _, _, xx2,yy2,zz2 = gp.trace(x_foot_int, y_foot_int, z_foot_int, dir=-1,rlim=10, r0=(alt-10+6371)/6371, maxloop=1000 )
+                            def curve_fit_func():
+                                def cubic(t, a, b, c, d):
+                                    return a*t**3 + b*t**2 + c*t + d
+                                r = np.linspace(1, 1.5, 100000)
+
+                                radius_data=np.sqrt(xx2**2+yy2**2+zz2**2)
+
+                                params_x, _ = curve_fit(cubic, radius_data, xx2)
+                                params_y, _ = curve_fit(cubic, radius_data, yy2)
+                                params_z, _ = curve_fit(cubic, radius_data, zz2)
+
+                                def x(t):
+                                    return cubic(t, *params_x)
+
+                                def y(t):
+                                    return cubic(t, *params_y)
+
+                                def z(t):
+                                    return cubic(t, *params_z)
+                                def radius(t):
+                                    return np.sqrt(x(t)**2 + y(t)**2 + z(t)**2)
+
+                                index_closest=np.argmin(np.abs(radius(r)-(alt-10+6371)/6371))
+
+                                return x(r[index_closest]),y(r[index_closest]),z(r[index_closest])
+
+                            x_foot[index],y_foot[index],z_foot[index] = curve_fit_func()
+
+                        x_done, y_done, z_done = gp.geogsm(x_foot, y_foot, z_foot, -1)
+
+                        alt_sat_done, lat_sat_done,lon_sat_done = np.zeros(len(x_done)), np.zeros(len(x_done)), np.zeros(len(x_done))
+                        for index in range(len(x_done)):
+                            
+                            r_done,theta_done,lon_sat_done[index]= gp.sphcar(x_done[index], y_done[index], z_done[index],-1)
+
+                            alt_sat_done[index], lat_sat_done[index]= gp.geodgeo(r_done*6371,theta_done,-1) #TODO check if this is right
+
+
+                        if np.any(np.abs(alt_sat_done - alt) > 5):
+                            raise Exception("One or more values in the footprinting are greater than 5km away from the specified alt. Contact owner for a fix, not your fault")
+                        print(np.rad2deg(lon_sat_done)-360,np.rad2deg(lat_sat_done) )
+                        sat_lla=np.array([np.rad2deg(lat_sat_done), np.rad2deg(lon_sat_done)-360, alt_sat_done]).T
+
+                        conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
+                        return conjunction_obj
+                    conjunction_obj = footprinting()
 
                     lat_satellite.append(conjunction_obj.sat["lat"].to_numpy())
                     lon_satellite.append(conjunction_obj.sat["lon"].to_numpy())

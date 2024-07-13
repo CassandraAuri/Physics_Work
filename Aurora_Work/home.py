@@ -20,6 +20,7 @@ import warnings
 import geopack.geopack as gp
 warnings.filterwarnings('ignore')
 plt.style.use("cyberpunk")
+from scipy.optimize import curve_fit, fsolve
 
 st.title("Cassandra Litwinowich's Auroral Website!")
 st.header("How to Use: (Buttons for drop down menus on left, will need to scroll down)")
@@ -298,37 +299,77 @@ def graphing_animation(dict):
 
             lat_sat=np.deg2rad(conjunction_obj.sat["lat"].to_numpy())
             lon_sat=np.deg2rad(conjunction_obj.sat["lon"].to_numpy())
-            print(lon_sat, 'longs')
+
             alt_sat=conjunction_obj.sat["alt"].to_numpy()
 
+            def footprinting():
+                t1 = time_range[0]
+                t0 = datetime(1970,1,1)
+                ut = (t1-t0).total_seconds()
 
-            print("geopack module is located at:", gp.__file__)
-            t1 = time_range[0]
-            t0 = datetime(1970,1,1)
-            ut = (t1-t0).total_seconds()
-            import inspect
+                gp.recalc(ut)
+                r, theta= gp.geodgeo(alt_sat,lat_sat,1) #TODO magically, r is 10km less than if you calculated r manually, is this real
 
-            functions_list = inspect.getmembers(gp, inspect.isfunction)
-            for function_name, _ in functions_list:
-                print(function_name)
-                print('test')
-            gp.recalc(ut)
-            r, theta= gp.geodgeo(alt_sat,lat_sat,1)
-            print(r, 'r')
-            x_gc,y_gc,z_gc = gp.sphcar((r)/6371,theta,lon_sat,1)
-            print('GC:  ', x_gc,y_gc,z_gc,' R=',np.sqrt(x_gc**2+y_gc**2+z_gc**2))
-            x_gsm, y_gsm, z_gsm = gp.geogsm(x_gc,y_gc,z_gc, 1)
+                x_gc,y_gc,z_gc = gp.sphcar((r)/6371,theta,lon_sat,1) 
 
-            x_foot,y_foot,z_foot=np.zeros(len(x_gsm)), np.zeros(len(y_gsm)), np.zeros(len(z_gsm))
-            print(alt, ((alt+6371)/6371))
+                
+                x_gsm, y_gsm, z_gsm = gp.geogsm(x_gc,y_gc,z_gc, 1)
+
+                x_foot,y_foot,z_foot=np.zeros(len(x_gsm)), np.zeros(len(y_gsm)), np.zeros(len(z_gsm))
+
+                
+                for index in range(len(x_gsm)):
+                    x_foot_int, y_foot_int, z_foot_int, xx, _,zz = gp.trace(x_gsm[index], y_gsm[index], z_gsm[index], dir=1,rlim=10, r0=(alt-10+6371)/6371, maxloop=300 )
+                    _, _, _, xx2,yy2,zz2 = gp.trace(x_foot_int, y_foot_int, z_foot_int, dir=-1,rlim=10, r0=(alt-10+6371)/6371, maxloop=1000 )
+                    def curve_fit_func():
+                        def cubic(t, a, b, c, d):
+                            return a*t**3 + b*t**2 + c*t + d
+                        r = np.linspace(1, 1.5, 100000)
+
+                        radius_data=np.sqrt(xx2**2+yy2**2+zz2**2)
+
+                        params_x, _ = curve_fit(cubic, radius_data, xx2)
+                        params_y, _ = curve_fit(cubic, radius_data, yy2)
+                        params_z, _ = curve_fit(cubic, radius_data, zz2)
+
+                        def x(t):
+                            return cubic(t, *params_x)
+
+                        def y(t):
+                            return cubic(t, *params_y)
+
+                        def z(t):
+                            return cubic(t, *params_z)
+                        def radius(t):
+                            return np.sqrt(x(t)**2 + y(t)**2 + z(t)**2)
+                        
+
+                        ax.plot(x(r), z(r), label='interp')
+
+                        index_closest=np.argmin(np.abs(radius(r)-(alt-10+6371)/6371))
+
+                        return x(r[index_closest]),y(r[index_closest]),z(r[index_closest])
+
+                    x_foot[index],y_foot[index],z_foot[index] = curve_fit_func()
+
+                x_done, y_done, z_done = gp.geogsm(x_foot, y_foot, z_foot, -1)
+
+                alt_sat_done, lat_sat_done,lon_sat_done = np.zeros(len(x_done)), np.zeros(len(x_done)), np.zeros(len(x_done))
+                for index in range(len(x_done)):
+                    
+                    r_done,theta_done,lon_sat_done[index]= gp.sphcar(x_done[index], y_done[index], z_done[index],-1)
+
+                    alt_sat_done[index], lat_sat_done[index]= gp.geodgeo(r_done*6371,theta_done,-1) #TODO check if this is right
 
 
-            conjunction_obj.lla_footprint(alt=alt) #Turn this to T89 model to compare
-
-            #sat_lla=np.array(lat_sat_done, lon_sat_done, z_foot)
-
-            
-            #conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
+                if np.any(np.abs(alt_sat_done - alt) > 5):
+                    raise Exception("One or more values in the footprinting are greater than 5km away from the specified alt. Contact owner for a fix, not your fault")
+                print(np.rad2deg(lon_sat_done)-360,np.rad2deg(lat_sat_done) )
+                sat_lla=np.array([np.rad2deg(lat_sat_done), np.rad2deg(lon_sat_done)-360, alt_sat_done]).T
+                
+                conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
+                return conjunction_obj
+            conjunction_obj = footprinting()
 
             print(conjunction_obj.sat["lat"].to_numpy() , 'footprint')
             if dict["sky_map_values"][k][3] == 'Map':
@@ -749,7 +790,7 @@ def Animation(timerange):
 
         global skymap_values
         skymap_values = station_logic()
-
+        print(skymap_values, 'skymap_values')
         Animation_dict = {
             "time_range": timerange,
             "satellite_graph": st.session_state["Satellite_Graph"],
@@ -761,7 +802,7 @@ def Animation(timerange):
         # calls to make one column but should dynamiically update
         # station_logic(1)
         button_for_animation = st.button(
-            label="Render graphs", key="Animation_executer_asi"
+            label="Render Animations", key="Animation_executer_asi"
         )
         if button_for_animation == True:
             Animation_function_caller(Animation_dict)
@@ -911,7 +952,7 @@ def Graph():
         label=r"Would you like to graph the pixel intesity",
         value=st.session_state["Pixel_intensity"],
         key="Pixel_intensity",
-        help="Graphs the pixel intensity from auroral animation"
+        help="Graphs the pixel intensity from auroral animation, this is extremely expensive computationally (be warned), both finding a footprint for the satellite as well as using a minimization function find the closest pixel"
     )
     st.checkbox(
         label=r"Would you like to bandpass filter your satellite measurements",
@@ -1100,34 +1141,33 @@ def Render_Graph(timerange):
     except IndexError:
         FAC_boolean = False
     # try:  # [0] doesnt work
-    try:
-        count = st.session_state["station_count"]
-        values = [[None, None]] * count
 
-        def value_setter():  # sets values of selected sites and projects
-            nonlocal values
-            for i in range(count):  # goes through all columns
+    count = st.session_state["station_count"]
+    values = [[None, None]] * count
+
+    def value_setter():  # sets values of selected sites and projects
+        nonlocal values
+        for i in range(count):  # goes through all columns
+            # doesn't add values if empty
+            if st.session_state["".join([str(i), "project"])] == []:
+                pass
+
+            else:
                 # doesn't add values if empty
-                if st.session_state["".join([str(i), "project"])] == []:
-                    pass
+                if st.session_state["".join([str(i), "s"])] != []:
+                    project = st.session_state["".join([str(i), "project"])]
 
+                    sites = st.session_state["".join([str(i), "s"])]
+
+                    heights = st.session_state["".join([str(i), "heights"])]
+                    
+                    values[i] = [project, sites, heights]
                 else:
-                    # doesn't add values if empty
-                    if st.session_state["".join([str(i), "sites"])] != []:
-                        project = st.session_state["".join([str(i), "project"])][0]
+                    pass
+        return values
 
-                        sites = st.session_state["".join([str(i), "sites"])][0]
+    skymap_values = value_setter()
 
-                        heights = st.session_state["".join([str(i), "heights"])]
-                        
-                        values[i] = [project, sites, heights]
-                    else:
-                        pass
-            return values
-
-        skymap_values = value_setter()
-    except KeyError:
-        skymap_values = None
 
 
     if st.session_state['B_difference'] == True:
@@ -1143,7 +1183,7 @@ def Render_Graph(timerange):
     else:
         PF_difference = None
 
-
+    print(skymap_values, 'skymap dict')
     dict = {
         "time_range": timerange,
         "satellite_graph": st.session_state["Satellite_Graph"],
