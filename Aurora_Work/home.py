@@ -17,7 +17,7 @@ from viresclient import set_token
 from viresclient import SwarmRequest
 import asilib.skymap
 import warnings
-import geopack as gp
+import geopack.geopack as gp
 warnings.filterwarnings('ignore')
 plt.style.use("cyberpunk")
 
@@ -296,28 +296,90 @@ def graphing_animation(dict):
 
             # Converts altitude to assumed auroral height
 
-            lat_sat=conjunction_obj.sat["lat"].to_numpy()
-            lon_sat=conjunction_obj.sat["lon"].to_numpy()
+            lat_sat=np.deg2rad(conjunction_obj.sat["lat"].to_numpy())
+            lon_sat=np.deg2rad(conjunction_obj.sat["lon"].to_numpy())
+            print(lon_sat, 'longs')
             alt_sat=conjunction_obj.sat["alt"].to_numpy()
 
-            lat_rad = np.radians(lat_sat)
-            lon_rad = np.radians(lon_sat)
-            alt_sat=alt_sat+6371
-            x_ecef = alt_sat * np.cos(lat_rad) * np.cos(lon_rad)
-            y_ecef = alt_sat * np.cos(lat_rad) * np.sin(lon_rad)
-            z_ecef = alt_sat * np.sin(lat_rad)
+
+            print("geopack module is located at:", gp.__file__)
             t1 = time_range[0]
             t0 = datetime(1970,1,1)
             ut = (t1-t0).total_seconds()
+            import inspect
+
+            functions_list = inspect.getmembers(gp, inspect.isfunction)
+            print(dir(gp))
+            for function_name, _ in functions_list:
+                print(function_name)
+                print('test')
             gp.recalc(ut)
-            x_gsm, y_gsm, z_gsm = gp.geigeo(x_ecef, y_ecef, z_ecef, 1)
-            x_foot, y_foot, z_foot = gp.trace(x_gsm, y_gsm, z_gsm, alt+6371)
-            lat_foot, lon_foot = gp.gsm_to_geo(x_foot, y_foot, z_foot)
-            sat_lla=np.array(lat_foot, lon_foot, [alt]*len(lat_foot))
-            conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
+            r, theta= gp.geodgeo(alt_sat,lat_sat,1)
+            print(r, 'r')
+            x_gc,y_gc,z_gc = gp.sphcar((r)/6371,theta,lon_sat,1)
+            print('GC:  ', x_gc,y_gc,z_gc,' R=',np.sqrt(x_gc**2+y_gc**2+z_gc**2))
+            x_gsm, y_gsm, z_gsm = gp.geogsm(x_gc,y_gc,z_gc, 1)
 
+            x_foot,y_foot,z_foot=np.zeros(len(x_gsm)), np.zeros(len(y_gsm)), np.zeros(len(z_gsm))
+            print(alt, ((alt+6371)/6371))
+            """
+            def dual_half_circle(center=(0,0), radius=1, angle=90, ax=None, colors=('w','k','k'),
+                     **kwargs):
 
-            #conjunction_obj.lla_footprint(alt=alt)
+                if ax is None:
+                    ax = plt.gca()
+                theta1, theta2 = angle, angle + 180
+                #w1 = Wedge(center, radius, theta1, theta2, fc=colors[0], **kwargs)
+                #w2 = Wedge(center, radius, theta2, theta1, fc=colors[1], **kwargs)
+                from matplotlib.patches import Wedge, Circle
+                w1 = Wedge(center, radius, theta1, theta2, fc=colors[1], **kwargs)
+                w2 = Wedge(center, radius, theta2, theta1, fc=colors[0], **kwargs)
+            
+                cr = Circle(center, radius, fc=colors[2], fill=False, **kwargs)
+                for wedge in [w1, w2, cr]:
+                    ax.add_artist(wedge)
+                return [w1, w2, cr]
+
+            def setup_fig(xlim=(10,-30),ylim=(-20,20),xlabel='X GSM [Re]',ylabel='Z GSM [Re]'):
+
+                fig = plt.figure(figsize=(15,10))
+                ax  = fig.add_subplot(111)
+                ax.axvline(0,ls=':',color='k')
+                ax.axhline(0,ls=':',color='k')
+                ax.set_xlim(xlim)
+                ax.set_ylim(ylim)
+                ax.set_xlabel(xlabel)
+                ax.set_ylabel(ylabel)
+                
+                ax.set_aspect('equal')
+                w1,w2,cr = dual_half_circle(ax=ax)
+                
+                return ax
+            for index in range(len(x_gsm)):
+                x_foot[index], y_foot[index], z_foot[index], xx, _,zz = gp.trace(x_gsm[index], y_gsm[index], z_gsm[index], dir=1,rlim=50, r0=(alt+6371)/6371, maxloop=5000 )
+                ax=setup_fig()
+                ax.plot(xx,zz)
+                plt.scatter(x_foot[index],  z_foot[index], s=10, color='red')
+                plt.savefig(f'testing{index}.png')
+
+            x_done, y_done, z_done = gp.geogsm(x_foot, y_foot, z_foot, -1)
+
+            alt_sat_done, lat_sat_done,lon_sat_done = np.zeros(len(x_done)), np.zeros(len(x_done)), np.zeros(len(x_done))
+            print('GC:  ', x_done, y_done, z_done,' R=',np.sqrt(x_done**2+y_done**2+z_done**2))
+            for index in range(len(x_done)):
+                
+                r_done,theta_done,lon_sat_done[index]= gp.sphcar(x_done[index], y_done[index], z_done[index],-1)
+                print(gp.sphcar(x_done[index], y_done[index], z_done[index],-1), 'test323213')
+                alt_sat_done[index], lat_sat_done[index]= gp.geodgeo(r_done*6371,theta_done,-1)
+            """
+
+            conjunction_obj.lla_footprint(alt=alt) #Turn this to T89 model to compare
+
+            #sat_lla=np.array(lat_sat_done, lon_sat_done, z_foot)
+
+            
+            #conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
+
             print(conjunction_obj.sat["lat"].to_numpy() , 'footprint')
             if dict["sky_map_values"][k][3] == 'Map':
                 lat_satellite.append(conjunction_obj.sat["lat"].to_numpy())
