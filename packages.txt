@@ -1,3 +1,1 @@
 libgl1
-build-essential
-https://github.com/PRBEM/IRBEM.git
