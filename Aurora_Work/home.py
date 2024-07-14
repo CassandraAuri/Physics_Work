@@ -494,7 +494,9 @@ def graphing_animation(dict):
                 f"{asi_array_code.lower()}_{location_code.lower()}_fisheye.{movie_container}"
             )  # file address of movie saved by asilib
 
-            movie_address_total = movie_address
+            # Saves address so movie.py can load it in the GUI
+            st.write("Aurora_Work"/"animations" / movie_address)
+            save_file.append( "Aurora_Work"/"animations" / movie_address)
 
             st.write(movie_address_total)
 
