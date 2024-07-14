@@ -56,6 +56,10 @@ st.write("REGO : Old camera, Focuses on Nitrogen Emissions  \
 st.write("TREx-NIR: New camera, focuses on Near Infared, altitude should always be 150km, lower resolution than other cameras and longer integration time: 1 image every 6 seconds")
 st.write("TREx-RGB:  New camera, RECOMMENDED,  focuses on Optical Emission, altitude be 110km unless otherwise specified, works very well, 1 image every 3 seconds")
 st.write(asilib.config["ASI_DATA_DIR"])
+import pathlib
+ 
+# current working directory
+st.write(pathlib.Path().absolute())
 
 
 # https://stackoverflow.com/questions/47792242/rounding-time-off-to-the-nearest-second-python
