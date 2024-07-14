@@ -19,6 +19,12 @@ import matplotlib.colors as colors
 import cmasher as cmr
 import geopack.geopack as gp
 from scipy.optimize import curve_fit, fsolve
+plt.style.use("cyberpunk")
+plt.rcParams['figure.facecolor'] =  '121212'
+plt.rcParams['axes.facecolor'] =  '121212'
+plt.rcParams['savefig.facecolor'] =  '121212'
+mplcyberpunk.make_lines_glow()
+mplcyberpunk.add_underglow()
 def process_string(input_string):
     # Convert the string to lowercase
     lowercased_string = input_string.lower()
