@@ -471,7 +471,7 @@ def graphing_animation(dict):
 
             # Saves address so movie.py can load it in the GUI
             st.write(r"Aurora_Work/animations{}".format( movie_address))
-            save_file.append( r"Aurora_Work/animations{}".format( movie_address))
+            save_file.append( r"Aurora_Work/animations/{}".format( movie_address))
         else:
             animator_fisheye()
 
@@ -484,7 +484,7 @@ def graphing_animation(dict):
 
             # Saves address so movie.py can load it in the GUI
         
-            save_file.append( r"Aurora_Work/animations/images{}".format( movie_address))
+            save_file.append( r"Aurora_Work/animations/{}".format( movie_address))
 
     return save_file
 
