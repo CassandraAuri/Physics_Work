@@ -31,7 +31,16 @@ mplcyberpunk.add_underglow()
 asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
 asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
 asilib.config['ASILIB_DIR'] = os.path.dirname(os.path.abspath(__file__))
+
 path = "/mount/src/physics_work/Aurora_Work"
+path = "/mount"
+
+# Walk through the directory and its subdirectories
+for root, dirs, files in os.walk(path):
+    st.write(f"Directory: {root}")
+    for file in files:
+        st.write(f" - {file}")
+time_range=[datetime(2021,4,16,6,39), datetime(2021,4,16,7,42)]
 
 
 
