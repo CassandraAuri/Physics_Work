@@ -13,9 +13,9 @@ path = os.path.dirname(os.path.abspath(__file__))
 
 # Walk through the directory and its subdirectories
 for root, dirs, files in os.walk(path):
-    print(f"Directory: {root}")
+    st.write(f"Directory: {root}")
     for file in files:
-        print(f" - {file}")
+        st.write(f" - {file}")
 time_range=[datetime(2021,4,16,6,39), datetime(2021,4,16,7,42)]
 """
 asi = asilib.asi.trex.trex_rgb(
