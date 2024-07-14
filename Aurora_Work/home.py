@@ -480,9 +480,8 @@ def graphing_animation(dict):
                 f"{asi_array_code.lower()}_{location_code.lower()}_{str(alt)}km_fisheye.{movie_container}"
             )  # file address of movie saved by asilib
 
-            movie_address_total = (
-                "/home/appuser/asilib-data" / "animations" / movie_address
-            )  # full address from C:
+            movie_address_total = r"/home/appuser/asilib-data/animations/{}".format(movie_address)
+
             st.write(movie_address_total)
 
             # Saves address so movie.py can load it in the GUI
