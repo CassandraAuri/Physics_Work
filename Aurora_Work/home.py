@@ -23,22 +23,11 @@ plt.style.use("cyberpunk")
 from scipy.optimize import curve_fit, fsolve
 import os
 
-st.write(asilib.config["ASI_DATA_DIR"])
-st.write(asilib.config)
 asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
 st.write(asilib.config)
 path = "/mount/src/physics_work/Aurora_Work"
-st.write("Current working directory:", os.getcwd())
 
 
-# List the folders in the specified directory
-folders = [name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]
-
-# Print the folders
-for folder in folders:
-    st.write(folder)
-
-import posixpath
 
 st.title("Cassandra Litwinowich's Auroral Website!")
 st.header("How to Use: (Buttons for drop down menus on left, will need to scroll down)")
@@ -495,24 +484,8 @@ def graphing_animation(dict):
             )  # file address of movie saved by asilib
 
             # Saves address so movie.py can load it in the GUI
-            import os
-
-            # Define the path to the directory
-            path = "/mount/src/physics_work"
-            for root, dirs, files in os.walk(path):
-                st.write(f"Directory: {root}")
-                for file in files:
-                    st.write(f" - {file}")
-
-            # List the files in the specified directory
-            files = [name for name in os.listdir(path) if os.path.isfile(os.path.join(path, name))]
-            
-            # Print the files
-            print("Files in the specified directory:")
-            st.write(files)
-
-            st.write(r"Aurora_Work/animations/{}".format( movie_address))
-            save_file.append( r"Aurora_Work/animations/{}".format( movie_address))
+        
+            save_file.append( r"Aurora_Work/animations/images{}".format( movie_address))
 
     return save_file
 
