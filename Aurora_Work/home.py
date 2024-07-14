@@ -22,14 +22,11 @@ warnings.filterwarnings('ignore')
 plt.style.use("cyberpunk")
 from scipy.optimize import curve_fit, fsolve
 import os
-try:
-    from pathlib import WindowsPath
-    pass
-except:
-    st.write(asilib.config["ASI_DATA_DIR"])
-    st.write(asilib.config)
-    asilib.config["ASI_DATA_DIR"] = '/mount/src/physics_work/Aurora_Work'
-    st.write(asilib.config)
+
+st.write(asilib.config["ASI_DATA_DIR"])
+st.write(asilib.config)
+asilib.config["ASI_DATA_DIR"] = '/mount/src/physics_work/Aurora_Work'
+st.write(asilib.config)
  
 
 import posixpath
@@ -303,6 +300,7 @@ def graphing_animation(dict):
             return asi, movie_generator
 
         asi, movie_generator = ASI_logic()
+        print(movie_generator, 'movie_gen')
 
         lat_satellite, lon_satellite, conj_obj_array,sat_azel_pixels_total = [], [], [], []  
         # Creates empty arrays for data from satellites to go, which is there rendered in animator
