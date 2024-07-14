@@ -1118,6 +1118,7 @@ def EBplotsNEC(user_select):
             length_for_axis +=len(user_select["PF_difference"])
         if user_select ["sky_map_values"] != None:
             length_for_axis += len(user_select["sky_map_values"])
+        print(length_for_axis, 'rows')
 
         return length_for_axis
 
@@ -1868,7 +1869,7 @@ def EBplotsNEC(user_select):
                 asi_array_code = user_select["sky_map_values"][k][0]
                 location_code = user_select["sky_map_values"][k][1]
                 alt = int(user_select["sky_map_values"][k][2])
-                
+
 
                 def ASI_logic():
                     if asi_array_code.lower() == "themis":
