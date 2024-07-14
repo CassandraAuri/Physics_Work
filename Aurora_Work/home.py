@@ -25,7 +25,7 @@ import os
 
 st.write(asilib.config["ASI_DATA_DIR"])
 st.write(asilib.config)
-asilib.config["ASI_DATA_DIR"] = '/mount/src/physics_work/Aurora_Work'
+asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
 st.write(asilib.config)
  
 
@@ -294,7 +294,7 @@ def graphing_animation(dict):
                 )
             else:
                 movie_generator = asi.animate_fisheye_gen(  # initaliziation
-                    ax=ax, overwrite=True, ffmpeg_params={"framerate": frame_rate}
+                    ax=ax, ffmpeg_params={"framerate": frame_rate}
                 )
 
             return asi, movie_generator
