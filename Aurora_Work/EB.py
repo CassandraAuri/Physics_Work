@@ -1116,7 +1116,7 @@ def EBplotsNEC(user_select):
             length_for_axis +=len(user_select["B_difference"])
         if user_select ["PF_difference"] != None:
             length_for_axis +=len(user_select["PF_difference"])
-        if user_select ["sky_map_values"] != None:
+        if user_select ["sky_map_values"] != None and user_select['Pixel_intensity']:
             length_for_axis += len(user_select["sky_map_values"])
         print(length_for_axis, 'rows')
 
