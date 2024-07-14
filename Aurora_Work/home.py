@@ -24,10 +24,7 @@ from scipy.optimize import curve_fit, fsolve
 import os
 try:
     from pathlib import WindowsPath
-    st.write(asilib.config["ASI_DATA_DIR"])
-    st.write(asilib.config)
-    asilib.config["ASI_DATA_DIR"] = WindowsPath('/mount/src/physics_work/Aurora_Work')
-    st.write(asilib.config)
+    pass
 except:
     st.write(asilib.config["ASI_DATA_DIR"])
     st.write(asilib.config)
@@ -489,7 +486,7 @@ def graphing_animation(dict):
                 f"{asi_array_code.lower()}_{location_code.lower()}_{str(alt)}km_fisheye.{movie_container}"
             )  # file address of movie saved by asilib
 
-            movie_address_total = r"/home/appuser/asilib-data/animations/{}".format(movie_address)
+            movie_address_total = movie_address
 
             st.write(movie_address_total)
 
