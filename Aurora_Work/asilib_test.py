@@ -14,6 +14,9 @@ st.write(asilib.config["acknowledged_asis"])
 
 time_range=[datetime(2021,4,16,6,39), datetime(2021,4,16,6,42)]
 try:
+    print(
+          'start'
+    )
     asi = asilib.asi.trex.trex_rgb(
         'fsmi',
         time_range=time_range,
@@ -22,6 +25,7 @@ try:
         custom_alt=True
     )
 except PermissionError:
+        print('erro1')
         asi = asilib.asi.trex.trex_rgb(
         'fsmi',
         time_range=time_range,
