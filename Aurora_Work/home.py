@@ -27,7 +27,15 @@ st.write(asilib.config["ASI_DATA_DIR"])
 st.write(asilib.config)
 asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
 st.write(asilib.config)
- 
+path = "/mount/src/physics_work/Aurora_Work"
+
+
+# List the folders in the specified directory
+folders = [name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]
+
+# Print the folders
+for folder in folders:
+    print(folder)
 
 import posixpath
 
