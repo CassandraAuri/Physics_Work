@@ -13,12 +13,20 @@ st.write(os.path.dirname(os.path.abspath(asilib.acknowledge.__file__)))
 st.write(asilib.config["acknowledged_asis"])
 
 time_range=[datetime(2021,4,16,6,39), datetime(2021,4,16,7,42)]
-
-asi = asilib.asi.trex.trex_rgb(
-    'fsmi',
-    time_range=time_range,
-    alt=110,
-    colors="rgb",
-    custom_alt=True
-)
+try:
+    asi = asilib.asi.trex.trex_rgb(
+        'fsmi',
+        time_range=time_range,
+        alt=110,
+        colors="rgb",
+        custom_alt=True
+    )
+except ImportError:
+        asi = asilib.asi.trex.trex_rgb(
+        'fsmi',
+        time_range=time_range,
+        alt=110,
+        colors="rgb",
+        custom_alt=True
+    )
 
