@@ -31,6 +31,7 @@ mplcyberpunk.add_underglow()
 asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
 asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
 asilib.config['ASILIB_DIR'] = os.path.dirname(os.path.abspath(__file__))
+from asilib.acknowledge import acknowledge
 
 path = "/mount/src/physics_work/Aurora_Work"
 path = "/mount"
@@ -283,22 +284,15 @@ def graphing_animation(dict):
 
             elif asi_array_code.lower() == "trex_rgb":
                 frame_rate = 2
-                try:
-                    asi = asilib.asi.trex.trex_rgb(
-                        location_code,
-                        time_range=time_range,
-                        alt=alt,
-                        colors="rgb",
-                        custom_alt=True
-                    )
-                except PermissionError:
-                    asi = asilib.asi.trex.trex_rgb(
-                        location_code,
-                        time_range=time_range,
-                        alt=alt,
-                        colors="rgb",
-                        custom_alt=True
-                    )
+                acknowledge('trex-rgb', t0=np.inf)
+                asi = asilib.asi.trex.trex_rgb(
+                    location_code,
+                    time_range=time_range,
+                    alt=alt,
+                    colors="rgb",
+                    custom_alt=True
+                )
+
             else:
                 raise NotImplementedError("How did you get this to happen")
             print(dict["sky_map_values"][k][3], "map test")
