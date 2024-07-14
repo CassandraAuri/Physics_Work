@@ -506,11 +506,10 @@ def graphing_animation(dict):
             
             # Print the files
             print("Files in the specified directory:")
-            for file in files:
-                print(file)
+            st.write(files)
 
-            st.write(r"Aurora_Work/animations{}".format( movie_address))
-            save_file.append( r"Aurora_Work/animations{}".format( movie_address))
+            st.write(r"Aurora_Work/animations/{}".format( movie_address))
+            save_file.append( r"Aurora_Work/animations/{}".format( movie_address))
 
     return save_file
 
