@@ -482,8 +482,8 @@ def graphing_animation(dict):
             )  # file address of movie saved by asilib
 
             # Saves address so movie.py can load it in the GUI
-            st.write("Aurora_Work"/"animations" / movie_address)
-            save_file.append( "Aurora_Work"/"animations" / movie_address)
+            st.write(r"Aurora_Work/animations{}".format( movie_address))
+            save_file.append( r"Aurora_Work/animations{}".format( movie_address))
         else:
             animator_fisheye()
 
@@ -495,13 +495,23 @@ def graphing_animation(dict):
             )  # file address of movie saved by asilib
 
             # Saves address so movie.py can load it in the GUI
-            st.write("Aurora_Work"/"animations" / movie_address)
-            save_file.append( "Aurora_Work"/"animations" / movie_address)
+            import os
 
-            st.write(movie_address_total)
+            # Define the path to the directory
+            path = "/mount/src/physics_work/Aurora_Work/animations"
 
-            # Saves address so movie.py can load it in the GUI
-            save_file.append(movie_address_total)
+
+            # List the files in the specified directory
+            files = [name for name in os.listdir(path) if os.path.isfile(os.path.join(path, name))]
+            
+            # Print the files
+            print("Files in the specified directory:")
+            for file in files:
+                print(file)
+
+            st.write(r"Aurora_Work/animations{}".format( movie_address))
+            save_file.append( r"Aurora_Work/animations{}".format( movie_address))
+
     return save_file
 
 def Animation_function_caller(Animation_dict):
