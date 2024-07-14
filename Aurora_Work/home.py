@@ -303,7 +303,7 @@ def graphing_animation(dict):
                 )
             else:
                 movie_generator = asi.animate_fisheye_gen(  # initaliziation
-                    ax=ax, ffmpeg_params={"framerate": frame_rate}
+                    ax=ax, overwrite=True, ffmpeg_params={"framerate": frame_rate}
                 )
 
             return asi, movie_generator
