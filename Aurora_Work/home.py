@@ -35,7 +35,7 @@ folders = [name for name in os.listdir(path) if os.path.isdir(os.path.join(path,
 
 # Print the folders
 for folder in folders:
-    print(folder)
+    st.write(folder)
 
 import posixpath
 
