@@ -498,7 +498,7 @@ def graphing_animation(dict):
             import os
 
             # Define the path to the directory
-            path = "/mount/src/physics_work/Aurora_Work/animations"
+            path = "/mount/src/physics_work/Aurora_Work"
 
 
             # List the files in the specified directory
