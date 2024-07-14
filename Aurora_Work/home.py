@@ -24,7 +24,6 @@ from scipy.optimize import curve_fit, fsolve
 import os
 
 asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
-st.write(asilib.config)
 path = "/mount/src/physics_work/Aurora_Work"
 
 
