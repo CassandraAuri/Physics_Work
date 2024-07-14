@@ -62,6 +62,7 @@ st.write('Absolute path of file:     ',
       os.path.abspath(__file__))
 st.write('Absolute directoryname: ', 
       os.path.dirname(os.path.abspath(__file__)))
+t.write('Absolute directoryname: ',  os.path.dirname(asilib.config["ASI_DATA_DIR"])
 import pathlib
  
 # current working directory
