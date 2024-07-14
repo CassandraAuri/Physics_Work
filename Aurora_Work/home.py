@@ -28,6 +28,7 @@ st.write(asilib.config)
 asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
 st.write(asilib.config)
 path = "/mount/src/physics_work/Aurora_Work"
+st.write("Current working directory:", os.getcwd())
 
 
 # List the folders in the specified directory
