@@ -1212,7 +1212,7 @@ def EBplotsNEC(user_select):
             global axes_twin_E
             axes_twin_E=[ axes[x].twinx() for x in range(len(user_select["graph_E_chosen"])) ] 
         for i in range(len(user_select["graph_E_chosen"])):
-            if user_select["coordinate_system"][0] == "North East Centre":
+            if user_select["coordinate_system"] == "North East Centre":
 
                 if user_select["graph_E_chosen"][i] == "North":
 
