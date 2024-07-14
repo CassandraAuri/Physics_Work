@@ -21,6 +21,11 @@ import geopack.geopack as gp
 warnings.filterwarnings('ignore')
 plt.style.use("cyberpunk")
 from scipy.optimize import curve_fit, fsolve
+import os
+from pathlib import WindowsPath
+ 
+
+import posixpath
 
 st.title("Cassandra Litwinowich's Auroral Website!")
 st.header("How to Use: (Buttons for drop down menus on left, will need to scroll down)")
@@ -57,8 +62,8 @@ st.write("TREx-NIR: New camera, focuses on Near Infared, altitude should always 
 st.write("TREx-RGB:  New camera, RECOMMENDED,  focuses on Optical Emission, altitude be 110km unless otherwise specified, works very well, 1 image every 3 seconds")
 st.write(asilib.config["ASI_DATA_DIR"])
 st.write(asilib.config)
-import os
- 
+asilib.config["ASI_DATA_DIR"] = WindowsPath('/mount/src/physics_work/Aurora_Work')
+st.write(asilib.config)
 st.write('Absolute path of file:     ', 
       os.path.abspath(__file__))
 st.write('Absolute directoryname: ', 
@@ -465,12 +470,8 @@ def graphing_animation(dict):
                 f"{asi_array_code.lower()}_{location_code.lower()}_{str(alt)}km_map.{movie_container}"
             )  # file address of movie saved by asilib
 
-            movie_address_total = (
-                asilib.config["ASI_DATA_DIR"] / "animations" / movie_address
-            )  # full address from C:
-
             # Saves address so movie.py can load it in the GUI
-            save_file.append(movie_address_total)
+            save_file.append(movie_address)
         else:
             animator_fisheye()
 
