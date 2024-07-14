@@ -1868,6 +1868,7 @@ def EBplotsNEC(user_select):
                 asi_array_code = user_select["sky_map_values"][k][0]
                 location_code = user_select["sky_map_values"][k][1]
                 alt = int(user_select["sky_map_values"][k][2])
+                
 
                 def ASI_logic():
                     if asi_array_code.lower() == "themis":
