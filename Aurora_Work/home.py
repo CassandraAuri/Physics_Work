@@ -517,11 +517,11 @@ def Animation_function_caller(Animation_dict):
         animation_strings = graphing_animation(Animation_dict)
 
         try:
-            clip1 = VideoFileClip(r"{}".format(animation_strings[0]))
+            clip1 = VideoFileClip(animation_strings[0])
         except IndexError:
             clip1 = None
         try:
-            clip2 = VideoFileClip(r"{}".format(animation_strings[1]))
+            clip2 = VideoFileClip(format(animation_strings[1]))
         except IndexError:
             clip2 = None
         try:
