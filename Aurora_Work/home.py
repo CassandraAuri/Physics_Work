@@ -478,11 +478,12 @@ def graphing_animation(dict):
             movie_address = (
                 f'{time_range[0].strftime("%Y%m%d_%H%M%S")}_'
                 f'{time_range[1].strftime("%H%M%S")}_'
-                f"{asi_array_code.lower()}_{location_code.lower()}_{str(alt)}km_map.{movie_container}"
+                f"{asi_array_code.lower()}_{location_code.lower()}_map.{movie_container}"
             )  # file address of movie saved by asilib
 
             # Saves address so movie.py can load it in the GUI
-            save_file.append(movie_address)
+            st.write("Aurora_Work"/"animations" / movie_address)
+            save_file.append( "Aurora_Work"/"animations" / movie_address)
         else:
             animator_fisheye()
 
@@ -490,7 +491,7 @@ def graphing_animation(dict):
             movie_address = (
                 f'{time_range[0].strftime("%Y%m%d_%H%M%S")}_'
                 f'{time_range[1].strftime("%H%M%S")}_'
-                f"{asi_array_code.lower()}_{location_code.lower()}_{str(alt)}km_fisheye.{movie_container}"
+                f"{asi_array_code.lower()}_{location_code.lower()}_fisheye.{movie_container}"
             )  # file address of movie saved by asilib
 
             movie_address_total = movie_address
