@@ -22,7 +22,12 @@ warnings.filterwarnings('ignore')
 plt.style.use("cyberpunk")
 from scipy.optimize import curve_fit, fsolve
 import os
-
+from cycler import cycler
+plt.rcParams['figure.facecolor'] =  121212
+plt.rcParams['axes.facecolor'] =  121212
+plt.rcParams['savefig.facecolor'] =  121212
+mplcyberpunk.make_lines_glow()
+mplcyberpunk.add_underglow()
 asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
 path = "/mount/src/physics_work/Aurora_Work"
 
