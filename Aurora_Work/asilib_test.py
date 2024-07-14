@@ -21,7 +21,7 @@ try:
         colors="rgb",
         custom_alt=True
     )
-except ImportError:
+except PermissionError:
         asi = asilib.asi.trex.trex_rgb(
         'fsmi',
         time_range=time_range,
