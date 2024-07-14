@@ -498,8 +498,11 @@ def graphing_animation(dict):
             import os
 
             # Define the path to the directory
-            path = "/mount/src/physics_work/Aurora_Work"
-
+            path = "/mount/src/physics_work"
+            for root, dirs, files in os.walk(path):
+                st.write(f"Directory: {root}")
+                for file in files:
+                    st.write(f" - {file}")
 
             # List the files in the specified directory
             files = [name for name in os.listdir(path) if os.path.isfile(os.path.join(path, name))]
