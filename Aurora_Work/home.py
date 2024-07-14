@@ -469,7 +469,7 @@ def graphing_animation(dict):
             )  # file address of movie saved by asilib
 
             movie_address_total = (
-                asilib.config["ASI_DATA_DIR"] / "animations" / movie_address
+                r"..\..\..\asilib-data\animations" / movie_address
             )  # full address from C:
 
             # Saves address so movie.py can load it in the GUI
