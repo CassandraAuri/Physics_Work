@@ -9,7 +9,6 @@ asilib.config['ASILIB_DIR'] = os.path.dirname(os.path.abspath(__file__)) #Change
 asilib.config["HERE"] = os.path.dirname(os.path.abspath(__file__))
 asilib.config["acknowledged_asis"] = []
 asilib.config["CONFIG_PATH"] =  os.path.dirname(os.path.abspath(__file__))
-st.write(asilib.asi.trex_rgb['dt'])
 time_range=[datetime(2021,4,16,6,39), datetime(2021,4,16,7,42)]
 asi = asilib.asi.trex.trex_rgb(
     'fsmi',
