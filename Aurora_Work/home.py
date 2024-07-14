@@ -469,7 +469,7 @@ def graphing_animation(dict):
             )  # file address of movie saved by asilib
 
             movie_address_total = (
-                f"..\..\..\asilib-data\animations\{movie_address}"
+                r"..\..\..\asilib-data\animations\{}".format(movie_address)
             )  # full address from C:
 
             # Saves address so movie.py can load it in the GUI
@@ -517,19 +517,19 @@ def Animation_function_caller(Animation_dict):
         animation_strings = graphing_animation(Animation_dict)
 
         try:
-            clip1 = VideoFileClip("{}".format(animation_strings[0]))
+            clip1 = VideoFileClip(r"{}".format(animation_strings[0]))
         except IndexError:
             clip1 = None
         try:
-            clip2 = VideoFileClip("{}".format(animation_strings[1]))
+            clip2 = VideoFileClip(r"{}".format(animation_strings[1]))
         except IndexError:
             clip2 = None
         try:
-            clip3 = VideoFileClip("{}".format(animation_strings[2]))
+            clip3 = VideoFileClip(r"{}".format(animation_strings[2]))
         except IndexError:
             clip3 = None
         try:
-            clip4 = VideoFileClip("{}".format(animation_strings[3]))
+            clip4 = VideoFileClip(r"{}".format(animation_strings[3]))
         except IndexError:
             clip4 = None
     else:
