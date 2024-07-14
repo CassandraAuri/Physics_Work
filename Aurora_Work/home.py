@@ -29,6 +29,8 @@ plt.rcParams['savefig.facecolor'] =  '121212'
 mplcyberpunk.make_lines_glow()
 mplcyberpunk.add_underglow()
 asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
+asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
+asilib.config['ASILIB_DIR'] = os.path.dirname(os.path.abspath(__file__))
 path = "/mount/src/physics_work/Aurora_Work"
 
 
