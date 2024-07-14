@@ -283,13 +283,22 @@ def graphing_animation(dict):
 
             elif asi_array_code.lower() == "trex_rgb":
                 frame_rate = 2
-                asi = asilib.asi.trex.trex_rgb(
-                    location_code,
-                    time_range=time_range,
-                    alt=alt,
-                    colors="rgb",
-                    custom_alt=True
-                )
+                try:
+                    asi = asilib.asi.trex.trex_rgb(
+                        location_code,
+                        time_range=time_range,
+                        alt=alt,
+                        colors="rgb",
+                        custom_alt=True
+                    )
+                except PermissionError:
+                    asi = asilib.asi.trex.trex_rgb(
+                        location_code,
+                        time_range=time_range,
+                        alt=alt,
+                        colors="rgb",
+                        custom_alt=True
+                    )
             else:
                 raise NotImplementedError("How did you get this to happen")
             print(dict["sky_map_values"][k][3], "map test")
