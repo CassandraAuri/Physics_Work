@@ -1743,7 +1743,7 @@ def EBplotsNEC(user_select):
                 if "".join(("swarm", ds["Spacecraft"][0].lower())) in labels:
                     fac = ds["FAC"]
                     time = fac.index
-                    fac = pd.Series.to_numpy(fac)
+                    fac = ds["FAC"].to_numpy(fac)
 
                     graphingF("".join(("Swarm ", ds["Spacecraft"][0])), time, fac)
                     if (
@@ -1950,8 +1950,8 @@ def EBplotsNEC(user_select):
 
 
                         for index in range(len(x_gsm)):
-                            x_foot_int, y_foot_int, z_foot_int, xx, _,zz = gp.trace(x_gsm[index], y_gsm[index], z_gsm[index], dir=1,rlim=10, r0=(alt-10+6371)/6371, maxloop=300 )
-                            _, _, _, xx2,yy2,zz2 = gp.trace(x_foot_int, y_foot_int, z_foot_int, dir=-1,rlim=10, r0=(alt-10+6371)/6371, maxloop=1000 )
+                            x_foot_int, y_foot_int, z_foot_int, xx, _,zz = gp.trace(x_gsm[index], y_gsm[index], z_gsm[index], dir=1,rlim=2, r0=(alt-10+6371)/6371, maxloop=300 )
+                            _, _, _, xx2,yy2,zz2 = gp.trace(x_foot_int, y_foot_int, z_foot_int, dir=-1,rlim=100, r0=(alt-10+6371)/6371, maxloop=1000 )
                             def curve_fit_func():
                                 def cubic(t, a, b, c, d):
                                     return a*t**3 + b*t**2 + c*t + d
@@ -2013,7 +2013,7 @@ def EBplotsNEC(user_select):
                 index_of_image = 0
                 pixel_chosen_average = np.zeros((len(emph), len(emph[0][0])))
 
-                def average(start_index,grid, subregion_size=user_select['pixel_average'][0]):
+                def average(start_index,grid, subregion_size=user_select['pixel_average']):
                     """
                     Calculate the average of a subregion in a grid.
                     
