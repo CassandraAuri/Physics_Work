@@ -29,24 +29,12 @@ plt.rcParams['savefig.facecolor'] =  '121212'
 mplcyberpunk.make_lines_glow()
 mplcyberpunk.add_underglow()
 asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
-asilib.config["ASI_DATA_DIR"] = os.path.dirname(os.path.abspath(__file__))
-asilib.config['ASILIB_DIR'] = os.path.dirname(os.path.abspath(__file__))
-from asilib.acknowledge import acknowledge
-
-path = "/mount/src/physics_work/Aurora_Work"
-path = "/mount"
-
-# Walk through the directory and its subdirectories
-for root, dirs, files in os.walk(path):
-    st.write(f"Directory: {root}")
-    for file in files:
-        st.write(f" - {file}")
-time_range=[datetime(2021,4,16,6,39), datetime(2021,4,16,7,42)]
+print(asilib.__version__)
 
 
 
 st.title("Cassandra Litwinowich's Auroral Website!")
-st.header("How to Use: (Buttons for drop down menus on left, will need to scroll down)")
+st.header("How to Use: (Buttons for drop down menus on left, you will need to scroll down)")
 st.divider()
 st.write("First we need to find suitable conjunctions. Well first you may ask what a conjunction is. \
             A Conjunction is a closer approach between a satellite with either \
@@ -268,9 +256,14 @@ def graphing_animation(dict):
         def ASI_logic():
             if asi_array_code.lower() == "themis":
                 frame_rate = 2
-                asi = asilib.asi.themis(
-                    location_code, time_range=time_range, alt=alt, custom_alt='interp'
-                )
+                if alt==90 or alt==110 or alt==150:
+                    asi = asilib.asi.themis(
+                        location_code, time_range=time_range, alt=alt, custom_alt=False 
+                    )
+                else:
+                    asi = asilib.asi.themis(
+                        location_code, time_range=time_range, alt=alt, custom_alt=True
+                    )
             elif asi_array_code.lower() == "rego":
                 frame_rate = 2
                 asi = asilib.asi.rego(
@@ -284,15 +277,14 @@ def graphing_animation(dict):
 
             elif asi_array_code.lower() == "trex_rgb":
                 frame_rate = 2
-                acknowledge('trex-rgb', t0=np.inf)
                 asi = asilib.asi.trex.trex_rgb(
                     location_code,
                     time_range=time_range,
                     alt=alt,
                     colors="rgb",
-                    custom_alt=True
+                    custom_alt=True,
+                    acknowledge_always=True
                 )
-
             else:
                 raise NotImplementedError("How did you get this to happen")
             print(dict["sky_map_values"][k][3], "map test")
@@ -344,11 +336,51 @@ def graphing_animation(dict):
                 x_gsm, y_gsm, z_gsm = gp.geogsm(x_gc,y_gc,z_gc, 1)
 
                 x_foot,y_foot,z_foot=np.zeros(len(x_gsm)), np.zeros(len(y_gsm)), np.zeros(len(z_gsm))
-
+                from matplotlib.patches import Wedge, Circle
+                def dual_half_circle(center=(0,0), radius=1, angle=90, ax=None, colors=('w','k','k'),
+                     **kwargs):
+                    """
+                    Add two half circles to the axes *ax* (or the current axes) with the 
+                    specified facecolors *colors* rotated at *angle* (in degrees).
+                    """
+                    if ax is None:
+                        ax = plt.gca()
+                    theta1, theta2 = angle, angle + 180
+                    #w1 = Wedge(center, radius, theta1, theta2, fc=colors[0], **kwargs)
+                    #w2 = Wedge(center, radius, theta2, theta1, fc=colors[1], **kwargs)
+                    
+                    w1 = Wedge(center, radius, theta1, theta2, fc=colors[1], **kwargs)
+                    w2 = Wedge(center, radius, theta2, theta1, fc=colors[0], **kwargs)
                 
+                    cr = Circle(center, radius, fc=colors[2], fill=False, **kwargs)
+                    for wedge in [w1, w2, cr]:
+                        ax.add_artist(wedge)
+                    return [w1, w2, cr]
+
+                def setup_fig(xlim=(10,-30),ylim=(-20,20),xlabel='X GSM [Re]',ylabel='Z GSM [Re]'):
+
+                    fig = plt.figure(figsize=(15,10))
+                    ax  = fig.add_subplot(111)
+                    ax.axvline(0,ls=':',color='k')
+                    ax.axhline(0,ls=':',color='k')
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
+                    ax.set_xlabel(xlabel)
+                    ax.set_ylabel(ylabel)
+                    
+                    ax.set_aspect('equal')
+                    w1,w2,cr = dual_half_circle(ax=ax)
+                    
+                    return ax
+                #ax = setup_fig(xlim=(-10,10),ylim=(-10,10))
                 for index in range(len(x_gsm)):
-                    x_foot_int, y_foot_int, z_foot_int, xx, _,zz = gp.trace(x_gsm[index], y_gsm[index], z_gsm[index], dir=1,rlim=10, r0=(alt-10+6371)/6371, maxloop=300 )
-                    _, _, _, xx2,yy2,zz2 = gp.trace(x_foot_int, y_foot_int, z_foot_int, dir=-1,rlim=10, r0=(alt-10+6371)/6371, maxloop=1000 )
+                    x_foot_int, y_foot_int, z_foot_int, xx, _,zz = gp.trace(x_gsm[index], y_gsm[index], z_gsm[index], dir=1,rlim=2, r0=(alt-10+6371)/6371, maxloop=1000 )
+
+                    
+                    x, _, z, xx2,yy2,zz2 = gp.trace(x_foot_int, y_foot_int, z_foot_int, dir=-1,rlim=100, r0=(alt-10+6371)/6371, maxloop=100 )
+                    #print(len(xx))
+                    ax.plot(xx,zz)
+                    fig.savefig('testwest.png')
                     def curve_fit_func():
                         def cubic(t, a, b, c, d):
                             return a*t**3 + b*t**2 + c*t + d
@@ -620,6 +652,8 @@ def Animation(timerange):
         st.title("Animation Interface:")
         if "station_count" not in st.session_state:
             st.session_state["station_count"] = 1
+        if st.session_state["station_count"] == None:
+            st.session_state["station_count"] = 1
         st.number_input(
             label="Number of Stations to animate",
             min_value=1,
@@ -716,7 +750,6 @@ def Animation(timerange):
                                 st.selectbox(
                                     "Type of Image",
                                     ["Fisheye", "Map"],
-                                    "Fisheye",
                                     key="".join([str(i), "imagetype"]),
                                 )
                             if (
@@ -855,6 +888,7 @@ def Graph():
         )
 
     def Graph_options_E(coord_options):
+        print(coord_options)
         st.multiselect(
             label="What directions of E would you like to graph",
             options=coord_options,
@@ -875,6 +909,7 @@ def Graph():
         pass
 
     def Graph_options_PF(coord_options):
+        print(coord_options)
         st.multiselect(
             label="What directions of Ponyting Flux would you like to graph",
             options=coord_options,
@@ -895,7 +930,6 @@ def Graph():
     Graph_functions = [
         Graph_options_B,
         Graph_options_E,
-        Graph_options_F,
         Graph_options_PF,
     ]
 
@@ -1038,13 +1072,13 @@ def Graph():
         st.select_slider(label="Please select the low pass in Hz", value=7, options=[0.5, 1, 2, 4, 6, 7, 7.9], key="high_pass")
     
     if st.session_state["E_B_ratio"] == True:
-        graph_type=st.multiselect(label="Would you like a heatmap (running windows) or a single interval", options=["heatmap", "single value"], key="graph_type")
+        graph_type=st.multiselect(label="Would you like a heatmap (running windows) or a single interval", options=("heatmap", "single value"), key="graph_type")
         print(graph_type)
-        if st.session_state["Coordinate_system"][0] == "North East Centre":
+        if st.session_state["Coordinate_system"] == "North East Centre":
             options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"], ['B B lag cross power', 'B B lag cross phase'], ['E E lag cross power', 'E E lag cross phase']]
         else:
             options=[["E_Azimuthal", "E_Polodial"], ["B_Azimuthal", "B_Polodial"], ["EAzimuthal/BPolodial", "EPolodial/BAzimuthal"]]
-        if graph_type[0] == 'heatmap':
+        if st.session_state['graph_type'][0] == 'heatmap':
             st.select_slider(label="Please select the running window interval (sampling rate)", value=1, options=[0.1,0.2,0.5, 1, 2], key="sampling_rate")
             st.select_slider(label="Please select the running window length", value=4, options=[2,3,4,5,6,8,10, 20,30,40,60,119], key="Window_Length")
             st.select_slider(label="Please select the number of samples per segment (note 16sps)", value='window length', options=['window length', 'half window length', 'quarter window'], key="nperseg")
@@ -1164,9 +1198,9 @@ def Render_Graph(timerange):
     except IndexError:
         FAC_boolean = False
     # try:  # [0] doesnt work
-
+    if "station_count" not in st.session_state:
+        st.session_state["station_count"] = None
     count = st.session_state["station_count"]
-    values = [[None, None]] * count
 
     def value_setter():  # sets values of selected sites and projects
         nonlocal values
@@ -1188,8 +1222,11 @@ def Render_Graph(timerange):
                 else:
                     pass
         return values
-
-    skymap_values = value_setter()
+    if st.session_state["station_count"] !=None:
+        values = [[None, None]] * count
+        skymap_values = value_setter()
+    else:
+        skymap_values = None
 
 
 

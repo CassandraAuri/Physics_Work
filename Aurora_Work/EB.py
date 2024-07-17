@@ -2014,7 +2014,7 @@ def EBplotsNEC(user_select):
                 pixel_chosen_average = np.zeros((len(emph), len(emph[0][0])))
 
                 def average(start_index,grid, subregion_size=user_select['pixel_average']):
-                    """
+                    """w
                     Calculate the average of a subregion in a grid.
                     
                     Parameters:
