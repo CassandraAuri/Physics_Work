@@ -8,6 +8,6 @@ scipy
 cmasher
 moviepy
 moviepy
-git+https://github.com/CassandraAuri/asilib_implementation/tree/testingnewbranch
+asilib
 aacgmv2
 geopack
