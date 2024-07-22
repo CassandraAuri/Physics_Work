@@ -283,7 +283,7 @@ def graphing_animation(dict):
                     alt=alt,
                     colors="rgb",
                     custom_alt=True,
-                    acknowledge_always=True
+                    acknowledge=True
                 )
             else:
                 raise NotImplementedError("How did you get this to happen")

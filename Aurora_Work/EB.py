@@ -339,7 +339,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         else:
             pass
         if user_select["EB_periodogram"] != None:
-            for i in range(len(user_select["EB_cross power"])):
+            for i in range(len(user_select["EB_periodogram"])):
                 user_select_selected.append([True]) #need a graph for each satellite, creates an array of length satellite that will register for the following for loop
         if user_select["EB_cross power"] != None:
             for i in range(len(user_select["EB_cross power"])):
@@ -684,9 +684,11 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
                     elif user_select["heatmap"][i] == "E_East":
                         index1 = 1
                         index2=  1
+                        scale=1e3
                     elif user_select["heatmap"][i] == "B_North":
                         index1 = 2
                         index2=  0
+                        scale=1e3
                     elif user_select["heatmap"][i] == "B_East":
                         index1 = 2
                         index2=  1
@@ -760,25 +762,33 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
 
                 
                 if index1==2: #B's
+                    print(np.percentile(np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices]*1e9, 25))
+                    dev=np.percentile(np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices]*1e9, 25)
                     img = axes[length_for_axis+indicies].pcolormesh(times+delta ,
-                                np.absolute(data[k, 0, 0, 0, bandpass]), np.real(np.array(data[k, :, index1, index2,bandpass]))[:,  non_nan_indices],
+                                np.absolute(data[k, 0, 0, 0, bandpass]), np.real(np.array(data[k, :, index1, index2,bandpass]))[:,  non_nan_indices]*1e9,
                                 shading='auto',
-                                    norm=colors.LogNorm(), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
+                                    norm=colors.LogNorm(vmin=dev), cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 elif  index1==1: #E's
+                    print(np.percentile(np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices]*1e3, 25))
+                    dev=np.percentile(np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices]*1e3, 25)
                     img = axes[length_for_axis+indicies].pcolormesh(times+delta , 
-                                    np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices] , shading='auto', 
-                                    norm=colors.LogNorm(),
+                                    np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices]*1e3 , shading='auto', 
+                                    norm=colors.LogNorm(vmin=dev),
                                     cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 elif index1==3: #E/B ratio
+                    print(np.percentile(np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices], 75))
+                    dev=np.percentile(np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices], 75)
                     img = axes[length_for_axis+indicies].pcolormesh(times+delta , 
                                     np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices] , shading='auto', 
-                                    norm=colors.LogNorm(),
-                                    cmap='winter' ) #selects average time, frequencies, and then the periodogram 
+                                    norm=colors.LogNorm(vmax=dev),
+                                    cmap='winter_r' ) #selects average time, frequencies, and then the periodogram 
 
                 elif index1==5: #cross power
+                    print(np.percentile(np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices]*1e9*1e3, 25))
+                    dev=np.percentile(np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices]*1e9*1e3, 25)
                     img = axes[length_for_axis+indicies].pcolormesh(times+delta , 
-                            np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices] , shading='auto', 
-                            norm=colors.LogNorm(),
+                            np.absolute(data[k, 0, 0, 0, bandpass]), np.absolute(np.array(data[k, :, index1, index2, bandpass]))[:,  non_nan_indices]*1e9*1e3 , shading='auto', 
+                            norm=colors.LogNorm(vmin=dev),
                             cmap='winter' ) #selects average time, frequencies, and then the periodogram 
                 elif index1 ==6: #phase
                     #print(np.real(data[k, 0, 0, 0, :]), np.real(np.array(data[k, 0, index1, index2, :])).T, 'heatmap')
