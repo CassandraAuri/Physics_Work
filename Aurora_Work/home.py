@@ -187,7 +187,7 @@ def graphing_animation(dict):
     # Finds the footprint of selected region with each selected spacecraft
 
     def animator_map():
-        print(movie_generator, "movie_gen")
+
         for i, (time, image, axes, _) in enumerate(movie_generator):
             # clears time series
             try:
@@ -247,7 +247,7 @@ def graphing_animation(dict):
     )
     # Loops through the number of stations selected by the user
     for k in range(len(dict["sky_map_values"])):
-        print(dict["sky_map_values"])
+
         asi_array_code = dict["sky_map_values"][k][0]
         location_code = dict["sky_map_values"][k][1]
         alt = int(dict["sky_map_values"][k][2])
@@ -287,7 +287,7 @@ def graphing_animation(dict):
                 )
             else:
                 raise NotImplementedError("How did you get this to happen")
-            print(dict["sky_map_values"][k][3], "map test")
+
             if dict["sky_map_values"][k][3] == 'Map':
                 movie_generator = asi.animate_map_gen(  # initaliziation
                     ax=ax, overwrite=True, ffmpeg_params={"framerate": frame_rate}
@@ -300,7 +300,7 @@ def graphing_animation(dict):
             return asi, movie_generator
 
         asi, movie_generator = ASI_logic()
-        print(movie_generator, 'movie_gen')
+
 
         lat_satellite, lon_satellite, conj_obj_array,sat_azel_pixels_total = [], [], [], []  
         # Creates empty arrays for data from satellites to go, which is there rendered in animator
@@ -378,9 +378,7 @@ def graphing_animation(dict):
 
                     
                     x, _, z, xx2,yy2,zz2 = gp.trace(x_foot_int, y_foot_int, z_foot_int, dir=-1,rlim=100, r0=(alt-10+6371)/6371, maxloop=100 )
-                    #print(len(xx))
-                    ax.plot(xx,zz)
-                    fig.savefig('testwest.png')
+
                     def curve_fit_func():
                         def cubic(t, a, b, c, d):
                             return a*t**3 + b*t**2 + c*t + d
@@ -424,14 +422,14 @@ def graphing_animation(dict):
 
                 if np.any(np.abs(alt_sat_done - alt) > 5):
                     raise Exception("One or more values in the footprinting are greater than 5km away from the specified alt. Contact owner for a fix, not your fault")
-                print(np.rad2deg(lon_sat_done)-360,np.rad2deg(lat_sat_done) )
+
                 sat_lla=np.array([np.rad2deg(lat_sat_done), np.rad2deg(lon_sat_done)-360, alt_sat_done]).T
                 
                 conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
                 return conjunction_obj
             conjunction_obj = footprinting()
 
-            print(conjunction_obj.sat["lat"].to_numpy() , 'footprint')
+
             if dict["sky_map_values"][k][3] == 'Map':
                 lat_satellite.append(conjunction_obj.sat["lat"].to_numpy())
                 lon_satellite.append(conjunction_obj.sat["lon"].to_numpy())
@@ -493,7 +491,7 @@ def graphing_animation(dict):
 
                     indicies = np.unravel_index((np.abs(values)).argmin(), values.shape)
                     indicies_total[satellite, i] = indicies
-                    print(indicies)
+
                 try:
                     pixel_chosen[satellite][i] = asi.data[1][i][
                         indicies[0], indicies[1]
@@ -616,7 +614,7 @@ def Animation_function_caller(Animation_dict):
                 [[clip1, clip2], [clip3, clip4], [clip_graph, clip_graph]]
             )
     if "Graph" in st.session_state and 'Alfven_graphs' in st.session_state:
-        print('wowee')
+
         Render_Graph(timerange) #gets a new copy
         Animate_graph()
         clip_graph = VideoFileClip("animationgraph.mp4")
@@ -698,7 +696,7 @@ def Animation(timerange):
                                 st.session_state["".join([str(i), "project"])]
                                 == "THEMIS"
                             ):
-                                print( st.session_state["".join([str(i), "project"])])
+
                                 st.selectbox(
                                     "Name of Site",
                                     options=(
@@ -814,7 +812,7 @@ def Animation(timerange):
                 nonlocal values
                 for i in range(count):  # goes through all columns
                     # doesn't add values if empty
-                    print(st.session_state["".join([str(i), "project"])], 'test1')
+
                     if st.session_state["".join([str(i), "project"])] == []:
                         pass
 
@@ -835,7 +833,7 @@ def Animation(timerange):
                                 maps=None
 
                             values[i] = [project, sites, heights, maps]
-                            print(values[i])
+
                         else:
                             pass
 
@@ -846,7 +844,7 @@ def Animation(timerange):
 
         global skymap_values
         skymap_values = station_logic()
-        print(skymap_values, 'skymap_values')
+
         Animation_dict = {
             "time_range": timerange,
             "satellite_graph": st.session_state["Satellite_Graph"],
@@ -888,7 +886,7 @@ def Graph():
         )
 
     def Graph_options_E(coord_options):
-        print(coord_options)
+
         st.multiselect(
             label="What directions of E would you like to graph",
             options=coord_options,
@@ -909,7 +907,7 @@ def Graph():
         pass
 
     def Graph_options_PF(coord_options):
-        print(coord_options)
+
         st.multiselect(
             label="What directions of Ponyting Flux would you like to graph",
             options=coord_options,
@@ -1073,7 +1071,7 @@ def Graph():
     
     if st.session_state["E_B_ratio"] == True:
         graph_type=st.multiselect(label="Would you like a heatmap (running windows) or a single interval", options=("heatmap", "single value"), key="graph_type")
-        print(graph_type)
+
         if st.session_state["Coordinate_system"] == "North East Centre":
             options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"], ['B B lag cross power', 'B B lag cross phase'], ['E E lag cross power', 'E E lag cross phase']]
         else:
@@ -1101,7 +1099,7 @@ def Graph():
                 st.multiselect(label="Please select the plots in the Alfven animation", options=["Time Series", "E Periodogram", "B Periodogram", "E/B Periodogram", "Cross Power Spectrum", "Cross phase", 'B B lag'], key="Alfven_graphs")
 
                 if "Time Series" in st.session_state["Alfven_graphs"]:
-                    print(options[:-1])
+
                     st.multiselect(label="Please select the time series you want to plot through", options=sum(options[:-5], []), key="Time_Series_Graph")
 
                 if "E Periodogram" in st.session_state["Alfven_graphs"]:
@@ -1243,7 +1241,7 @@ def Render_Graph(timerange):
     else:
         PF_difference = None
 
-    print(skymap_values, 'skymap dict')
+
     dict = {
         "time_range": timerange,
         "satellite_graph": st.session_state["Satellite_Graph"],
@@ -1286,11 +1284,10 @@ def Render_Graph(timerange):
     if dict["coordinate_system"] == "North East Centre":
         figaxes = EBplotsNEC(dict)
         st.session_state["Graph"] = figaxes
-    print("axes")
-    print(dict["coordinate_system"])
+
     if dict["coordinate_system"] == "Mean-field aligned":
         fig,axes,data = EBplotsNEC(dict)
-        print("called")
+
         st.session_state["Graph"] = [fig,axes]
     return
 
@@ -1374,7 +1371,7 @@ def Main():
         button = st.button(label="Render graphs", key="Graph_executer")
         if st.session_state["Alfven_Animation"] == True:
             button = st.button(label="Animate Alfven Graphs", key="Animation_executer")
-        print(button)
+
         if st.session_state["Graph_executer"] == True:
             Render_Graph(timerange)
         if st.session_state["Animation_executer"] == True:
