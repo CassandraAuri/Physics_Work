@@ -928,6 +928,7 @@ def Graph():
     Graph_functions = [
         Graph_options_B,
         Graph_options_E,
+        Graph_options_F,
         Graph_options_PF,
     ]
 
@@ -1016,7 +1017,7 @@ def Graph():
         help="The swarm satellites are travelling at approximately 10km/s so a 0.1Hz and above gets rid of ionospheric signatures greater than 100km in azimuthal length"
     )
     if "swarma" in st.session_state["Satellite_Graph"] and "swarmc" in st.session_state["Satellite_Graph"]:
-        st.checkbox(label='Would you like to lag the plots by the synoptic B scale', value=False, key='lag')
+        st.checkbox(label='Would you like to lag the plots by the synoptic B scale for offsetting as well as using magnitude latitude for the basic plots', value=False, key='lag')
 
     if "low_pass" not in st.session_state:
         st.session_state["low_pass"] = None

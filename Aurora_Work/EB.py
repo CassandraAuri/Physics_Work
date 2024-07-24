@@ -19,12 +19,38 @@ import matplotlib.colors as colors
 import cmasher as cmr
 import geopack.geopack as gp
 from scipy.optimize import curve_fit, fsolve
+import streamlit as st
 plt.style.use("cyberpunk")
 plt.rcParams['figure.facecolor'] =  '121212'
 plt.rcParams['axes.facecolor'] =  '121212'
 plt.rcParams['savefig.facecolor'] =  '121212'
 mplcyberpunk.make_lines_glow()
 mplcyberpunk.add_underglow()
+def long_sep(long1,long2,lag_data,sps):
+    """
+    Given a lag, find the average longitinduinal seperation
+    """
+    num_shift = int(lag_data[2] * sps)
+    if num_shift > 0:
+        adjusted_long1 = long1[num_shift:]
+        adjusted_long2 = long2[:-num_shift]
+    else:
+        adjusted_long1 = long1[:num_shift]
+        adjusted_long2 = long2[-num_shift:]
+    
+    # Ensure both arrays have the same length
+    min_length = min(len(adjusted_long1), len(adjusted_long2))
+    adjusted_long1 = adjusted_long1[:min_length]
+    adjusted_long2 = adjusted_long2[:min_length]
+    
+    # Calculate the pairwise longitudinal separation
+    separations = np.abs(np.array(adjusted_long1) - np.array(adjusted_long2))
+    
+    # Calculate and return the average separation
+    average_separation = np.mean(separations)
+    
+    return average_separation
+
 def process_string(input_string):
     # Convert the string to lowercase
     lowercased_string = input_string.lower()
@@ -364,7 +390,7 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
         """
         Creates an animation of each window
         """
-        fig_ani, axes_ani = plt.subplots(figsize=(10,15),  nrows=Animation_rows(), constrained_layout=True)
+        fig_ani, axes_ani = plt.subplots(figsize=(10,15),  nrows=Animation_rows())
         axs = np.array(axes_ani)
         if user_select["Time_Series"] != None:
             twin_x_axes=[axes_ani[k].twinx() for k in range(len(user_select["satellite_graph"]))]
@@ -1142,9 +1168,10 @@ def EBplotsNEC(user_select):
     fig, axes = plt.subplots(
         nrows=rows(),
         figsize=(10, 15),
-        constrained_layout=True,
+        constrained_layout=True
     )
     time_range = user_select["time_range"]
+    print(time_range)
     has_E = []  # Sets Which space-craft have a corersponding E field
     # Labels of space-craft interested in
     labels = user_select["satellite_graph"]
@@ -1223,10 +1250,20 @@ def EBplotsNEC(user_select):
         return df
 
     def graphingE(label, arrayx, arrayy, arraybandy, satelliteindex, has_twin):
+        time=arrayx
         colors = ["C0", "C1", "C2", "C3", "C4", "C5", "C6"]
+        global  axes_twin_E_y, axes_twin_E_x
+        if user_select['lag'] and has_twin==False:
+            axes_twin_E_y=[ axes[x].twiny() for x in range(len(user_select["graph_E_chosen"])) ]
+        elif user_select['lag'] and rows() ==1 and has_twin==False:
+            axes_twin_E_y= axes.twiny()
+
         if user_select["bandpass"][0] == True and has_twin==False:
-            global axes_twin_E
-            axes_twin_E=[ axes[x].twinx() for x in range(len(user_select["graph_E_chosen"])) ] 
+            if rows() !=1 :
+                axes_twin_E_x=[ axes[x].twinx() for x in range(len(user_select["graph_E_chosen"])) ]
+            else:
+                axes_twin_E_x= axes.twinx()
+
         for i in range(len(user_select["graph_E_chosen"])):
             if user_select["coordinate_system"] == "North East Centre":
 
@@ -1244,8 +1281,10 @@ def EBplotsNEC(user_select):
                     index = 1
                 elif user_select["graph_E_chosen"][i] == "Mean-field":
                     index = 2
+            
             try:
                 if user_select['lag'] == True:
+                    print(lag_data[3],process_string(label) , 'test')
                     if lag_data[3] == process_string(label):
 
                         lag_seconds = int(lag_data[2])
@@ -1255,44 +1294,95 @@ def EBplotsNEC(user_select):
                         seconds_delta = np.timedelta64(lag_seconds, 's')
                         nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
 
+                        
                         # Add the timedelta to the datetime array
-                        arrayx = arrayx + seconds_delta + nanoseconds_delta
 
+                        time = arrayx + seconds_delta + nanoseconds_delta
+                        print(arrayx)
+                        arrayx_y = arrayx - (seconds_delta + nanoseconds_delta)
+                        print(arrayx_y)
+                        if rows() ==1:
+                            axes_twin_E_y.plot(arrayx_y, [np.nan]*len(arrayx))
+                            axes_twin_E_y.tick_params(axis='x', labelcolor=colors[satelliteindex])
+                            axes_twin_E_y.set_xlim((min(arrayx_y), max(arrayx_y)))
+                        else:
+                            axes_twin_E_y[i].plot(arrayx_y, [np.nan]*len(arrayx))
+                            axes_twin_E_y[i].tick_params(axis='x', labelcolor=colors[satelliteindex])
+                            axes_twin_E_y[i].set_xlim((min(arrayx_y), max(arrayx_y)))
+                        print((min(arrayx_y), max(arrayx_y)))
+
+                        
             except NameError:
-                pass
+                    pass
+
+
             if user_select["bandpass"][0] == True:
                 alpha=0.35
             else:
                 alpha=1
-            axes[i].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
-            axes[i].set_ylabel(
-                r"$E_{{{}}}$ $(mV/m)$".format(user_select["graph_E_chosen"][i])
-            )
-            axes[i].legend(loc=2)
-            axes[i].set_xlim((time_range[0], time_range[1]))
-            if user_select['singles_graph'] != None:
-                axes[i].axvline(user_select["time_range_single"][0], color='orchid', linestyle='dashed')
-                axes[i].axvline(user_select["time_range_single"][1], color='orchid', linestyle='dashed')
+            try:
+                if has_twin == False and user_select['lag']:
+                    axes[i].tick_params(axis='x', labelcolor=colors[satelliteindex])
+                axes[i].plot(time, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
+                axes[i].set_ylabel(
+                    r"$E_{{{}}}$ $(mV/m)$".format(user_select["graph_E_chosen"][i])
+                )
+                axes[i].set_title(f"Electric Field in the {user_select['graph_E_chosen'][i]} direction")
+                axes[i].legend(loc=2)
+                axes[i].set_xlim((time_range[0], time_range[1]))
+                if user_select['singles_graph'] != None:
+                    axes[i].axvline(user_select["time_range_single"][0], color='orchid', linestyle='dashed')
+                    axes[i].axvline(user_select["time_range_single"][1], color='orchid', linestyle='dashed')
 
-            if user_select["bandpass"][0] == True:
-                axes_twin_E[i].plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
-                axes_twin_E[i].set_ylabel(
-                r"$E_{{{}}}$ bandpassed $(mV/m)$".format(user_select["graph_E_chosen"][i])
-            )
-                axes_twin_E[i].legend(loc=1)
+                if user_select["bandpass"][0] == True:
+                    axes_twin_E_x[i].plot(time,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
+                    axes_twin_E_x[i].set_ylabel(
+                    r"$E_{{{}}}$ bandpassed $(mV/m)$".format(user_select["graph_E_chosen"][i])
+                )
+                    axes_twin_E_x[i].legend(loc=1)
+            except TypeError:
+                axes.plot(time, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
+                if has_twin == False  and user_select['lag']:
+                    axes.tick_params(axis='x', labelcolor=colors[satelliteindex])
+                axes.set_ylabel(
+                    r"$E_{{{}}}$ $(mV/m)$".format(user_select["graph_E_chosen"][i])
+                )
+                axes.set_title(f"Electric Field in the {user_select['graph_E_chosen'][i]} direction")
+                axes.legend(loc=2)
+                axes.set_xlim((time_range[0], time_range[1]))
+                if user_select['singles_graph'] != None:
+                    axes.axvline(user_select["time_range_single"][0], color='orchid', linestyle='dashed')
+                    axes.axvline(user_select["time_range_single"][1], color='orchid', linestyle='dashed')
+
+                if user_select["bandpass"][0] == True:
+                    axes_twin_E_x.plot(time,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
+                    axes_twin_E_x.set_ylabel(
+                    r"$E_{{{}}}$ bandpassed $(mV/m)$".format(user_select["graph_E_chosen"][i])
+                )
+                    axes_twin_E_x.legend(loc=1)
+                    
         return True
 
-    def graphingB(label, arrayx, arrayy, arraybandy, satelliteindex, has_twin):
+    def graphingB(label, arrayx, arrayy, arraybandy, satelliteindex, has_twin, lag_bool):
+        global axes_twin_B_x, axes_twin_B_y
+        time=arrayx
         colors = ["C0", "C1", "C2", "C3", "C4", "C5", "C6"]
         
-        if user_select["graph_E_chosen"] != None:
-            length_for_axis = len(user_select["graph_E_chosen"])
+        if user_select["graph_B_chosen"] != None:
+            length_for_axis = len(user_select["graph_B_chosen"])
         else:
             length_for_axis = 0
         
+        if user_select['lag'] and has_twin==False:
+            axes_twin_B_y=[ axes[x + length_for_axis].twiny() for x in range(len(user_select["graph_B_chosen"])) ]
+        elif user_select['lag'] and rows() ==1 and has_twin==False:
+            axes_twin_B_y= axes.twiny()
+
         if user_select["bandpass"][0] == True and has_twin==False:
-            global axes_twin_B
-            axes_twin_B=[ axes[x +length_for_axis].twinx() for x in range(len(user_select["graph_B_chosen"])) ] 
+            
+            axes_twin_B_x=[ axes[x +length_for_axis].twinx() for x in range(len(user_select["graph_B_chosen"])) ] 
+
+
         for i in range(len(user_select["graph_B_chosen"])):
             if user_select['coordinate_system'] == "North East Centre":
                 if user_select["graph_B_chosen"][i] == "North":
@@ -1308,8 +1398,9 @@ def EBplotsNEC(user_select):
                     index = 1
                 elif user_select["graph_B_chosen"][i] == "Mean-field":
                     index = 2
-            if user_select['lag'] == True:
-                if lag_data[3] == process_string(label):
+            if user_select['lag'] == True and lag_bool:
+                print(lag_data[3], label, process_string(label))
+                if lag_data[3] == process_string(label) or lag_data[3]==label:
                     lag_seconds = int(lag_data[2])
                     lag_fraction = lag_data[2] - lag_seconds
                     lag_nanoseconds = int(lag_fraction * 1e9)
@@ -1318,45 +1409,69 @@ def EBplotsNEC(user_select):
                     nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
 
                     # Add the timedelta to the datetime array
-                    arrayx = arrayx + seconds_delta + nanoseconds_delta
+
+                    time = arrayx + seconds_delta + nanoseconds_delta
+                    print(arrayx)
+                    arrayx_y = arrayx - (seconds_delta + nanoseconds_delta)
+                    print(arrayx_y)
+                    if rows() ==1:
+                        axes_twin_B_y.plot(arrayx_y, [np.nan]*len(arrayx))
+                        axes_twin_B_y.tick_params(axis='x', labelcolor=colors[satelliteindex])
+                        axes_twin_B_y.set_xlim((min(arrayx_y), max(arrayx_y)))
+                    else:
+                        axes_twin_B_y[i].plot(arrayx_y, [np.nan]*len(arrayx))
+                        axes_twin_B_y[i].tick_params(axis='x', labelcolor=colors[satelliteindex])
+                        axes_twin_B_y[i].set_xlim((min(arrayx_y), max(arrayx_y)))
+                    print((min(arrayx_y), max(arrayx_y)))
+
             if user_select["bandpass"][0] == True:
                 alpha=0.35
             else:
                 alpha=1
             if rows() ==1 :
-                axes.plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
+                if has_twin == False and user_select['lag']:
+                    axes.tick_params(axis='x', labelcolor=colors[satelliteindex])
+                axes.plot(time, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
                 axes.legend(loc=2)
                 axes.set_ylabel(
                     r"$B_{{{}}}$".format(user_select["graph_B_chosen"][i]) + " (nT) "
                 )
                 axes.set_xlim((time_range[0], time_range[1]))
+                axes.set_title(f"Magnetic Field in the {user_select['graph_B_chosen'][i]} direction")
+
 
                 if user_select["bandpass"][0] == True:
-                    axes_twin_B[i].plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
-                    axes_twin_B[i].set_ylabel(
+                    axes_twin_B_x[i].plot(time,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
+                    axes_twin_B_x[i].set_ylabel(
                     r"$B_{{{}}}$ bandpassed $(nT)$".format(user_select["graph_B_chosen"][i])
                 )
-                    axes_twin_B[i].legend(loc=1)
+                    axes_twin_B_x[i].legend(loc=1)
             else:
-                axes[i + length_for_axis].plot(arrayx, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
+                if has_twin == False and user_select['lag']:
+                    axes[i + length_for_axis].tick_params(axis='x', labelcolor=colors[satelliteindex])
+                    
+                axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
+                axes[i + length_for_axis].plot(time, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
                 axes[i + length_for_axis].legend(loc=2)
                 axes[i + length_for_axis].set_ylabel(
                     r"$B_{{{}}}$".format(user_select["graph_B_chosen"][i]) + " (nT) "
                 )
-                axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
+                axes[i + length_for_axis].set_title(f"Magnetic Field in the {user_select['graph_B_chosen'][i]} direction")
 
                 if user_select["bandpass"][0] == True:
-                    axes_twin_B[i].plot(arrayx,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
-                    axes_twin_B[i].set_ylabel(
+                    axes_twin_B_x[i].plot(time,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
+                    axes_twin_B_x[i].set_ylabel(
                     r"$B_{{{}}}$ bandpassed $(nT)$".format(user_select["graph_B_chosen"][i])
                 )
-                    axes_twin_B[i].legend(loc=1)
+                    axes_twin_B_x[i].legend(loc=1)
                 if user_select['singles_graph'] != None:
                     axes[i+ length_for_axis].axvline(user_select["time_range_single"][0], color='orchid', linestyle='dashed')
                     axes[i+ length_for_axis].axvline(user_select["time_range_single"][1], color='orchid', linestyle='dashed')
         return True
 
     def graphingFlux(label, arrayx, arrayy, index_band, satelliteindex, has_twin):
+        global axes_twin_PF,  axes_twin_PF_y
+        time=arrayx
         length_for_axis = 0
         # because python starts index at 0
         colors = ["C0", "C1", "C2", "C3", "C4", "C5", "C6"]
@@ -1368,9 +1483,15 @@ def EBplotsNEC(user_select):
             length_for_axis += len(user_select["graph_B_chosen"])
         except TypeError:
             pass
+
+        if user_select['lag'] and has_twin==False:
+            axes_twin_PF_y=[ axes[x + length_for_axis].twiny() for x in range(len(user_select["graph_PF_chosen"])) ]
+        elif user_select['lag'] and rows() ==1 and has_twin==False:
+            axes_twin_PF_y= axes.twiny()
+
         try:
             if user_select["bandpass"][0] == True and has_twin==False:
-                global axes_twin_PF
+    
                 axes_twin_PF=[ axes[x+length_for_axis].twinx() for x in range(len(user_select["graph_PF_chosen"])) ] 
         except TypeError:
             if user_select["bandpass"][0] == True and has_twin==False:
@@ -1391,7 +1512,8 @@ def EBplotsNEC(user_select):
                 elif user_select["graph_PF_chosen"][i] == "Mean-field":
                     index = 2
             if user_select['lag'] == True:
-                if lag_data[3] == process_string(label):
+                print(lag_data[3], label, process_string(label))
+                if lag_data[3] == process_string(label) or lag_data[3]==label:
                     lag_seconds = int(lag_data[2])
                     lag_fraction = lag_data[2] - lag_seconds
                     lag_nanoseconds = int(lag_fraction * 1e9)
@@ -1400,20 +1522,37 @@ def EBplotsNEC(user_select):
                     nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
 
                     # Add the timedelta to the datetime array
-                    arrayx = arrayx + seconds_delta + nanoseconds_delta
+                    time = arrayx + seconds_delta + nanoseconds_delta
+                    print(arrayx)
+                    arrayx_y = arrayx - (seconds_delta + nanoseconds_delta)
+                    print(arrayx_y)
+                    if rows() ==1:
+                        axes_twin_PF_y.plot(arrayx_y, [np.nan]*len(arrayx))
+                        axes_twin_PF_y.tick_params(axis='x', labelcolor=colors[satelliteindex])
+                        axes_twin_PF_y.set_xlim((min(arrayx_y), max(arrayx_y)))
+                    else:
+                        axes_twin_PF_y[i].plot(arrayx_y, [np.nan]*len(arrayx))
+                        axes_twin_PF_y[i].tick_params(axis='x', labelcolor=colors[satelliteindex])
+                        axes_twin_PF_y[i].set_xlim((min(arrayx_y), max(arrayx_y)))
+                    print((min(arrayx_y), max(arrayx_y)))
+
+
 
             try:
                 if index_band==0:
-                    p1,=axes[i + length_for_axis].plot(arrayx, arrayy[index], label=label, color=colors[satelliteindex])
+                    if user_select['lag'] and has_twin==False:
+                        axes[i + length_for_axis].tick_params(axis='x', labelcolor=colors[satelliteindex])
+                    axes[i + length_for_axis].plot(time, arrayy[index], label=label, color=colors[satelliteindex])
 
                     axes[i + length_for_axis].set_ylabel(
                         r"$S_{{{}}}$".format(user_select["graph_PF_chosen"][i])
                         + r" $mW m^{-2}$"
                     )
+                    axes[i + length_for_axis].set_title(f"Poynting Flux in the {user_select['graph_PF_chosen'][i]} direction")
                     axes[i + length_for_axis].legend(loc=2)
                     axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
                 if index_band!=0 and user_select["bandpass"][0] == True:
-                    axes_twin_PF[i].plot(arrayx,arrayy[index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=0.7)
+                    axes_twin_PF[i].plot(time,arrayy[index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=0.7)
                     axes_twin_PF[i].legend(loc=1)
                 if user_select['singles_graph'] != None:
                     axes[i+ length_for_axis].axvline(user_select["time_range_single"][0], color='orchid', linestyle='dashed')
@@ -1422,7 +1561,9 @@ def EBplotsNEC(user_select):
 
             except TypeError:
                 if index_band==0:
-                    axes.plot(arrayx, arrayy[index], label="".join([label, "bandpassed"]), color=colors[satelliteindex])
+                    if user_select['lag']:
+                        axes[i + length_for_axis].tick_params(axis='x', labelcolor=colors[satelliteindex])
+                    axes.plot(time, arrayy[index], label="".join([label, "bandpassed"]), color=colors[satelliteindex])
                     axes.set_ylabel(
                         r"$S_{{{}}}$".format(user_select["graph_PF_chosen"][i])
                         + r" $mW m^{-2}$"
@@ -1430,7 +1571,7 @@ def EBplotsNEC(user_select):
                     axes.legend(loc=2)
                     axes.set_xlim((time_range[0], time_range[1]))
                 else:
-                    axes_twin_PF.plot(arrayx,arrayy[index], label="".join([label, "bandpassed"]),  color=colors[satelliteindex+3], alpha=0.7)
+                    axes_twin_PF.plot(time,arrayy[index], label="".join([label, "bandpassed"]),  color=colors[satelliteindex+3], alpha=0.7)
                     axes_twin_PF.legend(loc=1)
                     axes_twin_PF.set_ylabel(
                     r"$S_{{{}}}$ bandpassed".format(user_select["graph_PF_chosen"][i])
@@ -1480,13 +1621,14 @@ def EBplotsNEC(user_select):
             length_for_axis += 1
         else:
             pass
-
-        axes[length_for_axis +i].plot(time, arrayx[1]-arrayx[0], label='Subtracted')
+        first_non_nan_index = np.where(~np.isnan(arrayx[1]-arrayx[0]))[0][0]
+        axes[length_for_axis +i].set_xlim(first_non_nan_index, len(arrayx[0]))
+        axes[length_for_axis +i].plot(arrayx[1]-arrayx[0], label='Subtracted')
         max_lim=np.nanmax(np.absolute(arrayx[1]-arrayx[0]))
         axes[length_for_axis +i].set_ylim(-max_lim,max_lim)
         axes_2=axes[length_for_axis +i].twinx()
         for l in range(2):
-            axes_2.plot(time, arrayx[l], label=label[l], alpha=0.2)
+            axes_2.plot(arrayx[l], label=label[l], alpha=0.2)
         max_lim=np.nanmax(np.absolute(arrayx))
         axes_2.set_ylim(-max_lim,max_lim)
         axes[length_for_axis +i].legend()
@@ -1496,7 +1638,9 @@ def EBplotsNEC(user_select):
         axes[length_for_axis + i].set_title(f"Difference of {fieldtype} in the {plotted} direction with appropriate units")
 
     def Graphing_skymap(pixel, time, spacecraft):
+        colors = ["C0", "C1", "C2", "C3", "C4", "C5", "C6"]
         length_for_axis = 0
+
         try:
             length_for_axis += len(user_select["graph_E_chosen"])
         except TypeError:
@@ -1519,19 +1663,46 @@ def EBplotsNEC(user_select):
             length_for_axis +=len(user_select["B_difference"])
         if user_select ["PF_difference"] != None:
             length_for_axis +=len(user_select["PF_difference"])
+
+        if user_select['lag']:
+            axes_twin_y=[ axes[x + length_for_axis].twiny() for x in range(len(pixel))]
             
         for i in range(len(pixel)):  # length of platforms basically
+            arrayx = time[i]
             for j in range(len(pixel[0])):  # Length of satellites selected
+                label="".join(["swarm ", spacecraft[j]])
                 for k in range(len(pixel[i][j])):
                     if pixel[i][j][k] == 0:
                         pixel[i][j][k] = np.nan
+                if user_select['lag']:
+                    if lag_data[3] == process_string(label) or lag_data[3]==label:
+                        lag_seconds = int(lag_data[2])
+                        lag_fraction = lag_data[2] - lag_seconds
+                        lag_nanoseconds = int(lag_fraction * 1e9)
+                        # Create timedelta64 objects
+                        seconds_delta = np.timedelta64(lag_seconds, 's')
+                        nanoseconds_delta = np.timedelta64(lag_nanoseconds, 'ns')
+
+                        # Add the timedelta to the datetime array
+                        arrayx = time[i] + seconds_delta + nanoseconds_delta
+                        arrayy= time[i] -( seconds_delta + nanoseconds_delta)
+                        print(arrayy)
+                        axes_twin_y[i].plot(arrayy, [np.nan]*len(arrayx))
+                        axes_twin_y[i].tick_params(axis='x', labelcolor=colors[i])
+                        axes_twin_y[i].set_xlim((min(arrayy), max(arrayy)))
+                else:
+                    arrayx = time[i]
                 axes[i + length_for_axis].plot(
-                    time[i], pixel[i][j], label="".join(["swarm ", spacecraft[j]])
-                )
+                    arrayx, pixel[i][j], label=label)
             axes[i + length_for_axis].legend(loc=2)
+            if user_select['lag']:
+                if lag_data[3] != process_string(label):
+                    axes[i + length_for_axis].tick_params(axis='x', labelcolor=colors[i])
             axes[i + length_for_axis].set_ylabel("Nearest Pixel intensity")
             axes[i + length_for_axis].set_xlim((time_range[0], time_range[1]))
-            # axes[i + length_for_axis].set_xlim(65,70)
+            # axes[i + length_for_axis].set_xlim(65,70)if user_select['lag'] == True and lag_bool:
+                
+
 
     def Coordinate_change(lattiude, longitude, radius):  # Coordinate change, from Ivan correspondence
         a, b, e2 = 6378137.0, 6356752.3142, 0.00669437999014  # From DRS80
@@ -1553,6 +1724,7 @@ def EBplotsNEC(user_select):
             twin_axis=False
             lag_bool=False
             B_lag_earlier=[]
+            lon_1=None
             for i in range(len(collectionE)):
                 dsE = requester(  # requests data
                     collectionE[i],
@@ -1586,6 +1758,7 @@ def EBplotsNEC(user_select):
 
 
                         def B_Logic_For_E(lag_bool):
+                            nonlocal lon_1
                             # finds the closest index in B for each time
                             def Time_corrections(E_time, B_time):
                                 # finds the closest time value for each element in E_time
@@ -1621,7 +1794,7 @@ def EBplotsNEC(user_select):
                                 lag_bool=True
                                 ##TODO make cleaner
                                 B_lag_earlier = arrangement(dsB.index.to_numpy(), dsB["B_NEC"].to_numpy()-dsB["B_NEC_CHAOS"].to_numpy(),3)
-                            
+                                lon_1=dsB['Longitude'].to_numpy()
 
                             return times_of_b_for_flux, meanfield,  lag_bool
 
@@ -1666,6 +1839,9 @@ def EBplotsNEC(user_select):
             time_array=[]
             twin_axis=False
             blabels=[]
+            lag_bool=None
+            B_lag_earlier = None
+            lon_1=None
             # Goes through every satellite selected
             for i in range(len(user_select["satellite_graph"])):
                 if user_select["satellite_graph"][i] == "epop":
@@ -1719,7 +1895,21 @@ def EBplotsNEC(user_select):
                     else:
                         Bdata = bresarranged
                         Bdataband = bresarrangedband
-
+                    if user_select['lag'] and lag_bool == False :
+                        B_synoptic = arrangement(ds.index.to_numpy(), ds["B_NEC"].to_numpy()-ds["B_NEC_CHAOS"].to_numpy(),3)
+                        global lag_data
+                        lag_data=list(lag(B_lag_earlier,B_synoptic))
+                        lag_data.append("".join(("swarm", ds["Spacecraft"][0].lower()))) 
+                        lag_bool=True
+                        print(lag_data)
+                        st.write(f"The lag in seconds is {lag_data[2]}")
+                        st.write(f"The average longindinual seperation during the pass is {long_sep(lon_1, ds['Longitude'].to_numpy(), lag_data,50)} in degrees")
+                    elif user_select['lag'] and lag_bool == None:
+                        lag_bool=False
+                        ##TODO make cleaner
+                        B_lag_earlier = arrangement(ds.index.to_numpy(), ds["B_NEC"].to_numpy()-ds["B_NEC_CHAOS"].to_numpy(),3)
+                        lon_1=ds['Longitude'].to_numpy()
+                    print(lag_bool)
                     if user_select["graph_B_chosen"] != None: #plots if selected
                         twin_axis=graphingB(
                             "".join(("Swarm ", dsmodel_res["Spacecraft"][0])),
@@ -1727,7 +1917,8 @@ def EBplotsNEC(user_select):
                             Bdata,
                             Bdataband,
                             i,
-                            twin_axis
+                            twin_axis,
+                            lag_bool,
                         )
 
 
@@ -1817,7 +2008,7 @@ def EBplotsNEC(user_select):
 
                     twin_axis=graphingFlux(space_craft_with_E[i], time_E, flux_individual, k, i, twin_axis)
                     return_data.append(
-                        [space_craft_with_E[i], time_E, flux_individual[2], band_or_no[k]]
+                        np.transpose(flux_individual)
                     )
             return return_data
 
@@ -1832,7 +2023,8 @@ def EBplotsNEC(user_select):
                     pass
                 else:
                     for k in range(len(data[i][0])): #Loop through different coordinates
-                        for index in range(len(data[i][1])): #Loops through satellite
+                        for index in range(len(data[i][3])): #Loops through satellite
+
                             if lag_data[3] == process_string(data[i][3][index]):
                                 if index==1: #Ask's if the space-craft is the lagged one or fixed one
                                     indexopposite=0
@@ -1889,12 +2081,20 @@ def EBplotsNEC(user_select):
 
                 def ASI_logic():
                     if asi_array_code.lower() == "themis":
-                        asi = asilib.asi.themis(
-                            location_code,
-                            time_range=time_range,
-                            alt=alt,
-                            custom_alt=True,
-                        )
+                        if alt==90 or alt==110 or alt==150:
+                            asi = asilib.asi.themis(
+                                location_code,
+                                time_range=time_range,
+                                alt=alt,
+                                custom_alt=False,
+                            )
+                        else:
+                            asi = asilib.asi.themis(
+                                location_code,
+                                time_range=time_range,
+                                alt=alt,
+                                custom_alt=True,
+                            )
                         cadence = 3
                     elif asi_array_code.lower() == "rego":
                         asi = asilib.asi.rego(
@@ -2160,18 +2360,9 @@ def EBplotsNEC(user_select):
                 PFtime=None
                 PFlabel=None
             else:
-                if user_select["bandpass"][0] == True:
-                    band="band"
-                else:
-                    band="nonband"
-                PFtime=[]
-                PFlabel=[]
-                PFfield=[]
-                for i in range(len(flux)):
-                    if flux[i][3] == band:
-                        PFtime.append(flux[i][1])
-                        PFlabel.append(flux[i][0])
-                        PFfield.append(flux[i][2])
+                PFtime=time_E
+                PFlabel=space_craft_with_E
+                PFfield=flux
 
             Difference_plots(bfield, btime, blabel, efield,etime,elabel,PFfield,PFtime,PFlabel)
 
@@ -2196,7 +2387,7 @@ def EBplotsNEC(user_select):
 
     requesterarraylogic()
 
-    fig.suptitle("Time Versus Auroral Parameters From Swarm Spacecraft", y=1)
+    fig.suptitle("Time Versus Auroral Parameters From Swarm Spacecraft")
 
     # for i in range(len(axes)):  # final touches
     # mplcyberpunk.make_lines_glow(axes[i])  # adds glow to plots
