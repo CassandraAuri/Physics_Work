@@ -294,7 +294,7 @@ def graphing_animation(dict):
                 )
             else:
                 movie_generator = asi.animate_fisheye_gen(  # initaliziation
-                    ax=ax, overwrite=True, ffmpeg_params={"framerate": frame_rate}
+                    ax=ax, overwrite=True, ffmpeg_params={"framerate": frame_rate}, color_bounds=color_bound, color_norm='lin'
                 )
 
             return asi, movie_generator
