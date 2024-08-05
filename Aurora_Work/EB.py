@@ -26,6 +26,37 @@ plt.rcParams['axes.facecolor'] =  '121212'
 plt.rcParams['savefig.facecolor'] =  '121212'
 mplcyberpunk.make_lines_glow()
 mplcyberpunk.add_underglow()
+
+from scipy.spatial.transform import Rotation as R
+import numpy as np
+
+def find_closest_indices(times1, times2):
+    # Convert to numpy arrays
+    times1 = np.array(times1)
+    times2 = np.array(times2)
+    
+    # Compute the differences between each time in times1 and all times in times2
+    # Resulting in a 2D array where each row contains the absolute differences for one time in times1
+    differences = np.abs(times1[:, None] - times2)
+    
+    # Find the index of the minimum difference for each time in times1
+    closest_indices = np.argmin(differences, axis=1)
+    
+    return closest_indices
+
+def quaternion_inverse_scipy(q):
+    # Ensure q is a numpy array
+    q = np.asarray(q)
+    
+    # Create a Rotation object from the quaternion
+    rotation = R.from_quat(q)  # Note: scipy uses [x, y, z, w] format
+    
+    # Compute the inverse rotation
+    inverse_rotation = rotation.inv()
+    
+    
+    return inverse_rotation
+
 def long_sep(long1,long2,lag_data,sps):
     """
     Given a lag, find the average longitinduinal seperation
@@ -1742,20 +1773,27 @@ def EBplotsNEC(user_select):
                         satellites_with_E.append(
                             "".join(("swarm", dsE["Spacecraft"][0].lower()))
                         )
-                        velocity = dsE[measurements[1][0]].to_numpy()  # Velocity of satellite in NEC
-                        velocity_unit = unit_array(velocity)
+                        dsB = requester( 
+                        collectionB_50, #Mag B, high resolution, 50Hz B (Magnetic field)
+                        ["q_NEC_CRF"], #Magnetic field in NEC coordinates
+                        False, 
+                        asynchronous=False,
+                        show_progress=False)
+                        indicies=find_closest_indices(dsE.index, dsB.index)
+                        quatnecrf=dsB["q_NEC_CRF"].to_numpy()[indicies]
+                        quaternions = []
+                        Esat=np.array([dsE["Evx"] , dsE["Evy"], dsE["Evz"]]).T
+                        Etime = dsE.index
+                        ENEC=[]
+                        for i in range(len(quatnecrf)):
+                            inverse_quat = quaternion_inverse_scipy(dsB["q_NEC_CRF"].to_numpy()[indicies][i])
+                            rot_NEC_V= inverse_quat.apply(Esat[i])
+                            ENEC.append(rot_NEC_V)
+                        ElectricNEC=np.array(ENEC)
 
-                        Electric = dsE[measurements[1][1]].to_numpy()  # Electric field in satellite coordinates
-                        ElectricNEC = np.multiply(velocity_unit, Electric)  # transforms satellite coordinates into NEC
-
-                        ElectricNECbandpass=np.zeros(np.shape(ElectricNEC))
                         if user_select["bandpass"][0] == True:
                             for l in range(3):  # moving average of bres for all three components
                                 ElectricNECbandpass[:, l] = butter_bandpass_filter(data=ElectricNEC[:, l], cutoffs=user_select["bandpass"][1], fs=16)
-
-
-                            
-
 
                         def B_Logic_For_E(lag_bool):
                             nonlocal lon_1
@@ -1822,8 +1860,7 @@ def EBplotsNEC(user_select):
                             )
                         # For ponyting flux
                         return_data_band.append(ElectricNECbandpass)
-                        return_data_non_band.append(ElectricData)
-                        returned_times = dsE.index.to_numpy()  # Times for plot
+                        return_data_non_band.append(ElectricData)  
 
                     else:
                         # Says theres no E component
@@ -1831,7 +1868,7 @@ def EBplotsNEC(user_select):
                 else:  # Says theres no E component
                     has_E.append(False)
 
-            return return_data_non_band, return_data_band, times_for_flux, returned_times, satellites_with_E
+            return return_data_non_band, return_data_band, times_for_flux, Etime, satellites_with_E
 
         def B():
             return_data_non_band = []
