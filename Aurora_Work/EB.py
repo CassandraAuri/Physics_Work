@@ -1774,7 +1774,7 @@ def EBplotsNEC(user_select):
                             "".join(("swarm", dsE["Spacecraft"][0].lower()))
                         )
                         dsB = requester( 
-                        collectionB_50, #Mag B, high resolution, 50Hz B (Magnetic field)
+                        collectionB_50[i], #Mag B, high resolution, 50Hz B (Magnetic field)
                         ["q_NEC_CRF"], #Magnetic field in NEC coordinates
                         False, 
                         asynchronous=False,
@@ -1785,12 +1785,12 @@ def EBplotsNEC(user_select):
                         Esat=np.array([dsE["Evx"] , dsE["Evy"], dsE["Evz"]]).T
                         Etime = dsE.index
                         ENEC=[]
-                        for i in range(len(quatnecrf)):
-                            inverse_quat = quaternion_inverse_scipy(dsB["q_NEC_CRF"].to_numpy()[indicies][i])
-                            rot_NEC_V= inverse_quat.apply(Esat[i])
+                        for l in range(len(quatnecrf)):
+                            inverse_quat = quaternion_inverse_scipy(dsB["q_NEC_CRF"].to_numpy()[indicies][l])
+                            rot_NEC_V= inverse_quat.apply(Esat[l])
                             ENEC.append(rot_NEC_V)
                         ElectricNEC=np.array(ENEC)
-
+                        ElectricNECbandpass = np.zeros(np.shape(ElectricNEC))
                         if user_select["bandpass"][0] == True:
                             for l in range(3):  # moving average of bres for all three components
                                 ElectricNECbandpass[:, l] = butter_bandpass_filter(data=ElectricNEC[:, l], cutoffs=user_select["bandpass"][1], fs=16)
@@ -1807,7 +1807,7 @@ def EBplotsNEC(user_select):
                                         np.abs(E_time[i] - B_time)
                                     )
                                 return closest_time
-
+                            print(collectionB)
                             dsB = requester(
                                 collectionB[i],
                                 measurements[0],
