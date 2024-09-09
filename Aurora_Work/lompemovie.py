@@ -15,7 +15,8 @@ import geopack.geopack as gp
 from lompe.utils.conductance import hardy_EUV
 from scipy.spatial.transform import Rotation as R
 import numpy as np
-
+from matplotlib.animation import FuncAnimation
+import matplotlib.animation as animation
 def quaternion_inverse_scipy(q):
     # Ensure q is a numpy array
     q = np.asarray(q)
@@ -188,7 +189,7 @@ def Lompe(t0, DT):
         grid = lompe.cs.CSgrid(lompe.cs.CSprojection(position, orientation), L, W, Lres, Wres, R = 6481.2e3)
         return grid
 
-    def Condutance():
+    def Condutance(grid):
         Kp = 2 # for Hardy conductance model
         SH = lambda lon = grid.lon, lat = grid.lat: hardy_EUV(lon, lat, Kp, t0, 'hall', F107=152    )
         SP = lambda lon = grid.lon, lat = grid.lat: hardy_EUV(lon, lat, Kp, t0, 'pedersen', F107=152)
@@ -352,7 +353,7 @@ def Lompe(t0, DT):
     
 
     grid_L = Grid()
-    condutance_L = Condutance()
+    SH, SP = Condutance(grid_L)
     supermag = Supermag()
     irdium_L = Iridium()
     swarmb_L = SwarmB()
@@ -365,8 +366,8 @@ def Lompe(t0, DT):
     # add data
     model.add_data(irdium_L)
     model.add_data(supermag)
-    model.add_data(swarmb_L[0],swarmb_L[1], swarmb_L[2] , )
-    model.add_data(SSIES_L[0],SSIES_L[1], SSIES_L[2] , )
+    model.add_data(swarmb_L[0],swarmb_L[1], swarmb_L[2] )
+    model.add_data(SSIES_L[0],SSIES_L[1], SSIES_L[2] )
     model.add_data(superdarn_L)
     model.add_data(swarme_L)
 
@@ -374,9 +375,77 @@ def Lompe(t0, DT):
     # run inversion
     model.run_inversion(l1 = 10, l2 = 1)
 
+    return model
+    
+
+
 
 def Animation():
 
+    fig, ax = plt.subplots(figsize=(10,15), nrows=2)  #Plot convection and FAC 
+    anim = FuncAnimation(
+        fig,
+        animate,
+        frames = 50,
+        interval = 1000/30,
+    )
+
+    def animate(i):
+        
+        plt.clf()
+
+        #Given 50 frames, with 30 seconds between each frame, that comes 25 minutes, we want the integration time to be 3 minute on each side so 6 min
+        t0 = datetime(2022,12,19,13,50) + timedelta(seconds=30*i)
+        DT = dt.timedelta(seconds = 3 * 60)
+
+
+
+        model = Lompe(t0, DT)
+        def Convection_plot():
+            lompe.visualization.plot_potential(ax[0], model)
+            print(lompe.visualization.QUIVERSCALES)
+            lompe.visualization.plot_quiver(ax[0], model, 'convection')
+            lompe.visualization.plot_datasets(ax[0], model, 'convection')
+
+            lon = np.linspace(-123, -105, 200)
+            lat= np.linspace(62.3, 62.45, 200)
+
+
+
+            x, y= model.grid_J.projection.geo2cube(lon, lat)
+            scat = ax[0].plot(x, y, color='purple', label='Location of Arc Based on Ewogram')
+            x, y= model.grid_J.projection.geo2cube( -114.3718, 62.4540)
+            lon = np.linspace(-123, -105, 200)
+            lat= np.linspace(62.5, 63.6, 200)
+            x, y= model.grid_J.projection.geo2cube(lon, lat)
+            scat = ax[0].plot(x, y, color='purple')
+
+            plt.legend()
+            return
+        
+        def FAC_plot():
+            lompe.visualization.plot_quiver(  ax[1], model, 'space_mag_fac')
+            lompe.visualization.plot_contour( ax[1], model, 'fac')
+            lon = np.linspace(-123, -105, 200)
+            lat= np.linspace(62.3, 62.45, 200)
+
+
+
+            x, y= model.grid_J.projection.geo2cube(lon, lat)
+            scat = ax[1].plot(x, y, color='purple', label='Location of Arc Based on Ewogram')
+            x, y= model.grid_J.projection.geo2cube( -114.3718, 62.4540)
+            lon = np.linspace(-123, -105, 200)
+            lat= np.linspace(62.5, 63.6, 200)
+            x, y= model.grid_J.projection.geo2cube(lon, lat)
+            scat = ax[1].plot(x, y, color='purple')
+            return
+        
+        Convection_plot()
+        FAC_plot()
+    FFwriter = animation.FFMpegWriter(fps=2)  # Writes to mp4
+    anim.save("lompe25min.mp4", writer=FFwriter)
+
 
         
-    
+if __name__ == "main":
+    Animation()
