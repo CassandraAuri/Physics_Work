@@ -1209,15 +1209,15 @@ def EBplotsNEC(user_select):
     # Measurement names from swarm
     measurements = [
         "B_NEC",
-        [["VsatN", "VsatE", "VsatC"], ["Evx", "Evy", "Evz"], "Quality_flags"],
+        [["VsatN", "VsatE", "VsatC"], ["Vixv", "Viy", "Viz"], "Quality_flags"],
     ]
     measurements_flat = [
         "VsatN",
         "VsatE",
         "VsatC",
-        "Evx",
-        "Evy",
-        "Evz",
+        "Vixv",
+        "Viy",
+        "Viz",
         "Quality_flags",
     ]
 
@@ -1356,7 +1356,7 @@ def EBplotsNEC(user_select):
                     axes[i].tick_params(axis='x', labelcolor=colors[satelliteindex])
                 axes[i].plot(time, arrayy[:, index], label=label, color=colors[satelliteindex], alpha=alpha)
                 axes[i].set_ylabel(
-                    r"$E_{{{}}}$ $(mV/m)$".format(user_select["graph_E_chosen"][i])
+                    r"$V_{{{}}}$ $(m/s)$".format(user_select["graph_E_chosen"][i])
                 )
                 axes[i].set_title(f"Electric Field in the {user_select['graph_E_chosen'][i]} direction")
                 axes[i].legend(loc=2)
@@ -1782,7 +1782,7 @@ def EBplotsNEC(user_select):
                         indicies=find_closest_indices(dsE.index, dsB.index)
                         quatnecrf=dsB["q_NEC_CRF"].to_numpy()[indicies]
                         quaternions = []
-                        Esat=np.array([dsE["Evx"] , dsE["Evy"], dsE["Evz"]]).T
+                        Esat=np.array([dsE["Vixv"] , dsE["Viy"], dsE["Viz"]]).T
                         Etime = dsE.index
                         ENEC=[]
                         for l in range(len(quatnecrf)):
