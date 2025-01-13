@@ -5,3 +5,6 @@
 *.ncdf
 *.cdf
 *.netcdf
+*.bin
+*.asc
+*.dat
