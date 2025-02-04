@@ -336,53 +336,15 @@ def graphing_animation(dict):
                 x_gsm, y_gsm, z_gsm = gp.geogsm(x_gc,y_gc,z_gc, 1)
 
                 x_foot,y_foot,z_foot=np.zeros(len(x_gsm)), np.zeros(len(y_gsm)), np.zeros(len(z_gsm))
-                from matplotlib.patches import Wedge, Circle
-                def dual_half_circle(center=(0,0), radius=1, angle=90, ax=None, colors=('w','k','k'),
-                     **kwargs):
-                    """
-                    Add two half circles to the axes *ax* (or the current axes) with the 
-                    specified facecolors *colors* rotated at *angle* (in degrees).
-                    """
-                    if ax is None:
-                        ax = plt.gca()
-                    theta1, theta2 = angle, angle + 180
-                    #w1 = Wedge(center, radius, theta1, theta2, fc=colors[0], **kwargs)
-                    #w2 = Wedge(center, radius, theta2, theta1, fc=colors[1], **kwargs)
-                    
-                    w1 = Wedge(center, radius, theta1, theta2, fc=colors[1], **kwargs)
-                    w2 = Wedge(center, radius, theta2, theta1, fc=colors[0], **kwargs)
-                
-                    cr = Circle(center, radius, fc=colors[2], fill=False, **kwargs)
-                    for wedge in [w1, w2, cr]:
-                        ax.add_artist(wedge)
-                    return [w1, w2, cr]
-
-                def setup_fig(xlim=(10,-30),ylim=(-20,20),xlabel='X GSM [Re]',ylabel='Z GSM [Re]'):
-
-                    fig = plt.figure(figsize=(15,10))
-                    ax  = fig.add_subplot(111)
-                    ax.axvline(0,ls=':',color='k')
-                    ax.axhline(0,ls=':',color='k')
-                    ax.set_xlim(xlim)
-                    ax.set_ylim(ylim)
-                    ax.set_xlabel(xlabel)
-                    ax.set_ylabel(ylabel)
-                    
-                    ax.set_aspect('equal')
-                    w1,w2,cr = dual_half_circle(ax=ax)
-                    
-                    return ax
                 #ax = setup_fig(xlim=(-10,10),ylim=(-10,10))
                 for index in range(len(x_gsm)):
-                    x_foot_int, y_foot_int, z_foot_int, xx, _,zz = gp.trace(x_gsm[index], y_gsm[index], z_gsm[index], dir=1,rlim=2, r0=(alt-10+6371)/6371, maxloop=1000 )
+                    x_foot_int, y_foot_int, z_foot_int, xx2, yy2,zz2 = gp.trace(x_gsm[index], y_gsm[index], z_gsm[index], dir=1,rlim=1.6, r0=(alt-10+6371)/6371, maxloop=1000 )
 
-                    
-                    x, _, z, xx2,yy2,zz2 = gp.trace(x_foot_int, y_foot_int, z_foot_int, dir=-1,rlim=100, r0=(alt-10+6371)/6371, maxloop=100 )
 
                     def curve_fit_func():
                         def cubic(t, a, b, c, d):
                             return a*t**3 + b*t**2 + c*t + d
-                        r = np.linspace(1, 1.5, 100000)
+                        r = np.linspace(1, 1.5, 10000)
 
                         radius_data=np.sqrt(xx2**2+yy2**2+zz2**2)
 
