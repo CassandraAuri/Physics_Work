@@ -189,6 +189,8 @@ dsB = requester(
     asynchronous=False,
     show_progress=False)
 
+
+
 latitude_E, longitude_E, altitude_E = dsE['Latitude'].to_numpy(), dsE['Longitude'].to_numpy(),  (dsE["Radius"].to_numpy()-6.371e6)/1e3 #km  # Gets Emphermis data
 sat_lla_B=footprint(time_array[0], latitude_B, longitude_B, altitude_B, alt, vsw=[-345,12,-12])
 
@@ -217,11 +219,17 @@ sat_lla_E= np.array([cs_lat(Etime), cs_lon(Etime),  cs_alt(Etime)]) #km  # Gets 
 from scipy.interpolate import CubicSpline
 cs = CubicSpline(Btime, sat_lla_B[0])
 latitudes_16sps = cs(Etime)
-cs = CubicSpline(Btime, BNEC[:,0])
+cs = CubicSpline(Btime, BNEC[:,1])
 Bs_16sps = cs(Etime)
-u_zeros = np.zeros_like(VNEC[:, 1])
-U_perpendicular = -VNEC[:, 1] / np.max(np.abs(VNEC[:, 1]))  # Inverting y-component for perpendicular direction
-V_perpendicular = VNEC[:, 1] / np.max(np.abs(VNEC[:, 1]))   # Keeping the x-component
+#u_zeros = np.zeros_like(VNEC[:, 1])
+#U_perpendicular = -VNEC[:, 1] / np.max(np.abs(VNEC[:, 1]))  # Inverting y-component for perpendicular direction
+#V_perpendicular = VNEC[:, 1] / np.max(np.abs(VNEC[:, 1]))   # Keeping the x-component
+
+u_zeros = np.zeros_like(-Bs_16sps)
+print(np.max(np.abs(VNEC[:, 1])))
+U_perpendicular = (-Bs_16sps-250) / 500  # Inverting y-component for perpendicular direction
+V_perpendicular = (Bs_16sps+250)  / 500   # Keeping the x-component
+
 
 
 asi=asilib.asi.trex_rgb(location_code='yknf', alt=alt, time_range=time_array, colors='rgb')
@@ -242,14 +250,15 @@ for i, (time, image, axes, _) in enumerate(movie_generator):
     if quivers_red is not None:
         quivers_red.remove()
 
-    #quivers=ax.quiver( sat_lla_E[1], sat_lla_E[0], V_perpendicular, u_zeros, color='white', scale=1, scale_units='inches', alpha=0.15)
-    indicies_sat= (np.where((Etime >= np.datetime64(time)) & (Etime <= np.datetime64(time + timedelta(seconds=3))))[0])
+    quivers=ax.quiver( sat_lla_E[1], sat_lla_E[0], V_perpendicular, u_zeros, color='white', scale=1, scale_units='inches', alpha=0.15)
+    indicies_sat= (np.where((Etime >= np.datetime64(time- timedelta(seconds=1.5))) & (Etime <= np.datetime64(time + timedelta(seconds=1.5))))[0])
     if indicies_sat.size == 0:
         pass
     else:
         print('yipee', sat_lla_E[1][indicies_sat[0]], sat_lla_E[1][indicies_sat[0]],)
-        ax.scatter(sat_lla_E[1][indicies_sat[0]], sat_lla_E[0][indicies_sat[0]], color='red', s=25)
+        middle_index=np.argmin(np.abs(Etime -time))
+        ax.scatter(sat_lla_E[1][middle_index], sat_lla_E[0][middle_index], color='white', s=25)
     ax.plot(sat_lla_E[1], sat_lla_E[0], linestyle='--', dashes=(5, 20), color='white') #length of 5, space of 20  
-    #quivers_red=ax.quiver( sat_lla_E[1][indicies_sat], sat_lla_E[0][indicies_sat], V_perpendicular[indicies_sat], u_zeros[indicies_sat], color='red', scale=1.75, scale_units='inches', alpha=0.25)
+    quivers_red=ax.quiver( sat_lla_E[1][indicies_sat], sat_lla_E[0][indicies_sat], V_perpendicular[indicies_sat], u_zeros[indicies_sat], color='red', scale=1, scale_units='inches', alpha=0.25)
     ax.set_ylabel("Geographic Latitude")
     ax.set_xlabel("Geographic Longitude")
