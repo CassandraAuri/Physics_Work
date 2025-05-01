@@ -1021,7 +1021,7 @@ def Graph():
     if 'lag' not in st.session_state:
         st.session_state['lag'] = None
     if "graph_type" not in st.session_state:
-        st.session_state['graph_type'] = None
+        st.session_state['graph_type'] = ["heatmap"]
     if "singles_graphs" not in st.session_state:
         st.session_state["singles_graphs"] = None
 
@@ -1033,13 +1033,14 @@ def Graph():
         st.select_slider(label="Please select the low pass in Hz", value=7, options=[0.5, 1, 2, 4, 6, 7, 7.9], key="high_pass")
     
     if st.session_state["E_B_ratio"] == True:
-        graph_type=st.multiselect(label="Would you like a heatmap (running windows) or a single interval", options=("heatmap", "single value"), key="graph_type")
-
+        st.multiselect(label="Would you like a heatmap (running windows) or a single interval", options=("heatmap", "single value"), key="graph_type", default=["heatmap"])
         if st.session_state["Coordinate_system"] == "North East Centre":
             options=[["E_North", "E_East"], ["B_North", "B_East"], ["ENorth/BEast ratio", "EEast/BNorth ratio"], ["ENorth/BEast crosspower", "EEast/BNorth crosspower"], ["ENorth/BEast cross phase", "EEast/BNorth cross phase"], ['B B lag cross power', 'B B lag cross phase'], ['E E lag cross power', 'E E lag cross phase']]
         else:
             options=[["E_Azimuthal", "E_Polodial"], ["B_Azimuthal", "B_Polodial"], ["EAzimuthal/BPolodial", "EPolodial/BAzimuthal"]]
-        if st.session_state['graph_type'][0] == 'heatmap':
+        st.write(st.session_state['graph_type'])
+        print(st.session_state['graph_type'])
+        if st.session_state['graph_type'] == 'heatmap':
             st.select_slider(label="Please select the running window interval (sampling rate)", value=1, options=[0.1,0.2,0.5, 1, 2], key="sampling_rate")
             st.select_slider(label="Please select the running window length", value=4, options=[2,3,4,5,6,8,10, 20,30,40,60,119], key="Window_Length")
             st.select_slider(label="Please select the number of samples per segment (note 16sps)", value='window length', options=['window length', 'half window length', 'quarter window'], key="nperseg")
