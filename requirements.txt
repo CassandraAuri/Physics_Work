@@ -1,0 +1,13 @@
+streamlit
+pandas
+numpy
+viresclient
+matplotlib
+mplcyberpunk
+scipy
+cmasher
+moviepy
+moviepy
+asilib
+aacgmv2
+geopack

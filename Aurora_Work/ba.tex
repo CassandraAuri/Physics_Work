@@ -1,0 +1,108 @@
+\documentclass[12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{latexsym,amsfonts,amssymb,amsthm,amsmath, graphicx}
+\usepackage[margin={0.75in,1in}]{geometry}
+\usepackage{hyperref}
+
+
+\title{EAS 270, Assignment 6 }
+\author{Cassandra Litwinowich}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 1}
+\begin{itemize}
+    \item Atmosphere: Thin layer of the Earth, 100km, that is composed of different gasses and is the interface between Earth and space.
+    \item Lithosphere: layer of Earth composed of rock, mantle, and other processes such as volcanism. Volcalism is one way that the lithosphere is connected to the Atmosphere and minerals and ash from the mantle is ejected through volcanos into the atmosphere; where they accumlate as aerols, which are subsequently deposited back.
+    \item The hydrosphere is where (liquid) water is on our planet.  Importantly, the hydrosphere mediates the water cycle which is characterized by water from the oceans evaporating into the atmosphere and then that water vapour turning back into liquid water and raining back to the hydrosphere
+    \item The cyrosphere is the frozen, rather than liquid, component of water on our planet. Glaciers and ice sheets have high albedo and as a result cool the atmosphere around them.
+    \item The biosphere is the sphere which is composed of all life on Earth. One easy interaction is humans emitting green house gasses which warm the atmosphere or damage it.
+\end{itemize}
+\section*{Problem 2}
+\subsection*{A)}
+If there was an ice sheet that extended all through the United states, the earth would inevitably cool as the albedo of the entire planet would be higher. This would cause a more signifigant portion of solar insolation to be reflected, causing less heat up-take.
+\subsection*{B}
+If the albedo of the continental shelf is greater than the ocean, the exposure of more coninental shelf would allow for cooler tempatures. Additionally, the heat capacity is much lower so it could cool more, allowing for an ice sheet to form on the exposed area which would increase the albedo dramatically.
+\subsection*{C}
+As given in the notes, the albedo of (dense) forest is approximately 5-10 percent so it being covered in ice would cool the global tempature as more insolation is reflected.
+\section*{Problem 3}
+\subsection*{A)}
+we use the formula 
+\begin{equation}
+    \Phi = \epsilon \sigma T^4
+\end{equation}
+where $\epsilon$ is the emissivity, $\sigma$ is the stefan boltzman constant, and T is the temperature in Kelvin so for water boiling $T=\left(100+273\right)K =373K$ which then using equation 1 gives
+\begin{equation*}
+    \Phi = \epsilon \sigma T^4 = 0.99 \times 5.67\times 10^{-8}\frac{W}{m^2K^4} \left(373K\right)^4 = 
+\end{equation*}
+\subsection*{B)}
+Here we need to use Wein's law which states the maximum intensity emitted.
+\begin{equation}
+    \lambda_{max} = \frac{0.0029K \cdot m}{T}
+\end{equation}
+
+Where the numerator is a constant and the denominator, T, is the tempature in Kelvin
+\begin{equation*}
+    \lambda_{max} = \frac{0.0029K \cdot m}{T} = \frac{0.0029K \cdot m}{373K} = 777nm
+\end{equation*}
+\subsection*{C}
+This is in the infrared part o
+
+\subsection*{D}
+Given that the moon has no atmosphere, then its tempature will be around 0. Lets assume its 50K, then we would get a $\lambda_{max} = $ which is outside of our vision range ( far IR)
+\subsection*{E}
+We see the moon in the sky because its albedo is high and it reflects sunlight. Cant see new moon cause the suns reflection is facing away from us.
+\section*{Problem 4}
+\subsection*{A)}
+For this problem, we need to use The tempature of a body, from absorbed power which is given as 
+\begin{equation}
+    T=\left(\frac{\left(1-\alpha) \Phi}{4\sigma}\right)^{\frac{1}{4}}
+\end{equation}
+Where T is tempature in Kelvin, $\alpha$ is the albedo, $\Phi$ is the incoming radiative flux, and sigma is the Stephan Boltzmman constant
+\begin{equation*}
+    T_{Venus}=\left(\frac{ \left(1-0.75\right) \cdot 2613W/m^2}{4\sigma}\right)^{\frac{1}{4}} = 231K  = -41^{\circ}C
+\end{equation*}
+Then for Earth
+\begin{equation*}
+    T_{Earth}=\left(\frac{ \left(1-0.3\right) \cdot 1360W/m^2}{4\sigma}\right)^{\frac{1}{4}} = 254K = -18^{\circ}C
+\end{equation*}
+Then for Mars
+\begin{equation*}
+    T_{Mars}=\left(\frac{ \left(1-0.15\right) \cdot 589W/m^2}{4\sigma}\right)^{\frac{1}{4}} = 217K=-56^{\circ}C
+\end{equation*}
+For Venus and Earth, the equation does not hold; whereas for mars, the equation does a pretty job of estimating the tempature
+\subsection*{B)}
+Green house gases could explain the difference as the can rerediate the heat from the body to insulate it. Additionally, for mars, there could be eccentricity in the orbit so the value of insolation changes to product some tempature changes; however, the main error of this formula is the assumption that the body does not insulate any of its heat.
+\section*{Problem 5}
+\subsection*{A)}
+Using equation 3 with a modern solar constant and an albedo of 0.85, we would get 
+\begin{equation*}
+    T_{Earth}=\left(\frac{ \left(1-0.85\right) \cdot 1360W/m^2}{4\sigma}\right)^{\frac{1}{4}} = 173K = -100^{\circ}C
+\end{equation*}
+\subsection*{B)}
+Now assuming that our $\Phi$ is reduced by 7 percent which gives a $\Phi = 1265 \frac{W}{m^2}$ then we can substuite into equation 3 this new value to get 
+\begin{equation*}
+        T_{Earth}=\left(\frac{ \left(1-0.85\right) \cdot 1265W/m^2}{4\sigma}\right)^{\frac{1}{4}} = 170K = -103^{\circ}C
+\end{equation*}
+\subsection*{C)}
+The first principles of equation 3 is that the energy output by the earth is equal to the solar flux (with considerations of albedo)
+thus we get the inital equation
+\begin{equation}
+    \sigma T_{Earth}^4 \cdot 4 \pi R_E^2 = \Phi \cdot \pi R_E^2
+\end{equation}
+now we add a term which represents our absorbtion of carbon dioxide, that is the energy output of the earth is now 50\% greater giving
+\begin{equation*}
+    \frac{3}{2} \sigma T_{Earth}^4 \cdot 4 \pi R_E^2 = \Phi \cdot \pi R_E^2
+\end{equation*}
+which then put in the form of equation 3 we get
+\begin{equation}
+    T_{Earth}=\left(\frac{2 \left(1-0.85\right) \cdot 1265W/m^2}{3\sigma}\right)^{\frac{1}{4}} =217K = -56^{\circ}C
+\end{equation}
+
+
+
+
+\end{document}
