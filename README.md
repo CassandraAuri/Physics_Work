@@ -1,1 +1,1 @@
-Current work (WIP)
+Cassandra's public facing auroral repo. The works within primiary relate to the graphical userinterface for University of Calgaries imagers and Swarm.
