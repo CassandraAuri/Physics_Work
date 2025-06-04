@@ -1153,6 +1153,38 @@ def Graphing_Ratio(space_craft_with_E, efield, bfield, time_E, time_B, user_sele
     
 
     return  data
+import numpy as np
+
+def remove_spikes_with_interpolation(data: np.ndarray, z_thresh: float = 3.0) -> np.ndarray:
+    """
+    Removes spikes from an N×3 time series array by detecting large z-scores and interpolating over them.
+
+    Parameters:
+        data (np.ndarray): N×3 time series array (time along rows, 3 components as columns).
+        z_thresh (float): Z-score threshold for detecting spikes.
+
+    Returns:
+        np.ndarray: Cleaned N×3 array with interpolated values.
+    """
+    cleaned = data.copy()
+    N = data.shape[0]
+
+    for i in range(3):  # for each component (column)
+        x = cleaned[:, i]
+        z = (x - np.mean(x)) / np.std(x)
+        spike_idx = np.where(np.abs(z) > z_thresh)[0]
+
+        if len(spike_idx) == 0:
+            continue  # nothing to do
+
+        # Indices of non-spike values
+        valid_idx = np.setdiff1d(np.arange(N), spike_idx)
+        valid_values = x[valid_idx]
+
+        # Linear interpolation over spikes
+        x[spike_idx] = np.interp(spike_idx, valid_idx, valid_values)
+
+    return cleaned
 
 def lag(x,y):
     """
@@ -1445,7 +1477,7 @@ def EBplotsNEC(user_select):
                 if user_select["bandpass"][0] == True:
                     axes_twin_E_x[i].plot(time,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
                     axes_twin_E_x[i].set_ylabel(
-                    r"$E_{{{}}}$ bandpassed $(mV/m)$".format(user_select["graph_E_chosen"][i])
+                    r"$V_{{{}}}$ bandpassed $(m/s)$".format(user_select["graph_E_chosen"][i])
                 )
                     axes_twin_E_x[i].legend(loc=1)
             except TypeError:
@@ -1453,7 +1485,7 @@ def EBplotsNEC(user_select):
                 if has_twin == False  and user_select['lag']:
                     axes.tick_params(axis='x', labelcolor=colors[satelliteindex])
                 axes.set_ylabel(
-                    r"$E_{{{}}}$ $(mV/m)$".format(user_select["graph_E_chosen"][i])
+                    r"$V_{{{}}}$ $(m/s)$".format(user_select["graph_E_chosen"][i])
                 )
                 axes.set_title(f"Electric Field in the {user_select['graph_E_chosen'][i]} direction")
                 axes.legend(loc=2)
@@ -1465,7 +1497,7 @@ def EBplotsNEC(user_select):
                 if user_select["bandpass"][0] == True:
                     axes_twin_E_x.plot(time,arraybandy[:, index], label="".join([label, "bandpassed"]), color=colors[satelliteindex+3], alpha=1)
                     axes_twin_E_x.set_ylabel(
-                    r"$E_{{{}}}$ bandpassed $(mV/m)$".format(user_select["graph_E_chosen"][i])
+                    r"$V_{{{}}}$ bandpassed $(m/s)$".format(user_select["graph_E_chosen"][i])
                 )
                     axes_twin_E_x.legend(loc=1)
                     
@@ -1823,54 +1855,52 @@ def EBplotsNEC(user_select):
 
     def requesterarraylogic():
         nonlocal data_returned
-        def E():
+        def V():
             return_data_non_band = []
             return_data_band =[]
-            returned_times = []
             satellites_with_E = []
             times_for_flux = []
             twin_axis=False
             lag_bool=False
-            B_lag_earlier=[]
             lon_1=None
+            Etime=[] #returns empty in case no velocity data found, required
             for i in range(len(collectionE)):
-                dsE = requester(  # requests data
+                dsV = requester(  # requests data
                     collectionE[i],
                     measurements_flat,
                     False,
                     asynchronous=False,
                     show_progress=False,
                 )
-                if len(dsE) != 0:  # checks if empty
+                if len(dsV) != 0:  # checks if empty
                     # Checks if space-craft is selected
-                    if "".join(("swarm", dsE["Spacecraft"][0].lower())) in labels:
+                    if "".join(("swarm", dsV["Spacecraft"][0].lower())) in labels:
                         
 
                         has_E.append(True)
                         satellites_with_E.append(
-                            "".join(("swarm", dsE["Spacecraft"][0].lower()))
+                            "".join(("swarm", dsV["Spacecraft"][0].lower()))
                         )
                         dsB = requester( 
                         collectionB_50[i], #Mag B, high resolution, 50Hz B (Magnetic field)
-                        ["q_NEC_CRF"], #Magnetic field in NEC coordinates
-                        False, 
+                        ["q_NEC_CRF", measurements[0]], #Magnetic field in NEC coordinates
+                        True, 
                         asynchronous=False,
                         show_progress=False)
-                        indicies=find_closest_indices(dsE.index, dsB.index)
+                        indicies=find_closest_indices(dsV.index, dsB.index)
                         quatnecrf=dsB["q_NEC_CRF"].to_numpy()[indicies]
-                        quaternions = []
-                        Esat=np.array([dsE["Vixv"] , dsE["Viy"], dsE["Viz"]]).T
-                        Etime = dsE.index
-                        ENEC=[]
+                        Vsat=np.array([dsV["Vixv"] , dsV["Viy"], dsV["Viz"]]).T
+                        Etime = dsV.index
+                        VNEC=[]
                         for l in range(len(quatnecrf)):
                             inverse_quat = quaternion_inverse_scipy(dsB["q_NEC_CRF"].to_numpy()[indicies][l])
-                            rot_NEC_V= inverse_quat.apply(Esat[l])
-                            ENEC.append(rot_NEC_V)
-                        ElectricNEC=np.array(ENEC)
-                        ElectricNECbandpass = np.zeros(np.shape(ElectricNEC))
+                            rot_NEC_V= inverse_quat.apply(Vsat[l])
+                            VNEC.append(rot_NEC_V)
+                        VelocityNEC=remove_spikes_with_interpolation(np.array(VNEC))
+                        VelocityNECbandpass = np.zeros(np.shape(VelocityNEC))
                         if user_select["bandpass"][0] == True:
                             for l in range(3):  # moving average of bres for all three components
-                                ElectricNECbandpass[:, l] = butter_bandpass_filter(data=ElectricNEC[:, l], cutoffs=user_select["bandpass"][1], fs=16)
+                                VelocityNECbandpass[:, l] = butter_bandpass_filter(data=VelocityNEC[:, l], cutoffs=user_select["bandpass"][1], fs=16)
 
                         def B_Logic_For_E(lag_bool):
                             nonlocal lon_1
@@ -1894,7 +1924,7 @@ def EBplotsNEC(user_select):
                             )
 
                             times_of_b_for_flux = Time_corrections(
-                                dsE.index.to_numpy(), dsB.index.to_numpy()
+                                dsV.index.to_numpy(), dsB.index.to_numpy()
                             )  # Takes times of both E and B and finds the closest values in B to E
 
                             meanfield=arrangement(dsB.index.to_numpy(),dsB["B_NEC_CHAOS"].to_numpy(),3)[times_of_b_for_flux, :]
@@ -1904,7 +1934,7 @@ def EBplotsNEC(user_select):
                                 B_synoptic = arrangement(dsB.index.to_numpy(), dsB["B_NEC"].to_numpy()-dsB["B_NEC_CHAOS"].to_numpy(),3)
                                 global lag_data
                                 lag_data=list(lag(B_lag_earlier,B_synoptic))
-                                lag_data.append("".join(("swarm", dsE["Spacecraft"][0].lower()))) 
+                                lag_data.append("".join(("swarm", dsV["Spacecraft"][0].lower()))) 
                             else:
                                 lag_bool=True
                                 ##TODO make cleaner
@@ -1916,28 +1946,28 @@ def EBplotsNEC(user_select):
                         times_for_flux, meanfield,lag_bool = B_Logic_For_E(lag_bool)
 
                         if user_select['coordinate_system'] == "Mean-field aligned":
-                            latitude, longitude, radius = dsE['Latitude'].to_numpy(), dsE['Longitude'].to_numpy(),  dsE["Radius"].to_numpy()  # Gets Emphermis data
+                            latitude, longitude, radius = dsV['Latitude'].to_numpy(), dsV['Longitude'].to_numpy(),  dsV["Radius"].to_numpy()  # Gets Emphermis data
                             r_nec = Coordinate_change(latitude, longitude, radius) #Changes coordinates of r to NEC
                           
-                            ElectricData = MFA(ElectricNEC, meanfield, r_nec.T) #puts data into MFA coordinate system
-                            ElectricNECbandpass = MFA(ElectricNECbandpass, meanfield, r_nec.T)
+                            VelocityData = MFA(VelocityNEC, meanfield, r_nec.T) #puts data into MFA coordinate system
+                            VelocityNECbandpass = MFA(VelocityNECbandpass, meanfield, r_nec.T)
                         else:
-                            ElectricData = ElectricNEC
+                            VelocityData = VelocityNEC
 
-                        # Plots electric field time seres
+                        # Plots velocity field time seres
 
                         if user_select["graph_E_chosen"] != None:
                             twin_axis=graphingE(
-                                "".join(("Swarm ", dsE["Spacecraft"][0])),
-                                dsE.index.to_numpy(),
-                                ElectricData,
-                                ElectricNECbandpass,
+                                "".join(("Swarm ", dsV["Spacecraft"][0])),
+                                dsV.index.to_numpy(),
+                                VelocityData,
+                                VelocityNECbandpass,
                                 sum(has_E)-1, #finds the amounts of trues in has_E then -'s by 1 to make it start at -1, this is so the color is the same as B and flux
                                 twin_axis
                             )
                         # For ponyting flux
-                        return_data_band.append(ElectricNECbandpass)
-                        return_data_non_band.append(ElectricData)  
+                        return_data_band.append(VelocityNECbandpass)
+                        return_data_non_band.append(VelocityData)  
 
                     else:
                         # Says theres no E component
@@ -2085,7 +2115,7 @@ def EBplotsNEC(user_select):
             pass
         else:
             # E field, indexs of B for time, times for plotting flux
-            efield_nonband, efield_band, times_for_b, time_E, space_craft_with_E = E()
+            efield_nonband, efield_band, times_for_b, time_E, space_craft_with_E = V() #TODO need efield  here
         if (
             user_select["graph_B_chosen"] == None
             and user_select["graph_PF_chosen"] == None
@@ -2258,7 +2288,7 @@ def EBplotsNEC(user_select):
 
                     # Converts altitude to assumed auroral height
                     
-                    conjunction_obj = footprint(sat_time,lat_sat,lon_sat,alt_sat)
+                    sat_lla= footprint(sat_time,lat_sat,lon_sat,alt_sat)
                     conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
 
                     lat_satellite.append(conjunction_obj.sat["lat"].to_numpy())

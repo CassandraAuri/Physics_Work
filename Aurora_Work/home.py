@@ -265,6 +265,12 @@ def graphing_animation(dict):
     time_range = dict["time_range"]
     platforms = dict["satellite_graph"]
     save_file = []
+    fig, ax = plt.subplots(  # intializes plots
+        1,
+        1,
+        figsize=(10, 15),
+        constrained_layout=True,
+    )
 
     # Finds the footprint of selected region with each selected spacecraft
 
@@ -321,12 +327,7 @@ def graphing_animation(dict):
                         sat_azel_pixels_total[j][:, 1])
                 ax.scatter(sat_azel_pixels_total[j][i, 0], sat_azel_pixels_total[j][i, 1],
                             marker='o', s=50)
-    fig, ax = plt.subplots(  # intializes plots
-        1,
-        1,
-        figsize=(10, 15),
-        constrained_layout=True,
-    )
+    
     # Loops through the number of stations selected by the user
     for k in range(len(dict["sky_map_values"])):
 
@@ -386,7 +387,8 @@ def graphing_animation(dict):
 
         lat_satellite, lon_satellite, conj_obj_array,sat_azel_pixels_total = [], [], [], []  
         # Creates empty arrays for data from satellites to go, which is there rendered in animator
-        for i in range(len(platforms)):  # length of spacecraft REFACTOR
+        for i in range(len(platforms)):  # length of spacecraft REFACTOR TODO broken here
+            print(len(platforms))
             # Trex is 6 second cadence compared to 3 of rego and themos
             if asi_array_code.lower() == "trex_nir":
                 data = data_6
@@ -404,8 +406,9 @@ def graphing_animation(dict):
 
             alt_sat=conjunction_obj.sat["alt"].to_numpy()
 
-            conjunction_obj = footprint(sat_time,lat_sat,lon_sat,alt_sat, alt)
-            conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
+            sat_lla = footprint(sat_time,lat_sat,lon_sat,alt_sat, alt)
+            print("footdone")
+            conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla.T))
 
             lat_satellite.append(conjunction_obj.sat["lat"].to_numpy())
             lon_satellite.append(conjunction_obj.sat["lon"].to_numpy())
@@ -414,16 +417,12 @@ def graphing_animation(dict):
 
             alt_sat=conjunction_obj.sat["alt"].to_numpy()
 
-
-
-            if dict["sky_map_values"][k][3] == 'Map':
-                lat_satellite.append(conjunction_obj.sat["lat"].to_numpy())
-                lon_satellite.append(conjunction_obj.sat["lon"].to_numpy())
-            else:
+            if dict["sky_map_values"][k][3] != 'Map':
                 conj_obj_array.append(conjunction_obj)
                 sat_azel, sat_azel_pixels = conjunction_obj.map_azel()
                 sat_azel_pixels_total.append(sat_azel_pixels)
-
+        print("question")
+        print(dict["sky_map_values"][k][3])
         # from asilib
         if dict["sky_map_values"][k][3] == 'Map': #creates a map in lat lon
             pixel_chosen = np.zeros((len(platforms), len(data[0][0])))
@@ -432,29 +431,10 @@ def graphing_animation(dict):
             values = np.zeros((np.shape(lat)[0], np.shape(lat)[1]))
             non_blind_search = 20
             indicies_total = np.zeros((len(platforms), len(data[0][0]), 2), dtype=int)
-
-            for satellite in range(len(platforms)):
-                lat_satellite[satellite], lon_satellite[satellite], ignored = (
-                    aacgmv2.convert_latlon_arr(  # Converts to magnetic coordinates
-                        in_lat=lat_satellite[satellite],
-                        in_lon=lon_satellite[satellite],
-                        height=alt,
-                        dtime=time_range[0],
-                        method_code="G2A",
-                    )
-                )
-            for i in range(len(lon)):
-                lat[i], lon[i], ignored = (
-                    aacgmv2.convert_latlon_arr(  # Converts to magnetic coordinates
-                        in_lat=lat[i],
-                        in_lon=lon[i],
-                        height=alt,
-                        dtime=time_range[0],
-                        method_code="G2A",
-                    )
-                )
+            print("startomg aacg,v2")
             lat[np.isnan(lat)] = np.inf
             lon[np.isnan(lon)] = np.inf
+            print("step 2")
             for i in range(len(data[0][0])):  # len of time series
                 # Themis starts at time_range[0], rego and trex start a time_range[0] + a cadence
                 if len(asi.data[0]) != len(data[0][0]) and i == 0:
@@ -488,6 +468,7 @@ def graphing_animation(dict):
                     ]
                 except IndexError:
                     pixel_chosen[satellite][i] = 0
+            print("animator map")
             animator_map()
             movie_container = "mp4"
             movie_address = (
@@ -642,7 +623,6 @@ def Animation(timerange):
             label="Number of Stations to animate",
             min_value=1,
             max_value=4,
-            value=st.session_state["station_count"],
             key="station_count",
         )
 
@@ -716,7 +696,7 @@ def Animation(timerange):
                             ):
                                 st.selectbox(
                                     "Name of Site",
-                                    ["rabb", "gill", "fsmi", "pina", "yknf"],
+                                    ["rabb", "gill", "fsmi", "pina", "yknf", 'atha'],
                                     key="".join([str(i), "s"]),
                                 )
 
@@ -771,7 +751,7 @@ def Animation(timerange):
                                 st.selectbox(
                                     "Type of Image",
                                     ["Fisheye", "Map"],
-                                    key="".join([str(i), "map"]),
+                                    key="".join([str(i), "imagetype"]),
                                 )
                             if (
                                 st.session_state["".join([str(i), "project"])]
@@ -781,7 +761,7 @@ def Animation(timerange):
                                     "Height of Skymap",
                                     min_value=70,
                                     max_value=170,
-                                    value=90,
+                                    value=110,
                                     step=10,
                                     key="".join([str(i), "heights"]),
                                 )
@@ -868,14 +848,14 @@ def Graph():
             options=[ "50Hz", "1Hz"],
         )
         st.checkbox(
-            label="Would you like to difference theses E's versus each satellite (requires the LAG option to selected which requires swarm A and C to be selected)",
+            label="Would you like to difference theses V's versus each satellite (requires the LAG option to selected which requires swarm A and C to be selected)",
             key="B_difference",
         )
 
     def Graph_options_E(coord_options):
 
         st.multiselect(
-            label="What directions of E would you like to graph",
+            label="What directions of V would you like to graph",
             options=coord_options,
             key="E_options_to_use",
             help="There is no electric field in a static ionosphere, main component is North or Azimuthal"
@@ -886,7 +866,7 @@ def Graph():
             options=["2Hz", "16Hz"],
         )
         st.checkbox(
-            label="Would you like to difference theses E's versus each satellite (requires the LAG option to selected which requires swarm A and C to be selected)",
+            label="Would you like to difference theses V's versus each satellite (requires the LAG option to selected which requires swarm A and C to be selected)",
             key="E_difference",
         )
 
@@ -911,7 +891,7 @@ def Graph():
         st.session_state["E_difference"] = False
     if "PF_difference" not in st.session_state:
         st.session_state["PF_difference"] = False
-    options_for_graphs = ["B", "E", "Field Aligned Current", "Poynting flux"]
+    options_for_graphs = ["B", "V", "Field Aligned Current", "Poynting flux"]
     Graph_functions = [
         Graph_options_B,
         Graph_options_E,
@@ -1185,12 +1165,9 @@ def Render_Graph(timerange):
     except IndexError:
         FAC_boolean = False
     # try:  # [0] doesnt work
-    if "station_count" not in st.session_state:
-        st.session_state["station_count"] = None
-        print("printing None Here")
-    count = st.session_state["station_count"]
 
-    def value_setter():  # sets values of selected sites and projects
+
+    def value_setter(count):  # sets values of selected sites and projects
         nonlocal values
         for i in range(count):  # goes through all columns
             # doesn't add values if empty
@@ -1210,9 +1187,11 @@ def Render_Graph(timerange):
                 else:
                     pass
         return values
+
     if st.session_state["station_count"] !=None:
+        count = st.session_state["station_count"]
         values = [[None, None]] * count
-        skymap_values = value_setter()
+        skymap_values = value_setter(count)
     else:
         skymap_values = None
         print("Make none")
