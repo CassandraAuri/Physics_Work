@@ -234,9 +234,13 @@ def empharisis_processing(dict, cadence):
             dict=dict,
             cadence=cadence,
         )
-        if "".join(("swarm", ds["Spacecraft"][0].lower())) in dict["satellite_graph"]:
-            data_stuff.append(ds)
-        else:
+        try: #If one of the magnetometers on swarm is not working
+            print(ds["Spacecraft"][0].lower() , "test")
+            if "".join(("swarm", ds["Spacecraft"][0].lower())) in dict["satellite_graph"]:
+                data_stuff.append(ds)
+            else:
+                pass
+        except KeyError: 
             pass
     for i in range(len(data_stuff)):
         time_array = data_stuff[i]["Spacecraft"].index
@@ -677,7 +681,8 @@ def Animation(timerange):
                                         "atha",
                                         "tpas",
                                         "gako",
-                                        "mcgr"
+                                        "mcgr",
+                                        "kuuj"
                                     ),
                                     key="".join([str(i), "s"]),
                                 )

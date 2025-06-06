@@ -2,7 +2,7 @@ from viresclient import set_token
 from viresclient import SwarmRequest
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.pyplot as pd
+import pandas as pd
 from datetime import datetime, timedelta
 from tqdm.notebook import tqdm
 import mplcyberpunk
@@ -191,7 +191,7 @@ def find_indices(datetime_array, start_time, end_time):
 
     return start_index,end_index
 
-def footprint(time, latitude, longitude, altitude, alt,vsw= [-400,0,0]):
+def footprint(time, latitude, longitude, altitude, alt,vsw= [-400,0,-40]):
     """
     time, datetime, time for magnetic data for footprint
     vsw velocity of solar wind, tuple of x,y,z
@@ -232,10 +232,11 @@ def footprint(time, latitude, longitude, altitude, alt,vsw= [-400,0,0]):
     
     t1 = time
     t0 = datetime(1970,1,1) #epoch
-    ut = (t1-t0).total_seconds()
+    py_dt = pd.to_datetime(t1).to_pydatetime()
+    ut = (py_dt-t0).total_seconds()
     lat_sat=np.deg2rad(latitude)
     lon_sat=np.deg2rad(longitude) #converts to radii
-    gp.recalc(ut)
+    gp.recalc(ut, vsw[0], vsw[1], vsw[2])
     r, theta= gp.geodgeo(altitude,lat_sat,1) #this r accounts for earths oblateness, so we need to find the difference between my 6371 assumption and the real value and account for that
     differencearray= (altitude+6371)-r
     x_gc,y_gc,z_gc = gp.sphcar((r)/6371,theta,lon_sat,1)  #spherical to cartesian
@@ -2281,6 +2282,7 @@ def EBplotsNEC(user_select):
                     sat_lla = np.array([emph[i][1], emph[i][2], emph[i][3]]).T
     
                     conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
+
                     lat_sat=conjunction_obj.sat["lat"].to_numpy()
                     lon_sat=conjunction_obj.sat["lon"].to_numpy()
 
@@ -2288,8 +2290,8 @@ def EBplotsNEC(user_select):
 
                     # Converts altitude to assumed auroral height
                     
-                    sat_lla= footprint(sat_time,lat_sat,lon_sat,alt_sat)
-                    conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla))
+                    sat_lla= footprint(sat_time[0],lat_sat,lon_sat,alt_sat, alt)
+                    conjunction_obj = asilib.Conjunction(asi, (sat_time, sat_lla.T))
 
                     lat_satellite.append(conjunction_obj.sat["lat"].to_numpy())
                     lon_satellite.append(conjunction_obj.sat["lon"].to_numpy())
